@@ -79,6 +79,74 @@ if (!app.requestSingleInstanceLock()) {
     }
   })
 
+  // ---- Penyimpanan cadangan: folder di perangkat dan WebDAV (bebas CORS) ----
+  const folderOk = async (dir) => {
+    if (typeof dir !== 'string' || !path.isAbsolute(dir)) return false
+    try { return (await fs.stat(dir)).isDirectory() } catch { return false }
+  }
+  const namaOk = (n) => typeof n === 'string' && n === path.basename(n) && /^[\w.\- ()]+$/.test(n) && n.length < 160 && /\.(simas\.json|xlsx|zip|csv)$/i.test(n)
+  ipcMain.handle('simas:pilih-folder', async (e) => {
+    const win = BrowserWindow.fromWebContents(e.sender)
+    const r = await dialog.showOpenDialog(win, { title: 'Pilih folder penyimpanan cadangan', properties: ['openDirectory', 'createDirectory'] })
+    return r.canceled || !r.filePaths[0] ? null : r.filePaths[0]
+  })
+  ipcMain.handle('simas:folder-tulis', async (_e, r) => {
+    try {
+      if (!(await folderOk(r?.dir))) return { ok: false, pesan: 'Folder tujuan tidak ditemukan.' }
+      if (!namaOk(r.nama)) return { ok: false, pesan: 'Nama berkas tidak valid.' }
+      const buf = Buffer.from(String(r.b64 ?? ''), 'base64')
+      if (buf.length > 400 * 1024 * 1024) return { ok: false, pesan: 'Berkas terlalu besar.' }
+      await fs.writeFile(path.join(r.dir, r.nama), buf)
+      const keep = Number(r.simpan)
+      if (keep >= 1 && /\.simas\.json$/i.test(r.nama)) {
+        const lama = (await fs.readdir(r.dir)).filter((f) => /^simas-.*\.simas\.json$/i.test(f))
+        const info = await Promise.all(lama.map(async (f) => ({ f, t: (await fs.stat(path.join(r.dir, f))).mtimeMs })))
+        info.sort((a, b) => b.t - a.t)
+        for (const x of info.slice(keep)) await fs.unlink(path.join(r.dir, x.f)).catch(() => {})
+      }
+      return { ok: true }
+    } catch (err) { return { ok: false, pesan: `Gagal menulis: ${err.message}` } }
+  })
+  ipcMain.handle('simas:folder-daftar', async (_e, dir) => {
+    try {
+      if (!(await folderOk(dir))) return { ok: false, pesan: 'Folder tidak ditemukan.' }
+      const out = []
+      for (const f of await fs.readdir(dir)) {
+        if (!namaOk(f)) continue
+        const st = await fs.stat(path.join(dir, f))
+        if (st.isFile()) out.push({ nama: f, ukuran: st.size, waktu: st.mtime.toISOString() })
+      }
+      out.sort((a, b) => b.waktu.localeCompare(a.waktu))
+      return { ok: true, berkas: out.slice(0, 100) }
+    } catch (err) { return { ok: false, pesan: err.message } }
+  })
+  ipcMain.handle('simas:folder-baca', async (_e, r) => {
+    try {
+      if (!(await folderOk(r?.dir)) || !namaOk(r.nama)) return { ok: false, pesan: 'Berkas tidak valid.' }
+      const file = path.join(r.dir, r.nama)
+      if ((await fs.stat(file)).size > 400 * 1024 * 1024) return { ok: false, pesan: 'Berkas terlalu besar.' }
+      return { ok: true, teks: await fs.readFile(file, 'utf8') }
+    } catch (err) { return { ok: false, pesan: err.message } }
+  })
+  ipcMain.handle('simas:dav', async (_e, req) => {
+    try {
+      const u = new URL(String(req?.url))
+      const lokal = ['localhost', '127.0.0.1', '[::1]'].includes(u.hostname)
+      if (!(u.protocol === 'https:' || (u.protocol === 'http:' && lokal))) return { status: 0, text: 'Alamat WebDAV harus HTTPS.' }
+      const method = String(req.method).toUpperCase()
+      if (!['PUT', 'GET', 'MKCOL', 'PROPFIND'].includes(method)) return { status: 0, text: 'Metode tidak diizinkan.' }
+      const headers = {}
+      for (const [k, v] of Object.entries(req.headers ?? {})) headers[String(k)] = String(v)
+      const body = req.bodyB64 ? Buffer.from(String(req.bodyB64), 'base64') : req.body !== undefined ? String(req.body) : undefined
+      const ctl = new AbortController()
+      const t = setTimeout(() => ctl.abort(), 120000)
+      try {
+        const res = await net.fetch(u.toString(), { method, headers, body, signal: ctl.signal })
+        return { status: res.status, text: (await res.text()).slice(0, 400 * 1024 * 1024) }
+      } finally { clearTimeout(t) }
+    } catch (err) { return { status: 0, text: `Tidak dapat terhubung: ${err.message}` } }
+  })
+
   app.whenReady().then(() => {
     protocol.handle('app', (req) => {
       const { pathname } = new URL(req.url)

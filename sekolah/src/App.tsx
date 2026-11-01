@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Icon } from './icons'
-import { useCol, useSekolah } from './store'
+import { exportTerenkripsi, put, useCol, useSekolah } from './store'
+import { jatuhTempo, unggah } from './cloud'
 import { Avatar, Btn, KonfirmasiHost, Nav, ToastHost, useNav, type AsalNav, type PageId } from './ui'
 import { PrintHost } from './PratinjauCetak'
 import Dashboard from './pages/Dashboard'
@@ -84,6 +85,19 @@ export default function App() {
   const jmlInvalid = useValidasi().filter((t) => t.level === 'invalid').length
   const tm = tampilanDari(sekolah)
   useEffect(() => { terapkanHuruf(tampilanDari({ tampilan: sekolah.tampilan })) }, [sekolah.tampilan])
+  // Cadangan otomatis terenkripsi (folder / WebDAV) saat aplikasi dibuka bila sudah waktunya
+  const [otoJalan, setOtoJalan] = useState(false)
+  useEffect(() => {
+    const c = sekolah.cloud
+    if (otoJalan || !c || !jatuhTempo(c)) return
+    setOtoJalan(true)
+    void (async () => {
+      let hasil: string
+      try { await unggah(c, `simas-cadangan-${new Date().toISOString().slice(0, 10)}.simas.json`, await exportTerenkripsi(c.sandiOto!), 'application/json'); hasil = 'Otomatis: berhasil' }
+      catch (e) { hasil = `Otomatis: gagal (${(e as Error).message})` }
+      await put('sekolah', { ...sekolah, cloud: { ...c, terakhir: hasil.includes('berhasil') ? new Date().toISOString() : c.terakhir, hasilTerakhir: hasil } })
+    })()
+  }, [sekolah, otoJalan])
   const tinggiTop = Math.max(60, tm.logoUkuran + 16)
   const menu = MENU.filter((m) => boleh(m.id))
 

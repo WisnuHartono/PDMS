@@ -70,6 +70,8 @@ export interface Sekolah {
   ukuranKertas?: 'A4' | 'F4'
   /** Integrasi AI untuk menyusun narasi rapor. Kunci API disimpan di perangkat ini (ikut cadangan terenkripsi). */
   ai?: AiSetting
+  /** Lokasi cadangan: lokal, folder sinkron (Google Drive/OneDrive/Dropbox desktop), Google Drive, atau WebDAV. */
+  cloud?: CloudSetting
   /** Tampilan header: kustomisasi logo & nama sekolah. */
   tampilan?: TampilanSetting
 }
@@ -335,6 +337,24 @@ export interface Ekskul {
   id: string
   nama: string
   pembinaId?: string
+}
+
+export type TujuanCadangan = 'lokal' | 'folder' | 'gdrive' | 'webdav'
+export interface CloudSetting {
+  tujuan: TujuanCadangan
+  /** Google Drive: OAuth Client ID milik sekolah (bukan rahasia). */
+  gClientId?: string
+  /** WebDAV (Nextcloud, ownCloud, Synology, Box, dll.) */
+  davUrl?: string; davUser?: string; davSandi?: string
+  /** Folder di perangkat (aplikasi Windows). */
+  folder?: string
+  otomatis?: 'mati' | 'harian' | 'mingguan'
+  /** Kata sandi cadangan untuk cadangan otomatis (disimpan di perangkat ini). */
+  sandiOto?: string
+  terakhir?: string
+  hasilTerakhir?: string
+  /** Jumlah cadangan otomatis yang disimpan di folder/WebDAV sebelum yang lama dihapus (folder saja). */
+  simpanTerbaru?: number
 }
 
 export interface Collections {

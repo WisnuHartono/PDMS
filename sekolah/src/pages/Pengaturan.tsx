@@ -1,15 +1,15 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useState } from 'react'
+import DataCadangan from './DataCadangan'
 import { kodeSekolah } from '../administrasi'
 import { KURIKULUM } from '../curricula'
 import { Icon } from '../icons'
 import { KopSurat, alamatLengkap, kontakLengkap } from '../print'
-import { seedDemo } from '../seed'
-import { DEFAULT_SEKOLAH, cadanganTerenkripsi, exportTerenkripsi, importJson, put, resetAll, useCol, useSekolah } from '../store'
+import { put, useCol, useSekolah } from '../store'
 import { JENJANG, type KopSetting, type Sekolah } from '../types'
 import { FONT_APP, FONT_DOK, LogoSekolah, tampilanDari } from '../logo'
 import { AI_DEFAULT, PANDUAN, PENYEDIA, aiSiap, panggilAi } from '../ai'
-import { Btn, Card, Field, Inp, Modal, PageHead, Sel, toast, tanya } from '../ui'
-import { download, fotoKecil, namaPegawai, readFileAsText, today } from '../util'
+import { Btn, Card, Field, Inp, Modal, PageHead, Sel, toast } from '../ui'
+import { fotoKecil, namaPegawai, today } from '../util'
 
 type Bagian = 'identitas' | 'lokasi' | 'pelengkap' | 'pejabat' | 'kop' | 'cetak' | 'kurikulum' | 'tampilan' | 'ai' | 'data'
 const BAGIAN: [Bagian, string, string][] = [
@@ -22,7 +22,7 @@ const BAGIAN: [Bagian, string, string][] = [
   ['kurikulum', 'Kurikulum', 'Kurikulum yang tersedia'],
   ['tampilan', 'Tampilan & Logo', 'Ukuran, bentuk, bingkai, zoom logo dan nama di header'],
   ['ai', 'Integrasi AI', 'Penyusun narasi rapor: penyedia, kunci API, gaya'],
-  ['data', 'Data & Cadangan', 'Cadangan terenkripsi, pulihkan, data contoh'],
+  ['data', 'Data & Cadangan', 'Ekspor Excel/CSV, cloud, cadangan terenkripsi, pulihkan'],
 ]
 
 const ROMAWI = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII']
@@ -315,49 +315,6 @@ function ImgSlot({ label, hint, src, onPick, onHapus }: { label: string; hint?: 
       </div>
     </div>
   )
-}
-
-function DataCadangan() {
-  const fileRef = useRef<HTMLInputElement>(null)
-  const [sandiCad, setSandiCad] = useState('')
-  return (
-    <>
-      <Card title="Cadangan & pemulihan" className="mb">
-        <p className="muted small">Data tersimpan di perangkat ini (browser atau aplikasi Windows). Cadangan dienkripsi (Argon2id + AES-256-GCM) dengan kata sandi cadangan. Simpan kata sandi ini terpisah dari berkasnya.</p>
-        <div className="filters">
-          <input type="password" placeholder="Kata sandi cadangan (min. 12 karakter)" value={sandiCad} onChange={(e) => setSandiCad(e.target.value)} autoComplete="new-password" aria-label="Kata sandi cadangan" style={{ width: 300 }} />
-          <Btn icon="download" disabled={sandiCad.length < 12} onClick={async () => { download(`simas-cadangan-${today()}.simas.json`, await exportTerenkripsi(sandiCad)); toast('Cadangan terenkripsi diunduh') }}>Unduh cadangan</Btn>
-          <Btn icon="upload" onClick={() => fileRef.current?.click()}>Pulihkan dari cadangan</Btn>
-          <input ref={fileRef} type="file" accept=".json,application/json" hidden onChange={async (e) => {
-            const f = e.target.files?.[0]
-            e.target.value = ''
-            if (!f) return
-            const teks = await readFileAsText(f)
-            if (cadanganTerenkripsi(teks) && !sandiCad) return toast('Isi kata sandi cadangan terlebih dahulu.')
-            if (!await tanya('Pulihkan akan MENGGANTI seluruh data saat ini. Lanjutkan?')) return
-            try { await importJson(teks, sandiCad); toast('Data berhasil dipulihkan') } catch (err) { toast(`Gagal: ${(err as Error).message}`) }
-          }} />
-        </div>
-      </Card>
-      <Card title="Data contoh & penghapusan">
-        <div className="btn-row">
-          <KonfirmasiBtn label="Muat data contoh" tanya="Klik lagi: data saat ini diganti data contoh" onYa={async () => { await seedDemo(); toast('Data contoh dimuat') }} />
-          <KonfirmasiBtn danger label="Hapus semua data" tanya="Klik lagi untuk menghapus SELURUH data" onYa={async () => { await resetAll(); await put('sekolah', DEFAULT_SEKOLAH); toast('Semua data dihapus') }} />
-        </div>
-      </Card>
-    </>
-  )
-}
-
-/** Tombol dua langkah: klik pertama meminta konfirmasi, klik kedua (dalam 5 detik) menjalankan aksi. */
-function KonfirmasiBtn({ label, tanya, onYa, danger }: { label: ReactNode; tanya: string; onYa: () => Promise<void>; danger?: boolean }) {
-  const [siap, setSiap] = useState(false)
-  useEffect(() => {
-    if (!siap) return
-    const t = setTimeout(() => setSiap(false), 5000)
-    return () => clearTimeout(t)
-  }, [siap])
-  return <Btn kind={danger || siap ? 'danger' : 'default'} onClick={async () => { if (!siap) return setSiap(true); setSiap(false); await onYa() }}>{siap ? tanya : label}</Btn>
 }
 
 function PanelAi({ s, set }: { s: Sekolah; set: (p: Partial<Sekolah>) => void }) {
