@@ -139,8 +139,8 @@ export function RaporDoc({ siswa, rombel, semester }: { siswa: Siswa; rombel: Ro
 
       <div className="ttd-row three">
         <div className="ttd"><div>&nbsp;</div><div>{L.ortu}</div><div className="ttd-space" /><div className="ttd-nama">{siswa.wali.nama || siswa.ayah.nama || siswa.ibu.nama || '..............................'}</div></div>
-        <div className="ttd"><div>&nbsp;</div><div>{L.kepsek}</div><div className="ttd-space" /><div className="ttd-nama">{kepsek ? namaPegawai(kepsek) : '..............................'}</div>{kepsek?.nip && <div>NIP. {kepsek.nip}</div>}</div>
-        <div className="ttd"><div>{s.kotaTtdRapor || s.kabupaten || ''}, {fmtTanggal(s.tanggalRapor ?? new Date().toISOString().slice(0, 10))}</div><div>{L.wali}</div><div className="ttd-space" /><div className="ttd-nama">{wali ? namaPegawai(wali) : '..............................'}</div>{wali?.nip && <div>NIP. {wali.nip}</div>}</div>
+        <div className="ttd"><div>&nbsp;</div><div>{L.wali}</div><div className="ttd-space" /><div className="ttd-nama">{wali ? namaPegawai(wali) : '..............................'}</div>{wali?.nip && <div>NIP. {wali.nip}</div>}</div>
+        <div className="ttd"><div>{s.kotaTtdRapor || s.kabupaten || ''}, {fmtTanggal(s.tanggalRapor ?? new Date().toISOString().slice(0, 10))}</div><div>{L.kepsek}</div><div className="ttd-space" /><div className="ttd-nama">{kepsek ? namaPegawai(kepsek) : '..............................'}</div>{kepsek?.nip && <div>NIP. {kepsek.nip}</div>}</div>
       </div>
     </div>
   )
