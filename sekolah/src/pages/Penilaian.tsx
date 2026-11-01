@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { getKurikulum, type Baris } from '../curricula'
+import { aiSiap, isiNama, jalankanBatch, panggilAi, promptMapel, promptPaud, systemPrompt } from '../ai'
+import { tpScores } from '../curricula'
 import { buatNarasi, bintang, kelompokUsia, type Capaian } from '../narasiPaud'
 import { put, useCol, useSekolah } from '../store'
 import type { LembarNilai } from '../types'
@@ -31,6 +33,8 @@ export default function Penilaian() {
   const [data, setData] = useState<LembarNilai['data']>({})
   const [dirty, setDirty] = useState(false)
   const [varian, setVarian] = useState<Record<string, number>>({})
+  const [sibukAi, setSibukAi] = useState<Record<string, boolean>>({})
+  const [progAi, setProgAi] = useState('')
   useEffect(() => {
     setTujuan(ada?.tujuan ?? [])
     setData(ada?.data ?? {})
@@ -65,6 +69,47 @@ export default function Penilaian() {
     setTimeout(() => toast(n ? `${n} narasi dibuat. Periksa dan sunting sebelum disimpan.` : 'Tidak ada baris kosong yang sudah diberi capaian.'), 0)
   }
 
+  const aiOn = aiSiap(sekolah.ai)
+  const kunciTeks = kur.komponen.find((k) => k.type === 'text')?.key
+  const CAP: Record<string, string> = { BB: 'Belum Berkembang (BB)', MB: 'Mulai Berkembang (MB)', BSH: 'Berkembang Sesuai Harapan (BSH)', BSB: 'Berkembang Sangat Baik (BSB)' }
+  /** Skor siap-kirim untuk satu murid; undefined bila belum ada data nilai/capaian. */
+  const promptAi = (sid: string) => {
+    const sw = siswa.find((x) => x.id === sid)
+    const row = data[sid]
+    if (!sw || !row || !kunciTeks) return undefined
+    const lama = String(row[kunciTeks] ?? '')
+    if (kur.naratif) {
+      const c = String(row.capaian ?? '')
+      if (!c) return undefined
+      return promptPaud({ mapel: m.nama, capaian: CAP[c] ?? c, tujuan, usia: kelompokUsia(sw.tanggalLahir, tglRapor), teksGuru: lama })
+    }
+    const tp = tpScores(row, tujuan)
+    const lain = kur.komponen.filter((k) => k.type === 'number' && !k.perTujuan).map((k) => ({ label: k.label, nilai: row[k.key] })).filter((x): x is { label: string; nilai: number } => typeof x.nilai === 'number')
+    if (!tp.length && !lain.length) return undefined
+    const h = kur.hitung(row, tujuan, kkm)
+    return promptMapel({ mapel: m.nama, kelas: r.nama, jenjang: r.jenjang, kurikulum: kur.nama, kkm, tujuan: tp.map((x) => ({ tp: x.t, nilai: x.v })), komponenLain: lain, nilaiAkhir: h.nilai, predikat: h.predikat, teksGuru: lama })
+  }
+  const narasiAi = async (sid: string) => {
+    const sw = siswa.find((x) => x.id === sid)
+    const pr = promptAi(sid)
+    if (!sw || !pr || !kunciTeks || !sekolah.ai) throw new Error(kur.naratif ? 'Pilih capaian dulu.' : 'Isi nilai dulu.')
+    const t = await panggilAi(sekolah.ai, systemPrompt(sekolah.ai, kur.naratif ? 'paud' : 'mapel', kur.asal === 'Internasional'), pr)
+    setCell(sid, kunciTeks, isiNama(t, sw.namaPanggilan || sw.nama.split(' ')[0]))
+  }
+  const narasiAiSatu = async (sid: string) => {
+    setSibukAi((x) => ({ ...x, [sid]: true }))
+    try { await narasiAi(sid); toast('Narasi AI dibuat. Periksa dan sunting sebelum disimpan.') } catch (e) { toast((e as Error).message) }
+    setSibukAi((x) => ({ ...x, [sid]: false }))
+  }
+  const narasiAiSemua = async () => {
+    const target = anggota.filter((sw) => promptAi(sw.id) && !String(data[sw.id]?.[kunciTeks ?? ''] ?? '').trim())
+    if (!target.length) return toast('Tidak ada baris kosong yang sudah memiliki nilai/capaian.')
+    setProgAi(`0/${target.length}`)
+    const { gagal, galat } = await jalankanBatch(target, (sw) => narasiAi(sw.id), 3, (n) => setProgAi(`${n}/${target.length}`))
+    setProgAi('')
+    toast(gagal ? `${target.length - gagal} narasi dibuat, ${gagal} gagal: ${galat}` : `${target.length} narasi AI dibuat. Periksa dan sunting sebelum disimpan.`)
+  }
+
   const setCell = (sid: string, key: string, v: string | number | undefined) => {
     setData((d) => ({ ...d, [sid]: { ...d[sid], [key]: v } }))
     setDirty(true)
@@ -80,6 +125,7 @@ export default function Penilaian() {
   return (
     <div>
       <PageHead title="Penilaian" sub={`${kur.nama}${kur.naratif ? '' : ` · KKM/KKTP ${kkm}`} · TA ${r.tahunAjaran} Semester ${sem}`}>
+        {aiOn && kunciTeks && <Btn icon="ai" onClick={narasiAiSemua} disabled={!!progAi} title="Susun narasi dengan AI untuk baris yang masih kosong, berdasarkan nilai/capaian">{progAi ? `Narasi AI ${progAi}` : 'Narasi AI (yang kosong)'}</Btn>}
         {kur.naratif && <Btn icon="edit" onClick={narasiSemua} title="Isi narasi untuk anak yang capaiannya sudah dipilih tetapi narasinya masih kosong">Buat narasi yang kosong</Btn>}
         <Btn kind="primary" onClick={simpan} disabled={!dirty}>{ada && !dirty ? 'Tersimpan' : 'Simpan nilai'}</Btn>
       </PageHead>
@@ -153,12 +199,13 @@ export default function Penilaian() {
                       ))}
                       {!kur.naratif && <td className={`c strong ${h.nilai !== undefined && h.nilai < kkm ? 'bad-t' : ''}`}>{h.nilai ?? '-'}</td>}
                       {kur.kolomRapor.some((k) => /^(pred\.?|grade|capaian)$/i.test(k.label)) && <td className="c">{h.predikat ?? '-'}{h.extra?.predKet ? ` / ${h.extra.predKet}` : ''}</td>}
-                      {!kur.naratif && <td className="small desc">{h.deskripsi || <span className="muted">-</span>}</td>}
+                      {!kur.naratif && <td className="small desc">{h.deskripsi || <span className="muted">-</span>}{aiOn && kunciTeks && <div><Btn kind="ghost" icon="ai" disabled={!promptAi(s.id) || sibukAi[s.id]} title="Susun narasi dengan AI dari nilai per TP; hasil masuk ke kolom deskripsi manual" onClick={() => narasiAiSatu(s.id)}>{sibukAi[s.id] ? '…' : 'Narasi AI'}</Btn></div>}</td>}
                       {kur.naratif && (
                         <td className="small">
                           {typeof row?.capaian === 'string' && <div className="bintang" title={String(row.capaian)}>{bintang(row.capaian)}</div>}
                           <Btn kind="ghost" icon="refresh" disabled={!row?.capaian} title={row?.capaian ? 'Susun narasi dari capaian, tujuan pembelajaran, usia, dan bank narasi' : 'Pilih capaian dulu'}
                             onClick={() => { const v = (varian[s.id] ?? 0) + 1; setVarian((x) => ({ ...x, [s.id]: v })); const t = narasiUntuk(s.id, v); if (t) setCell(s.id, 'deskripsi', t) }}>Narasi</Btn>
+                          {aiOn && <Btn kind="ghost" icon="ai" disabled={!row?.capaian || sibukAi[s.id]} title="Susun narasi dengan AI dari capaian dan tujuan" onClick={() => narasiAiSatu(s.id)}>{sibukAi[s.id] ? '…' : 'AI'}</Btn>}
                           {typeof row?.foto === 'string'
                             ? <div><img src={row.foto} alt="Foto kegiatan" className="paud-foto" /><Btn kind="ghost" icon="trash" onClick={() => setCell(s.id, 'foto', undefined)}>Foto</Btn></div>
                             : <label className="btn btn-ghost" title="Foto kegiatan untuk rapor"><input type="file" accept="image/*" hidden onChange={async (e) => { const f = e.target.files?.[0]; if (f) setCell(s.id, 'foto', await fotoKecil(f, 640)); e.target.value = '' }} />+ Foto</label>}

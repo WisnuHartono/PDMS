@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { getKurikulum } from '../curricula'
+import { aiSiap, isiNama, panggilAi, promptCatatan, systemPrompt } from '../ai'
 import { RaporDoc, catatanId, dataRapor } from '../rapor'
-import { put, useCol, useSekolah } from '../store'
+import { getState, put, useCol, useSekolah } from '../store'
 import type { CatatanRapor, Rombel, Siswa } from '../types'
 import { Btn, Card, Empty, Field, Modal, PageHead, printDoc, toast } from '../ui'
 
@@ -73,6 +74,34 @@ function CatatanForm({ siswa, rombel, semester, onClose }: { siswa: Siswa; rombe
   const [c, setC] = useState<CatatanRapor>(awal ?? { id, tahunAjaran: rombel.tahunAjaran, semester, siswaId: siswa.id, rombelId: rombel.id, isian: {}, ekskul: [] })
   const set = (p: Partial<CatatanRapor>) => setC((o) => ({ ...o, ...p }))
   const auto = dataRapor(siswa, rombel, semester).hadir
+  const sekolah = useSekolah()
+  const [sibuk, setSibuk] = useState(false)
+  const CAP: Record<string, string> = { BB: 'Belum Berkembang', MB: 'Mulai Berkembang', BSH: 'Berkembang Sesuai Harapan', BSB: 'Berkembang Sangat Baik' }
+  const catatanAi = async () => {
+    if (!sekolah.ai) return
+    setSibuk(true)
+    try {
+      const d = dataRapor(siswa, rombel, semester)
+      const nil = d.baris.filter((b) => b.hasil.nilai !== undefined)
+      const rata = nil.length ? nil.reduce((a, b) => a + (b.hasil.nilai as number), 0) / nil.length : undefined
+      const capaian = kur.naratif ? d.baris.map((b) => {
+        const lembar = getState().nilai.find((n) => n.id === `${rombel.tahunAjaran}|${semester}|${rombel.id}|${b.mapel.id}`)
+        const cp = String(lembar?.data[siswa.id]?.capaian ?? '')
+        return cp ? { nama: b.mapel.nama, capaian: CAP[cp] ?? cp } : null
+      }).filter((x): x is { nama: string; capaian: string } => !!x) : undefined
+      const pr = promptCatatan({
+        kelas: rombel.nama, semester, rataRata: rata,
+        mapel: d.baris.map((b) => ({ nama: b.mapel.nama, nilai: b.hasil.nilai, kkm: b.mapel.kkm ?? 70 })),
+        hadir: { sakit: c.sakitManual ?? d.hadir.sakit, izin: c.izinManual ?? d.hadir.izin, alpa: c.alpaManual ?? d.hadir.alpa },
+        ekskul: c.ekskul.filter((e) => e.nama).map((e) => ({ nama: e.nama, predikat: e.predikat })), capaian, teksGuru: c.catatanWali,
+      })
+      if (!nil.length && !capaian?.length) throw new Error('Isi nilai/capaian mata pelajaran dulu agar catatan sesuai penilaian.')
+      const t = await panggilAi(sekolah.ai, systemPrompt(sekolah.ai, 'catatan', kur.asal === 'Internasional'), pr, 700)
+      set({ catatanWali: isiNama(t, siswa.namaPanggilan || siswa.nama.split(' ')[0]) })
+      toast('Catatan AI dibuat. Periksa dan sunting sebelum disimpan.')
+    } catch (e) { toast((e as Error).message) }
+    setSibuk(false)
+  }
   const numOrU = (v: string) => (v === '' ? undefined : Number(v))
   return (
     <Modal title={`Catatan Rapor · ${siswa.nama}`} onClose={onClose} wide footer={<><Btn onClick={onClose}>Batal</Btn><Btn kind="primary" onClick={async () => { await put('rapor', c); toast('Catatan rapor disimpan'); onClose() }}>Simpan</Btn></>}>
@@ -117,6 +146,7 @@ function CatatanForm({ siswa, rombel, semester, onClose }: { siswa: Siswa; rombe
       </div>
       <div className="form-grid">
         <Field label="Catatan wali kelas" span={3}><textarea rows={3} value={c.catatanWali ?? ''} onChange={(e) => set({ catatanWali: e.target.value })} /></Field>
+        {aiSiap(sekolah.ai) && <div className="span-3"><Btn icon="ai" onClick={catatanAi} disabled={sibuk} title="Susun catatan dari seluruh nilai/capaian, kehadiran, dan ekstrakurikuler">{sibuk ? 'Menyusun…' : 'Susun catatan dengan AI'}</Btn> <span className="muted small">Nama tidak dikirim ke AI. Hasil dapat disunting.</span></div>}
         <Field label="Keputusan (akhir tahun)" span={3}><input value={c.keputusan ?? ''} placeholder="mis. Naik ke kelas 5 / Lulus" onChange={(e) => set({ keputusan: e.target.value })} /></Field>
       </div>
     </Modal>

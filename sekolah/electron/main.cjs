@@ -58,6 +58,27 @@ if (!app.requestSingleInstanceLock()) {
     }
   })
 
+  // Panggilan API AI dari proses utama (bebas CORS). Hanya HTTPS, atau HTTP ke komputer sendiri (model lokal).
+  ipcMain.handle('simas:ai', async (_e, req) => {
+    try {
+      const u = new URL(String(req?.url))
+      const lokal = ['localhost', '127.0.0.1', '[::1]'].includes(u.hostname)
+      if (!(u.protocol === 'https:' || (u.protocol === 'http:' && lokal))) return { status: 0, text: 'Alamat API harus HTTPS.' }
+      const body = String(req.body ?? '')
+      if (body.length > 200000) return { status: 0, text: 'Permintaan terlalu besar.' }
+      const headers = {}
+      for (const [k, v] of Object.entries(req.headers ?? {})) headers[String(k)] = String(v)
+      const ctl = new AbortController()
+      const t = setTimeout(() => ctl.abort(), 90000)
+      try {
+        const res = await net.fetch(u.toString(), { method: 'POST', headers, body, signal: ctl.signal })
+        return { status: res.status, text: (await res.text()).slice(0, 500000) }
+      } finally { clearTimeout(t) }
+    } catch (err) {
+      return { status: 0, text: err && err.name === 'AbortError' ? 'Waktu habis menunggu AI.' : `Tidak dapat terhubung: ${err.message}` }
+    }
+  })
+
   app.whenReady().then(() => {
     protocol.handle('app', (req) => {
       const { pathname } = new URL(req.url)

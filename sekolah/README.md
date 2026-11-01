@@ -87,3 +87,12 @@ diunduh dari tab **Actions → artifact `simas-windows`**.
 4. Absensi QR code / kartu siswa, notifikasi ke orang tua.
 5. Modul tambahan: mutasi, kelulusan & SKL, jadwal pelajaran, keuangan/SPP yayasan.
 6. Template rapor yang bisa diatur (logo dinas, ukuran F4, bahasa Inggris/bilingual).
+
+## Integrasi AI untuk narasi rapor
+
+Pengaturan → **Integrasi AI**: pilih penyedia (Anthropic, OpenAI, atau yang kompatibel OpenAI seperti OpenRouter/Ollama), isi kunci API, model, dan gaya narasi.
+
+- Tombol **Narasi AI** muncul di Penilaian (per baris dan massal untuk baris kosong) dan **Susun catatan dengan AI** di Catatan Rapor.
+- Kategori ketuntasan dihitung lokal terhadap KKM/KKTP sehingga narasi selaras dengan nilai; AI hanya merangkai kalimat.
+- Nama murid tidak dikirim (penanda `{NAMA}` diisi kembali di perangkat); NIS/NIK tidak pernah dikirim.
+- Aplikasi Windows memanggil API lewat proses utama (tanpa batasan CORS); versi web bergantung pada izin CORS penyedia.

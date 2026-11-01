@@ -68,6 +68,19 @@ export interface Sekolah {
   /** Singkatan sekolah untuk nomor surat, mis. "SHB". Default: NPSN. */
   kodeSurat?: string
   ukuranKertas?: 'A4' | 'F4'
+  /** Integrasi AI untuk menyusun narasi rapor. Kunci API disimpan di perangkat ini (ikut cadangan terenkripsi). */
+  ai?: AiSetting
+}
+
+export interface AiSetting {
+  aktif: boolean
+  penyedia: 'anthropic' | 'openai' | 'kompatibel'
+  endpoint: string
+  model: string
+  apiKey: string
+  gaya: 'ringkas' | 'standar' | 'rinci'
+  /** Pesan tambahan guru, mis. "gunakan sapaan Ananda". */
+  instruksi?: string
 }
 
 export interface KopSetting {

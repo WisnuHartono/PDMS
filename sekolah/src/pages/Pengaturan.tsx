@@ -6,10 +6,11 @@ import { KopSurat, alamatLengkap, kontakLengkap } from '../print'
 import { seedDemo } from '../seed'
 import { DEFAULT_SEKOLAH, cadanganTerenkripsi, exportTerenkripsi, importJson, put, resetAll, useCol, useSekolah } from '../store'
 import { JENJANG, type KopSetting, type Sekolah } from '../types'
+import { AI_DEFAULT, PENYEDIA, aiSiap, panggilAi } from '../ai'
 import { Btn, Card, Field, Inp, PageHead, Sel, toast, tanya } from '../ui'
 import { download, fotoKecil, namaPegawai, readFileAsText, today } from '../util'
 
-type Bagian = 'identitas' | 'lokasi' | 'pelengkap' | 'pejabat' | 'kop' | 'cetak' | 'kurikulum' | 'data'
+type Bagian = 'identitas' | 'lokasi' | 'pelengkap' | 'pejabat' | 'kop' | 'cetak' | 'kurikulum' | 'ai' | 'data'
 const BAGIAN: [Bagian, string, string][] = [
   ['identitas', 'Identitas & Legalitas', 'Nama, NPSN, status, SK pendirian/izin, akreditasi, jenjang'],
   ['lokasi', 'Lokasi & Kontak', 'Alamat lengkap, koordinat, telepon, email, laman'],
@@ -18,6 +19,7 @@ const BAGIAN: [Bagian, string, string][] = [
   ['kop', 'Kop Surat', 'Logo, baris kop, garis, huruf, pratinjau'],
   ['cetak', 'Administrasi & Cetak', 'Tahun ajaran, rapor, nomor surat, ukuran kertas'],
   ['kurikulum', 'Kurikulum', 'Kurikulum yang tersedia'],
+  ['ai', 'Integrasi AI', 'Penyusun narasi rapor: penyedia, kunci API, gaya'],
   ['data', 'Data & Cadangan', 'Cadangan terenkripsi, pulihkan, data contoh'],
 ]
 
@@ -271,6 +273,8 @@ export default function Pengaturan() {
             </Card>
           )}
 
+          {bagian === 'ai' && <PanelAi s={s} set={set} />}
+
           {bagian === 'data' && <DataCadangan />}
         </div>
       </div>
@@ -335,4 +339,61 @@ function KonfirmasiBtn({ label, tanya, onYa, danger }: { label: ReactNode; tanya
     return () => clearTimeout(t)
   }, [siap])
   return <Btn kind={danger || siap ? 'danger' : 'default'} onClick={async () => { if (!siap) return setSiap(true); setSiap(false); await onYa() }}>{siap ? tanya : label}</Btn>
+}
+
+function PanelAi({ s, set }: { s: Sekolah; set: (p: Partial<Sekolah>) => void }) {
+  const a = { ...AI_DEFAULT, ...s.ai }
+  const ubah = (p: Partial<typeof a>) => set({ ai: { ...a, ...p } })
+  const [lihat, setLihat] = useState(false)
+  const [uji, setUji] = useState<{ ok: boolean; pesan: string } | null>(null)
+  const [sibuk, setSibuk] = useState(false)
+  const pilih = (v: typeof a.penyedia) => ubah({ penyedia: v, endpoint: PENYEDIA[v].endpoint, model: PENYEDIA[v].model })
+  const tes = async () => {
+    setSibuk(true); setUji(null)
+    try {
+      const t = await panggilAi({ ...a, aktif: true }, 'Jawab singkat dalam bahasa Indonesia.', 'Balas dengan satu kalimat pendek: "Koneksi AI berhasil."', 60)
+      setUji({ ok: true, pesan: t })
+    } catch (e) { setUji({ ok: false, pesan: (e as Error).message }) }
+    setSibuk(false)
+  }
+  return (
+    <>
+      <Card title="Penyusun narasi dengan AI" className="mb">
+        <label className="cek"><input type="checkbox" checked={a.aktif} onChange={(e) => ubah({ aktif: e.target.checked })} /> Aktifkan tombol “Narasi AI” pada Penilaian dan Catatan Rapor</label>
+        <div className="form-grid g4">
+          <Field label="Penyedia" span={2}>
+            <select value={a.penyedia} onChange={(e) => pilih(e.target.value as typeof a.penyedia)}>
+              {(Object.keys(PENYEDIA) as (keyof typeof PENYEDIA)[]).map((k) => <option key={k} value={k}>{PENYEDIA[k].nama}</option>)}
+            </select>
+          </Field>
+          <Field label="Model" span={2} hint="Contoh: claude-sonnet-5-5, gpt-4o-mini"><input value={a.model} onChange={(e) => ubah({ model: e.target.value })} /></Field>
+          <Field label="Alamat API" span={4}><input value={a.endpoint} onChange={(e) => ubah({ endpoint: e.target.value })} /></Field>
+          <Field label="Kunci API" span={3} hint={a.penyedia === 'kompatibel' ? 'Boleh kosong untuk model lokal (Ollama).' : undefined}>
+            <input type={lihat ? 'text' : 'password'} autoComplete="off" spellCheck={false} value={a.apiKey} placeholder="sk-..." onChange={(e) => ubah({ apiKey: e.target.value.trim() })} />
+          </Field>
+          <Field label=" "><Btn onClick={() => setLihat(!lihat)}>{lihat ? 'Sembunyikan' : 'Tampilkan'}</Btn></Field>
+          <Field label="Gaya narasi" span={2}>
+            <select value={a.gaya} onChange={(e) => ubah({ gaya: e.target.value as typeof a.gaya })}>
+              <option value="ringkas">Ringkas (2 kalimat)</option><option value="standar">Standar (3-4 kalimat)</option><option value="rinci">Rinci (5-6 kalimat)</option>
+            </select>
+          </Field>
+          <Field label="Instruksi tambahan (opsional)" span={4} hint="Mis. “gunakan sapaan Ananda”, “hindari kata menguasai”."><input value={a.instruksi ?? ''} maxLength={400} onChange={(e) => ubah({ instruksi: e.target.value })} /></Field>
+        </div>
+        <div className="row-actions">
+          <Btn icon="refresh" onClick={tes} disabled={sibuk || !(a.apiKey || a.penyedia === 'kompatibel') || !a.model}>{sibuk ? 'Menguji…' : 'Uji koneksi'}</Btn>
+          {uji && <span className={`pill ${uji.ok ? 'ok' : 'bad'}`} role="status">{uji.ok ? `Berhasil: ${uji.pesan}` : uji.pesan}</span>}
+          {!aiSiap(s.ai) && a.aktif && <span className="muted small">Lengkapi model dan kunci API, lalu simpan.</span>}
+        </div>
+        <p className="muted small">Simpan pengaturan (tombol di atas) setelah mengubah. Pengujian memakai nilai di layar.</p>
+      </Card>
+      <Card title="Privasi & cara kerja">
+        <ul className="kur-list">
+          <li><b>Nama murid tidak dikirim.</b> Yang dikirim hanya nama mata pelajaran, tujuan pembelajaran, skor/capaian, kehadiran, dan ekskul. Nama diisi kembali di perangkat ini.</li>
+          <li><b>Selaras dengan nilai.</b> Kategori (sangat baik, baik, cukup, belum tuntas) dihitung lokal terhadap KKM/KKTP, lalu AI hanya merangkai kalimat. Hasil selalu dapat disunting sebelum disimpan.</li>
+          <li><b>Kunci API</b> disimpan di perangkat ini dan ikut cadangan terenkripsi. Biaya pemakaian ditagihkan oleh penyedia ke akun Anda. Jika AI gagal, narasi otomatis lokal tetap tersedia.</li>
+          <li>Pada aplikasi Windows, panggilan dilakukan lewat proses utama aplikasi (tanpa batasan CORS). Versi web dapat diblokir browser untuk sebagian penyedia.</li>
+        </ul>
+      </Card>
+    </>
+  )
 }
