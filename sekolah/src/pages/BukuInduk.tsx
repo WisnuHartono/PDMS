@@ -6,8 +6,20 @@ import { JENJANG, type Siswa } from '../types'
 import { Btn, Card, Empty, PageHead, Tabs, printDoc } from '../ui'
 import { fmtTanggal, namaPegawai } from '../util'
 import { SiswaForm } from './Siswa'
+import BukuIndukPegawai from './BukuIndukPegawai'
 
 export default function BukuInduk() {
+  const [kat, setKat] = useState<'siswa' | 'pegawai'>('siswa')
+  return (
+    <div>
+      <PageHead title="Buku Induk" sub="Register dan lembar induk peserta didik serta guru & pegawai (termasuk alumni, mutasi, dan nonaktif)" />
+      <Tabs tabs={[['siswa', 'Peserta Didik'], ['pegawai', 'Guru & Pegawai']]} value={kat} onChange={setKat} />
+      {kat === 'siswa' ? <BukuIndukSiswa /> : <BukuIndukPegawai />}
+    </div>
+  )
+}
+
+function BukuIndukSiswa() {
   const siswa = useCol('siswa')
   useCol('nilai'); useCol('rombel')
   const [tab, setTab] = useState<'register' | 'lembar'>('register')
@@ -26,7 +38,7 @@ export default function BukuInduk() {
 
   return (
     <div>
-      <PageHead title="Buku Induk" sub="Register induk peserta didik dan lembar buku induk per siswa (termasuk alumni dan mutasi)">
+      <PageHead title="Peserta Didik" sub="Register induk dan lembar buku induk per siswa">
         {tab === 'register' ? <Btn icon="print" kind="primary" onClick={cetakRegister}>Cetak register</Btn>
           : s && <><Btn icon="edit" onClick={() => setEdit(s)}>Ubah data</Btn><Btn icon="print" kind="primary" onClick={() => printDoc(<LembarInduk s={s} />)}>Cetak lembar induk</Btn></>}
       </PageHead>
