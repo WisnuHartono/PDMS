@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react'
 import { put, remove, useCol } from '../store'
 import { AGAMA, JENJANG, type Jenjang, type OrangTua, type Siswa, type StatusSiswa } from '../types'
-import { Avatar, Btn, Card, Empty, Field, Inp, Modal, PageHead, Sel, Tabs, toast } from '../ui'
+import { Avatar, Btn, Card, Empty, Field, Inp, Modal, PageHead, Sel, Tabs, toast, tanya } from '../ui'
 import { download, fmtTanggal, fotoKecil, readFileAsText, toCsv, uid } from '../util'
 import { parseCsv } from '../csv'
 
@@ -89,7 +89,7 @@ export default function SiswaPage() {
                     <td><span className={`pill ${s.status === 'Aktif' ? 'ok' : ''}`}>{s.status}</span></td>
                     <td className="row-actions">
                       <Btn icon="edit" kind="ghost" title="Ubah" onClick={() => setEdit(s)} />
-                      <Btn icon="trash" kind="ghost" title="Hapus" onClick={async () => { if (confirm(`Hapus ${s.nama}?`)) { await remove('siswa', s.id); toast('Dihapus') } }} />
+                      <Btn icon="trash" kind="ghost" title="Hapus" onClick={async () => { if (await tanya(`Hapus ${s.nama}?`)) { await remove('siswa', s.id); toast('Dihapus') } }} />
                     </td>
                   </tr>
                 ))}
@@ -103,10 +103,18 @@ export default function SiswaPage() {
   )
 }
 
-function OrtuForm({ v, set }: { v: OrangTua; set: (p: Partial<OrangTua>) => void }) {
+function OrtuForm({ v, set, kandung }: { v: OrangTua; set: (p: Partial<OrangTua>) => void; kandung?: boolean }) {
   return (
     <>
-      <Field label="Nama" span={2}><Inp obj={v} k="nama" set={set} /></Field>
+      {kandung && (
+        <Field label="Status hidup *">
+          <div className="radio-row">
+            {(['Hidup', 'Wafat'] as const).map((x) => <label key={x} className="chk"><input type="radio" checked={v.statusHidup === x} onChange={() => set({ statusHidup: x })} /> {x}</label>)}
+          </div>
+        </Field>
+      )}
+      <Field label="Nama" span={kandung ? 1 : 2}><Inp obj={v} k="nama" set={set} /></Field>
+      <Field label="NIK"><Inp obj={v} k="nik" set={set} inputMode="numeric" maxLength={16} /></Field>
       <Field label="Pekerjaan"><Inp obj={v} k="pekerjaan" set={set} /></Field>
       <Field label="Pendidikan"><Inp obj={v} k="pendidikan" set={set} /></Field>
       <Field label="Telepon"><Inp obj={v} k="telepon" set={set} /></Field>
@@ -158,10 +166,11 @@ export function SiswaForm({ initial, onClose }: { initial: Siswa; onClose: () =>
       )}
       {tab === 'ortu' && (
         <>
-          <h4 className="sec">Ayah</h4>
-          <div className="form-grid"><OrtuForm v={s.ayah} set={(p) => set({ ayah: { ...s.ayah, ...p } })} /></div>
-          <h4 className="sec">Ibu</h4>
-          <div className="form-grid"><OrtuForm v={s.ibu} set={(p) => set({ ibu: { ...s.ibu, ...p } })} /></div>
+          <p className="muted small">Dapodik 2027: status hidup ayah dan ibu kandung wajib diisi sesuai kondisi sebenarnya.</p>
+          <h4 className="sec">Ayah kandung</h4>
+          <div className="form-grid"><OrtuForm kandung v={s.ayah} set={(p) => set({ ayah: { ...s.ayah, ...p } })} /></div>
+          <h4 className="sec">Ibu kandung</h4>
+          <div className="form-grid"><OrtuForm kandung v={s.ibu} set={(p) => set({ ibu: { ...s.ibu, ...p } })} /></div>
           <h4 className="sec">Wali (jika ada)</h4>
           <div className="form-grid"><OrtuForm v={s.wali} set={(p) => set({ wali: { ...s.wali, ...p } })} /></div>
         </>
@@ -169,12 +178,20 @@ export function SiswaForm({ initial, onClose }: { initial: Siswa; onClose: () =>
       {tab === 'riwayat' && (
         <div className="form-grid">
           <Field label="Jenjang"><Sel obj={s} k="jenjang" set={set} options={JENJANG} /></Field>
+          <Field label="Jenis pendaftaran"><Sel obj={s} k="jenisPendaftaran" set={set} options={['Siswa baru', 'Pindahan', 'Kembali bersekolah']} empty="-" /></Field>
           <Field label="Tanggal diterima"><Inp obj={s} k="tanggalMasuk" set={set} type="date" /></Field>
           <Field label="Diterima di kelas"><Inp obj={s} k="diterimaDiKelas" set={set} /></Field>
           <Field label="Asal sekolah" span={2}><Inp obj={s} k="asalSekolah" set={set} /></Field>
           <Field label="No ijazah / STTB asal"><Inp obj={s} k="noIjazahAsal" set={set} /></Field>
           <Field label="Pindahan dari (jika mutasi masuk)" span={2}><Inp obj={s} k="pindahanDari" set={set} /></Field>
           <Field label="Alasan pindah"><Inp obj={s} k="alasanPindah" set={set} /></Field>
+          {s.jenjang === 'SMK' && (
+            <>
+              <Field label="Kompetensi keahlian" span={2}><Inp obj={s} k="kompetensiKeahlian" set={set} placeholder="mis. Teknik Kendaraan Ringan" /></Field>
+              <Field label="Peserta Kebekerjaan LN"><select value={s.pesertaKln ? '1' : ''} onChange={(e) => set({ pesertaKln: e.target.value === '1' })}><option value="">Tidak</option><option value="1">Ya (ditetapkan Ditjen)</option></select></Field>
+              {s.pesertaKln && <Field label="Negara tujuan"><Inp obj={s} k="negaraTujuan" set={set} placeholder="mis. Jepang" /></Field>}
+            </>
+          )}
           <Field label="Catatan" span={3}><textarea value={s.catatan ?? ''} onChange={(e) => set({ catatan: e.target.value })} rows={3} /></Field>
         </div>
       )}

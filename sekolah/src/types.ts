@@ -1,7 +1,7 @@
 // Model data inti SIMAS. Semua entitas memakai `id` string (UUID).
 
-export type Jenjang = 'PAUD' | 'TK' | 'SD' | 'SMP' | 'SMA' | 'SMK'
-export const JENJANG: Jenjang[] = ['PAUD', 'TK', 'SD', 'SMP', 'SMA', 'SMK']
+export type Jenjang = 'PAUD' | 'TK' | 'SD' | 'SMP' | 'SMA' | 'SMK' | 'PKBM'
+export const JENJANG: Jenjang[] = ['PAUD', 'TK', 'SD', 'SMP', 'SMA', 'SMK', 'PKBM']
 
 /** Tingkat kelas yang lazim per jenjang (dipakai untuk pilihan di form Rombel). */
 export const TINGKAT_PER_JENJANG: Record<Jenjang, string[]> = {
@@ -11,6 +11,7 @@ export const TINGKAT_PER_JENJANG: Record<Jenjang, string[]> = {
   SMP: ['7', '8', '9'],
   SMA: ['10', '11', '12'],
   SMK: ['10', '11', '12'],
+  PKBM: ['Keaksaraan Dasar', 'Keaksaraan Lanjutan', 'Paket A', 'Paket B', 'Paket C'],
 }
 
 export type JenisKelamin = 'L' | 'P'
@@ -38,12 +39,22 @@ export interface Sekolah {
   semesterAktif: 1 | 2
   kotaTtdRapor?: string
   tanggalRapor?: string // yyyy-mm-dd
+  // Data satuan pendidikan (Dapodik 2027: identitas, status operasional, akreditasi)
+  statusSekolah?: 'Negeri' | 'Swasta'
+  statusOperasional?: 'Aktif' | 'Tutup sementara' | 'Tutup'
+  akreditasi?: 'A' | 'B' | 'C' | 'Belum terakreditasi'
+  /** Penetapan dari Dinas/Ditjen (flag) yang membuka jenis rombel khusus. */
+  flag?: { kelasRangkap?: string; pjj?: string; kln?: string } // isi = nomor SK penetapan
+  validasiTerakhir?: string
 }
 
 export type StatusSiswa = 'Aktif' | 'Lulus' | 'Mutasi Keluar' | 'Keluar' | 'Meninggal'
 
 export interface OrangTua {
   nama?: string
+  nik?: string
+  /** Dapodik 2027: status hidup ayah/ibu kandung */
+  statusHidup?: 'Hidup' | 'Wafat'
   pekerjaan?: string
   pendidikan?: string
   telepon?: string
@@ -78,6 +89,11 @@ export interface Siswa {
   wali: OrangTua
   // Riwayat pendidikan (Buku Induk)
   jenjang: Jenjang
+  jenisPendaftaran?: 'Siswa baru' | 'Pindahan' | 'Kembali bersekolah'
+  /** Kebekerjaan Luar Negeri (SMK): ditetapkan Ditjen */
+  pesertaKln?: boolean
+  kompetensiKeahlian?: string
+  negaraTujuan?: string
   tanggalMasuk?: string
   diterimaDiKelas?: string
   asalSekolah?: string
@@ -119,9 +135,20 @@ export interface Pegawai {
   jurusan?: string
   tmt?: string // terhitung mulai tanggal
   mapelIds?: string[]
+  // Sertifikasi & tugas (Dapodik: GTK)
+  noSertifikatPendidik?: string
+  tahunSertifikasi?: number
+  bidangSertifikasi?: string
+  tugasTambahan?: string
   aktif: boolean
   foto?: string
 }
+
+export type JenisRombel = 'Reguler' | 'Kelas Rangkap' | 'PJJ' | 'Keaksaraan' | 'Kebekerjaan LN' | 'Praktik'
+export const JENIS_ROMBEL: JenisRombel[] = ['Reguler', 'Kelas Rangkap', 'PJJ', 'Keaksaraan', 'Kebekerjaan LN', 'Praktik']
+
+/** Pembelajaran: mapel yang diajarkan di rombel, guru pengampu, dan jam per minggu. */
+export interface Pembelajaran { mapelId: string; guruId?: string; jp: number; skMengajar?: string }
 
 export interface Rombel {
   id: string
@@ -132,6 +159,18 @@ export interface Rombel {
   waliKelasId?: string
   kurikulumId: string
   siswaIds: string[]
+  jenis?: JenisRombel // default Reguler
+  /** Kelas rangkap: true = rombel induk; rombel turunan menunjuk indukId */
+  rombelInduk?: boolean
+  indukId?: string
+  ruang?: string
+  /** Keaksaraan: program/layanan dan tutor */
+  program?: string
+  /** Kebekerjaan Luar Negeri */
+  negaraTujuan?: string
+  kompetensi?: string
+  kategoriMapel?: 'Bahasa Asing' | 'Produktif' | 'PJOK'
+  pembelajaran?: Pembelajaran[]
 }
 
 export interface Mapel {

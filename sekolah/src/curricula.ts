@@ -97,7 +97,7 @@ const MERDEKA: Kurikulum = {
   nama: 'Kurikulum Merdeka',
   singkat: 'Merdeka',
   asal: 'Indonesia',
-  jenjang: ['SD', 'SMP', 'SMA', 'SMK'],
+  jenjang: ['SD', 'SMP', 'SMA', 'SMK', 'PKBM'],
   istilahTujuan: 'Tujuan Pembelajaran (TP)',
   komponen: [
     { key: 'tp', label: 'Sumatif TP', type: 'number', perTujuan: true, width: 64 },

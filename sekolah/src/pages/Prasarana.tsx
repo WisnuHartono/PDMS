@@ -8,7 +8,7 @@ import {
 } from '../prasarana'
 import { getSekolah, getState, put, remove, useCol, useSekolah } from '../store'
 import type { Bangunan, DokumenPengajuan, JenisDokumen, JenisPengajuan, ObjekPrasarana, PengajuanPrasarana, Ruang, StatusPengajuan, Tanah } from '../types'
-import { Btn, Card, Empty, Field, Inp, Modal, PageHead, Sel, Tabs, printDoc, toast } from '../ui'
+import { Btn, Card, Empty, Field, Inp, Modal, PageHead, Sel, Tabs, printDoc, toast, tanya } from '../ui'
 import { fmtTanggal, namaPegawai, readFileAsDataUrl, today, uid } from '../util'
 
 type Tab = 'ringkasan' | 'tanah' | 'bangunan' | 'ruang' | 'pengajuan'
@@ -165,7 +165,7 @@ function TanahForm({ initial, onClose }: { initial: Tanah; onClose: () => void }
   const lok = t.samaDenganSekolah ? { ...t, provinsi: s.provinsi, kabupaten: s.kabupaten, kecamatan: s.kecamatan, desa: s.kelurahan, kodePos: t.kodePos || s.kodePos } : t
   const simpan = async () => {
     setCek(true)
-    if (err.length && !confirm(`Masih ada ${err.length} isian belum sesuai ketentuan. Simpan sebagai catatan sementara?`)) return
+    if (err.length && !await tanya(`Masih ada ${err.length} isian belum sesuai ketentuan. Simpan sebagai catatan sementara?`)) return
     await put('tanah', lok)
     toast('Data tanah disimpan')
     onClose()
@@ -248,7 +248,7 @@ function BangunanForm({ initial, onClose }: { initial: Bangunan; onClose: () => 
   const k = klasifikasiKerusakan(b.bobotKerusakan)
   const simpan = async () => {
     setCek(true)
-    if (err.length && !confirm(`Masih ada ${err.length} isian belum sesuai ketentuan. Simpan sebagai catatan sementara?`)) return
+    if (err.length && !await tanya(`Masih ada ${err.length} isian belum sesuai ketentuan. Simpan sebagai catatan sementara?`)) return
     await put('bangunan', b)
     toast('Data bangunan disimpan')
     onClose()
@@ -320,7 +320,7 @@ function RuangForm({ initial, onClose }: { initial: Ruang; onClose: () => void }
   const err = validasiRuang(r, semua, bangunan.find((b) => b.id === r.bangunanId))
   const simpan = async () => {
     setCek(true)
-    if (err.length && !confirm(`Masih ada ${err.length} isian belum sesuai ketentuan. Simpan sebagai catatan sementara?`)) return
+    if (err.length && !await tanya(`Masih ada ${err.length} isian belum sesuai ketentuan. Simpan sebagai catatan sementara?`)) return
     await put('ruang', r)
     toast('Data ruang disimpan')
     onClose()
@@ -392,7 +392,7 @@ function PengajuanTab({ ajukan, onEdit }: { ajukan: Ajukan; onEdit: (p: Pengajua
                   <td className="row-actions">
                     <Btn icon="print" kind="ghost" title="Cetak lembar pengajuan" onClick={() => printDoc(<LembarPengajuan p={p} />)} />
                     <Btn icon="edit" kind="ghost" onClick={() => onEdit(p)}>Buka</Btn>
-                    {p.status === 'Draf' && <Btn icon="trash" kind="ghost" title="Hapus draf" onClick={async () => { if (confirm('Hapus draf pengajuan ini?')) await remove('pengajuan', p.id) }} />}
+                    {p.status === 'Draf' && <Btn icon="trash" kind="ghost" title="Hapus draf" onClick={async () => { if (await tanya('Hapus draf pengajuan ini?')) await remove('pengajuan', p.id) }} />}
                   </td>
                 </tr>
               )

@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { put, remove, useCol } from '../store'
+import { put, remove, useCol, useSekolah } from '../store'
 import { AGAMA, type JenisPegawai, type Pegawai, type StatusKepegawaian } from '../types'
-import { Avatar, Btn, Card, Empty, Field, Inp, Modal, PageHead, Sel, toast } from '../ui'
+import { Avatar, Btn, Card, Empty, Field, Inp, Modal, PageHead, Sel, toast, tanya } from '../ui'
 import { download, fmtTanggal, fotoKecil, namaPegawai, toCsv, uid } from '../util'
 
 const JENIS: JenisPegawai[] = ['Guru', 'Tenaga Kependidikan', 'Yayasan']
@@ -54,7 +54,7 @@ export default function PegawaiPage() {
                     <td className="small">{(p.mapelIds ?? []).map((id) => mapel.find((m) => m.id === id)?.kode).filter(Boolean).join(', ')}</td>
                     <td className="row-actions">
                       <Btn icon="edit" kind="ghost" title="Ubah" onClick={() => setEdit(p)} />
-                      <Btn icon="trash" kind="ghost" title="Hapus" onClick={async () => { if (confirm(`Hapus ${p.nama}?`)) await remove('pegawai', p.id) }} />
+                      <Btn icon="trash" kind="ghost" title="Hapus" onClick={async () => { if (await tanya(`Hapus ${p.nama}?`)) await remove('pegawai', p.id) }} />
                     </td>
                   </tr>
                 ))}
@@ -70,6 +70,8 @@ export default function PegawaiPage() {
 
 function PegawaiForm({ initial, onClose }: { initial: Pegawai; onClose: () => void }) {
   const mapel = useCol('mapel')
+  const rombel = useCol('rombel')
+  const sekolah = useSekolah()
   const [p, setP] = useState(initial)
   const set = (x: Partial<Pegawai>) => setP((o) => ({ ...o, ...x }))
   const simpan = async () => {
@@ -105,6 +107,10 @@ function PegawaiForm({ initial, onClose }: { initial: Pegawai; onClose: () => vo
         <Field label="Telepon"><Inp obj={p} k="telepon" set={set} /></Field>
         <Field label="Email" span={2}><Inp obj={p} k="email" set={set} type="email" /></Field>
         <Field label="Alamat" span={3}><Inp obj={p} k="alamat" set={set} /></Field>
+        <Field label="Tugas tambahan" span={2}><Inp obj={p} k="tugasTambahan" set={set} placeholder="Wakasek, Kepala Perpustakaan, Operator, …" /></Field>
+        <Field label="No. sertifikat pendidik"><Inp obj={p} k="noSertifikatPendidik" set={set} /></Field>
+        <Field label="Tahun sertifikasi"><Inp obj={p} k="tahunSertifikasi" set={set} type="number" /></Field>
+        <Field label="Bidang sertifikasi" span={2}><Inp obj={p} k="bidangSertifikasi" set={set} /></Field>
         <Field label="Status"><select value={p.aktif ? '1' : '0'} onChange={(e) => set({ aktif: e.target.value === '1' })}><option value="1">Aktif</option><option value="0">Nonaktif</option></select></Field>
       </div>
       {p.jenis === 'Guru' && mapel.length > 0 && (
@@ -120,6 +126,16 @@ function PegawaiForm({ initial, onClose }: { initial: Pegawai; onClose: () => vo
         </>
       )}
       {p.tmt && <p className="muted small">Masa kerja sejak {fmtTanggal(p.tmt)}</p>}
+      {p.jenis === 'Guru' && (() => {
+        const tugas = rombel.filter((r) => r.tahunAjaran === sekolah.tahunAjaranAktif).flatMap((r) => (r.pembelajaran ?? []).filter((x) => x.guruId === p.id).map((x) => ({ r, x })))
+        const jp = tugas.reduce((a, t) => a + (t.x.jp || 0), 0)
+        return (
+          <p className="small"><b>Beban kerja TA {sekolah.tahunAjaranAktif}:</b> {jp} JP/minggu {jp > 0 && jp < 24 && !p.tugasTambahan ? <span className="pill warn">di bawah 24 JP</span> : null}
+            {tugas.length > 0 && <span className="muted"> · {tugas.map((t) => `${mapel.find((m) => m.id === t.x.mapelId)?.nama ?? '?'} ${t.r.nama} (${t.x.jp})`).join(', ')}</span>}
+            {!tugas.length && <span className="muted"> · atur di Kelas / Rombel → Pembelajaran</span>}
+          </p>
+        )
+      })()}
     </Modal>
   )
 }

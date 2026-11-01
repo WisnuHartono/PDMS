@@ -9,7 +9,7 @@ import {
 import { otpauthUri, totpSecretBaru } from '../security/crypto'
 import { getSesi, useSesi } from '../security/sesi'
 import { useCol } from '../store'
-import { Btn, Card, Empty, Field, Modal, PageHead, Tabs, toast } from '../ui'
+import { Btn, Card, Empty, Field, Modal, PageHead, Tabs, toast, tanya } from '../ui'
 import { namaPegawai } from '../util'
 import { SandiInput } from './Login'
 
@@ -71,7 +71,7 @@ function DaftarAkun() {
               <td className="row-actions">
                 <Btn kind="ghost" onClick={() => setReset(a)}>Atur ulang</Btn>
                 {a.id !== sesi.akun.id && <Btn kind="ghost" onClick={() => coba(() => ubahAkun(sesi, a, { aktif: !a.aktif }), a.aktif ? 'Akun dinonaktifkan' : 'Akun diaktifkan').then(muat)}>{a.aktif ? 'Nonaktifkan' : 'Aktifkan'}</Btn>}
-                {a.id !== sesi.akun.id && <Btn icon="trash" kind="ghost" title="Hapus akun" onClick={() => confirm(`Hapus akun ${a.username}?`) && coba(() => hapusAkun(sesi, a), 'Akun dihapus').then(muat)} />}
+                {a.id !== sesi.akun.id && <Btn icon="trash" kind="ghost" title="Hapus akun" onClick={async () => (await tanya(`Hapus akun ${a.username}?`)) && coba(() => hapusAkun(sesi, a), 'Akun dihapus').then(muat)} />}
               </td>
             </tr>
           )

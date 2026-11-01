@@ -1,7 +1,8 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { Icon } from './icons'
 import { useCol, useSekolah } from './store'
-import { Avatar, Nav, PrintHost, ToastHost, useNav, type PageId } from './ui'
+import { Avatar, KonfirmasiHost, Nav, ToastHost, useNav, type PageId } from './ui'
+import { PrintHost } from './PratinjauCetak'
 import Dashboard from './pages/Dashboard'
 import SiswaPage from './pages/Siswa'
 import PegawaiPage from './pages/Pegawai'
@@ -16,6 +17,7 @@ import Rapor from './pages/Rapor'
 import Pengaturan from './pages/Pengaturan'
 import Prasarana from './pages/Prasarana'
 import Administrasi from './pages/Administrasi'
+import Validasi, { useValidasi } from './pages/Validasi'
 import AkunPage, { ProfilSaya } from './pages/Akun'
 import { boleh, keluar, useSesi } from './security/sesi'
 import { namaPegawai } from './util'
@@ -36,6 +38,7 @@ export const MENU: MenuItem[] = [
   { id: 'rapor', label: 'Cetak Rapor', icon: 'rapor', group: 'Penilaian' },
   { id: 'administrasi', label: 'Administrasi Sekolah', icon: 'administrasi', group: 'Administrasi' },
   { id: 'prasarana', label: 'Prasarana (Sarpras)', icon: 'prasarana', group: 'Administrasi' },
+  { id: 'validasi', label: 'Validasi Data', icon: 'validasi', group: 'Sistem' },
   { id: 'pengaturan', label: 'Pengaturan', icon: 'pengaturan', group: 'Sistem' },
   { id: 'akun', label: 'Akun & Keamanan', icon: 'kunci', group: 'Sistem' },
 ]
@@ -54,6 +57,7 @@ const PAGES: Record<PageId, () => ReactNode> = {
   rapor: () => <Rapor />,
   prasarana: () => <Prasarana />,
   administrasi: () => <Administrasi />,
+  validasi: () => <Validasi />,
   pengaturan: () => <Pengaturan />,
   akun: () => <AkunPage />,
 }
@@ -65,6 +69,7 @@ export default function App() {
   const sesi = useSesi()!
   const [profil, setProfil] = useState(!!sesi.peran.wajib2fa && !sesi.akun.totpEnc)
   const sekolah = useSekolah()
+  const jmlInvalid = useValidasi().filter((t) => t.level === 'invalid').length
   const menu = MENU.filter((m) => boleh(m.id))
 
   const nav = useMemo(() => ({
@@ -82,7 +87,7 @@ export default function App() {
           <div className="brand">
             <span className="brand-mark"><Icon name="school" size={22} /></span>
             <div>
-              <b>SIMAS</b><span className="brand-sub">Administrasi Sekolah · v0.3</span>
+              <b>SIMAS</b><span className="brand-sub">Administrasi Sekolah · v0.4</span>
             </div>
           </div>
           <div className="topbar-fill" />
@@ -129,6 +134,7 @@ export default function App() {
                 <button className={`side-item ${halaman === m.id ? 'on' : ''}`} onClick={() => nav.open(m.id)} title={m.label} aria-current={halaman === m.id ? 'page' : undefined}>
                   <Icon name={m.icon} size={22} />
                   <span className="side-label">{m.label}</span>
+                  {m.id === 'validasi' && jmlInvalid > 0 && <span className="side-badge" title={`${jmlInvalid} data invalid`} aria-hidden="true">{jmlInvalid > 99 ? '99+' : jmlInvalid}</span>}
                 </button>
               </div>
             )
@@ -141,6 +147,7 @@ export default function App() {
       </div>
       {profil && <ProfilSaya onClose={() => setProfil(false)} />}
       <ToastHost />
+      <KonfirmasiHost />
       <PrintHost />
     </Nav.Provider>
   )

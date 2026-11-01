@@ -12,6 +12,7 @@ export function fase(r: Pick<Rombel, 'jenjang' | 'tingkat'>): string | undefined
   if (r.jenjang === 'SD') return t <= 2 ? 'A' : t <= 4 ? 'B' : 'C'
   if (r.jenjang === 'SMP') return 'D'
   if (r.jenjang === 'SMA' || r.jenjang === 'SMK') return t <= 10 ? 'E' : 'F'
+  if (r.jenjang === 'PKBM') return r.tingkat.includes('Paket A') ? 'A–C' : r.tingkat.includes('Paket B') ? 'D' : r.tingkat.includes('Paket C') ? 'E–F' : undefined
   return undefined
 }
 

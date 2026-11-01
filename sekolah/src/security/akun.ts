@@ -59,12 +59,12 @@ export interface Audit {
 
 interface Pemulihan { kdf: KdfParams; verifier: string; dekWrap: Bungkus }
 
-export const SEMUA_HALAMAN: PageId[] = ['dashboard', 'siswa', 'pegawai', 'induk', 'rombel', 'mapel', 'ekskul', 'absensiSiswa', 'absensiPegawai', 'nilai', 'rapor', 'prasarana', 'administrasi', 'pengaturan', 'akun']
+export const SEMUA_HALAMAN: PageId[] = ['dashboard', 'siswa', 'pegawai', 'induk', 'rombel', 'mapel', 'ekskul', 'absensiSiswa', 'absensiPegawai', 'nilai', 'rapor', 'prasarana', 'administrasi', 'validasi', 'pengaturan', 'akun']
 
 export const PERAN_BAWAAN: Peran[] = [
   { id: 'admin', nama: 'Administrator', ket: 'Akses penuh, termasuk akun, keamanan, cadangan data', halaman: SEMUA_HALAMAN, bawaan: true, wajib2fa: false },
   { id: 'kepsek', nama: 'Kepala Sekolah', ket: 'Melihat dan mengelola seluruh data sekolah', halaman: SEMUA_HALAMAN.filter((h) => h !== 'akun'), bawaan: true },
-  { id: 'operator', nama: 'Operator / Tata Usaha', ket: 'Data induk, rombel, absensi, rapor, prasarana', halaman: ['dashboard', 'siswa', 'pegawai', 'induk', 'rombel', 'mapel', 'ekskul', 'absensiSiswa', 'absensiPegawai', 'rapor', 'prasarana', 'administrasi'], bidang: ['anak', 'sdm', 'umum', 'sarpras', 'tu'], bawaan: true },
+  { id: 'operator', nama: 'Operator / Tata Usaha', ket: 'Data induk, rombel, absensi, rapor, prasarana', halaman: ['dashboard', 'siswa', 'pegawai', 'induk', 'rombel', 'mapel', 'ekskul', 'absensiSiswa', 'absensiPegawai', 'rapor', 'prasarana', 'administrasi', 'validasi'], bidang: ['anak', 'sdm', 'umum', 'sarpras', 'tu'], bawaan: true },
   { id: 'wali', nama: 'Wali Kelas', ket: 'Absensi siswa, penilaian, dan rapor kelasnya', halaman: ['dashboard', 'siswa', 'induk', 'absensiSiswa', 'nilai', 'rapor', 'administrasi'], bidang: ['anak', 'guru'], bawaan: true },
   { id: 'guru', nama: 'Guru Mata Pelajaran', ket: 'Absensi siswa dan penilaian', halaman: ['dashboard', 'absensiSiswa', 'nilai', 'administrasi'], bidang: ['guru'], bawaan: true },
   { id: 'sarpras', nama: 'Petugas Sarpras', ket: 'Data dan pengajuan prasarana', halaman: ['dashboard', 'prasarana', 'administrasi'], bidang: ['sarpras'], bawaan: true },

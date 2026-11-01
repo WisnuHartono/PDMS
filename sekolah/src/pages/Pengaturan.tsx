@@ -3,7 +3,7 @@ import { KURIKULUM } from '../curricula'
 import { seedDemo } from '../seed'
 import { DEFAULT_SEKOLAH, cadanganTerenkripsi, exportTerenkripsi, importJson, put, resetAll, useCol, useSekolah } from '../store'
 import { JENJANG, type Sekolah } from '../types'
-import { Btn, Card, Field, Inp, PageHead, Sel, toast } from '../ui'
+import { Btn, Card, Field, Inp, PageHead, Sel, toast, tanya } from '../ui'
 import { download, fotoKecil, namaPegawai, readFileAsText, today } from '../util'
 
 export default function Pengaturan() {
@@ -41,6 +41,16 @@ export default function Pengaturan() {
             <Field label="Telepon"><Inp obj={s} k="telepon" set={set} /></Field>
             <Field label="Email"><Inp obj={s} k="email" set={set} /></Field>
             <Field label="Website" span={2}><Inp obj={s} k="website" set={set} /></Field>
+            <Field label="Status sekolah"><Sel obj={s} k="statusSekolah" set={set} options={['Negeri', 'Swasta']} empty="-" /></Field>
+            <Field label="Status operasional"><Sel obj={s} k="statusOperasional" set={set} options={['Aktif', 'Tutup sementara', 'Tutup']} empty="-" /></Field>
+            <Field label="Akreditasi"><Sel obj={s} k="akreditasi" set={set} options={['A', 'B', 'C', 'Belum terakreditasi']} empty="-" /></Field>
+          </div>
+          <h4 className="sec">Penetapan khusus (flag dari Dinas / Ditjen)</h4>
+          <p className="muted small">Isi nomor SK penetapan bila sekolah ditetapkan. Jenis rombel terkait baru bisa dipilih setelah diisi, sesuai Dapodik 2027.</p>
+          <div className="form-grid">
+            <Field label="Pelaksana Kelas Rangkap (SD negeri)" span={2}><input value={s.flag?.kelasRangkap ?? ''} placeholder="No. SK Dinas" onChange={(e) => set({ flag: { ...s.flag, kelasRangkap: e.target.value || undefined } })} /></Field>
+            <Field label="Penyelenggara PJJ (SMA)" span={2}><input value={s.flag?.pjj ?? ''} placeholder="No. Kepdirjen Dikmen Diksus" onChange={(e) => set({ flag: { ...s.flag, pjj: e.target.value || undefined } })} /></Field>
+            <Field label="Program Kebekerjaan Luar Negeri (SMK)" span={2}><input value={s.flag?.kln ?? ''} placeholder="No. Kepdirjen Dikmen Diksus" onChange={(e) => set({ flag: { ...s.flag, kln: e.target.value || undefined } })} /></Field>
           </div>
           <h4 className="sec">Jenjang yang diselenggarakan</h4>
           <div className="chips">{JENJANG.map((j) => <label key={j} className={`chip ${s.jenjang.includes(j) ? 'on' : ''}`}><input type="checkbox" checked={s.jenjang.includes(j)} onChange={() => toggle(j)} />{j}</label>)}</div>
@@ -79,7 +89,7 @@ export default function Pengaturan() {
                 if (!f) return
                 const teks = await readFileAsText(f)
                 if (cadanganTerenkripsi(teks) && !sandiCad) return toast('Isi kata sandi cadangan terlebih dahulu.')
-                if (!confirm('Pulihkan akan MENGGANTI seluruh data saat ini. Lanjutkan?')) return
+                if (!await tanya('Pulihkan akan MENGGANTI seluruh data saat ini. Lanjutkan?')) return
                 try { await importJson(teks, sandiCad); toast('Data berhasil dipulihkan') } catch (err) { toast(`Gagal: ${(err as Error).message}`) }
               }} />
             </div>

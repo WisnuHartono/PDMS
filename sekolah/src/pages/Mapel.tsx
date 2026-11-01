@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { put, remove, useCol } from '../store'
 import { JENJANG, type Jenjang, type Mapel } from '../types'
-import { Btn, Card, Empty, Field, Inp, Modal, PageHead, toast } from '../ui'
+import { Btn, Card, Empty, Field, Inp, Modal, PageHead, toast, tanya } from '../ui'
 import { uid } from '../util'
 
 export default function MapelPage() {
@@ -25,7 +25,7 @@ export default function MapelPage() {
                     <td className="num">{m.urutan}</td><td>{m.kode}</td><td><b>{m.nama}</b></td><td>{m.kelompok}</td><td>{m.jenjang.join(', ')}</td><td className="num">{m.kkm ?? '-'}</td>
                     <td className="row-actions">
                       <Btn icon="edit" kind="ghost" title="Ubah" onClick={() => setEdit(m)} />
-                      <Btn icon="trash" kind="ghost" title="Hapus" onClick={async () => { if (confirm(`Hapus ${m.nama}?`)) await remove('mapel', m.id) }} />
+                      <Btn icon="trash" kind="ghost" title="Hapus" onClick={async () => { if (await tanya(`Hapus ${m.nama}?`)) await remove('mapel', m.id) }} />
                     </td>
                   </tr>
                 ))}

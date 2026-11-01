@@ -37,6 +37,7 @@ const P: Record<string, ReactNode> = {
   kepsek: <><circle cx="12" cy="7" r="3.5" /><path d="M5 21c.8-4 3.5-6.5 7-6.5s6.2 2.5 7 6.5" /><path d="m12 14.5-1.2 2.3L12 21l1.2-4.2z" /></>,
   uang: <><rect x="2.5" y="6" width="19" height="12" rx="2" /><circle cx="12" cy="12" r="2.8" /><path d="M6 9.5v5M18 9.5v5" /></>,
   surat: <><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3.5 6.5 8.5 6.5 8.5-6.5" /></>,
+  validasi: <><path d="M12 3 4 6v6c0 4.5 3.4 8 8 9 4.6-1 8-4.5 8-9V6z" /><path d="m8.5 12 2.5 2.5 4.5-5" /></>,
   school: <><path d="M3 10 12 5l9 5-9 5z" /><path d="M7 12.5V17c1.5 1.3 3.2 2 5 2s3.5-.7 5-2v-4.5" /><path d="M21 10v5" /></>,
 }
 

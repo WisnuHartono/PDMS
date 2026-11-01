@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { KopSurat, RekapBulanan, TandaTangan } from '../print'
 import { getSekolah, put, useCol, useSekolah } from '../store'
 import { STATUS_HADIR_LABEL, STATUS_HADIR_SISWA, type Absensi, type CatatanHadir, type StatusHadir } from '../types'
-import { Btn, Card, Empty, PageHead, Tabs, printDoc, toast } from '../ui'
+import { Btn, Card, Empty, PageHead, Tabs, printDoc, toast, tanya } from '../ui'
 import { BULAN, daysInMonth, download, fmtTanggalHari, isoDate, namaPegawai, rekapAbsensi, toCsv, today } from '../util'
 
 export default function AbsensiSiswa() {
@@ -47,7 +47,7 @@ function Harian() {
   const semuaHadir = () => { setData(Object.fromEntries(anggota.map((s) => [s!.id, { status: 'H' as StatusHadir, ket: data[s!.id]?.ket }]))); setDirty(true) }
   const simpan = async () => {
     const belum = anggota.filter((s) => !data[s!.id])
-    if (belum.length && !confirm(`${belum.length} siswa belum diisi. Simpan tetap?`)) return
+    if (belum.length && !await tanya(`${belum.length} siswa belum diisi. Simpan tetap?`)) return
     const doc: Absensi = { id, jenis: 'siswa', tanggal: tgl, rombelId: r!.id, data }
     await put('absensi', doc)
     setDirty(false)

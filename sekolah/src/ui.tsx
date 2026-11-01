@@ -5,7 +5,7 @@ import { Icon } from './icons'
 // ---------- Navigasi tab ----------
 export type PageId =
   | 'dashboard' | 'siswa' | 'pegawai' | 'induk' | 'rombel' | 'mapel' | 'ekskul'
-  | 'absensiSiswa' | 'absensiPegawai' | 'nilai' | 'rapor' | 'prasarana' | 'administrasi' | 'pengaturan' | 'akun'
+  | 'absensiSiswa' | 'absensiPegawai' | 'nilai' | 'rapor' | 'prasarana' | 'administrasi' | 'validasi' | 'pengaturan' | 'akun'
 
 export interface NavCtx {
   open: (p: PageId) => void
@@ -147,18 +147,22 @@ export function ToastHost() {
 
 // ---------- Cetak ----------
 let printFn: (n: ReactNode) => void = () => {}
-/** Render konten ke area cetak lalu buka dialog cetak (browser / Electron). */
+/** Buka pratinjau dokumen (A4) dengan pilihan Cetak, Simpan PDF, Simpan Word, dan Simpan ke Arsip. */
 export const printDoc = (n: ReactNode) => printFn(n)
-export function PrintHost() {
-  const [node, setNode] = useState<ReactNode>(null)
-  useEffect(() => { printFn = (n) => setNode(n) }, [])
-  useEffect(() => {
-    if (!node) return
-    const t = setTimeout(() => {
-      window.print()
-      setNode(null)
-    }, 150)
-    return () => clearTimeout(t)
-  }, [node])
-  return createPortal(<div id="print-root">{node}</div>, document.body)
+export const _pasangPrint = (f: (n: ReactNode) => void) => { printFn = f }
+
+// ---------- Konfirmasi (pengganti confirm() bawaan browser) ----------
+let tanyaFn: (pesan: string, ya?: string) => Promise<boolean> = async () => false
+/** Dialog konfirmasi, mis. "Apakah Anda yakin ingin menghapus data tersebut?" → true bila Ya. */
+export const tanya = (pesan: string, ya = 'Ya') => tanyaFn(pesan, ya)
+export function KonfirmasiHost() {
+  const [q, setQ] = useState<{ pesan: string; ya: string; done: (v: boolean) => void } | null>(null)
+  useEffect(() => { tanyaFn = (pesan, ya = 'Ya') => new Promise((done) => setQ({ pesan, ya, done })) }, [])
+  if (!q) return null
+  const tutup = (v: boolean) => { q.done(v); setQ(null) }
+  return (
+    <Modal title="Konfirmasi" onClose={() => tutup(false)} footer={<><Btn onClick={() => tutup(false)}>Tidak</Btn><Btn kind={/hapus|ganti/i.test(q.pesan) ? 'danger' : 'primary'} autoFocus onClick={() => tutup(true)}>{q.ya}</Btn></>}>
+      <p style={{ margin: 0 }}>{q.pesan}</p>
+    </Modal>
+  )
 }

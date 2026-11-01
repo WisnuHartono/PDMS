@@ -81,6 +81,7 @@ export async function seedDemo() {
     alamat: 'Jl. Pendidikan No. 10', kelurahan: 'Sukamaju', kecamatan: 'Coblong', kabupaten: 'Kota Bandung', provinsi: 'Jawa Barat', kodePos: '40132',
     telepon: '(022) 123456', email: 'info@harapanbangsa.sch.id', yayasan: 'Yayasan Pendidikan Harapan Bangsa',
     kepalaSekolahId: kepsek.id, tahunAjaranAktif: ta, semesterAktif: new Date().getMonth() >= 6 ? 1 : 2, kotaTtdRapor: 'Bandung',
+    statusSekolah: 'Swasta', statusOperasional: 'Aktif', akreditasi: 'A',
   })
 
   // Mapel
@@ -101,7 +102,7 @@ export async function seedDemo() {
   const rombel: Rombel[] = []
   let induk = 1
   for (const [nm, j, t, wali, kur] of rombelDef) {
-    const umurMasuk = { TK: 5, SD: 9, SMP: 12, SMA: 15, SMK: 15, PAUD: 3 }[j]
+    const umurMasuk = { TK: 5, SD: 9, SMP: 12, SMA: 15, SMK: 15, PAUD: 3, PKBM: 15 }[j]
     const ids: string[] = []
     for (let i = 0; i < 12; i++) {
       const jk = rnd() < 0.5 ? 'L' : 'P'
@@ -114,8 +115,10 @@ export async function seedDemo() {
         tanggalLahir: isoDate(new Date(thn - umurMasuk, Math.floor(rnd() * 12), 1 + Math.floor(rnd() * 27))),
         agama: pick(['Islam', 'Islam', 'Islam', 'Kristen', 'Katolik', 'Hindu']), kewarganegaraan: 'WNI', anakKe: 1 + Math.floor(rnd() * 3),
         alamat: `Jl. ${pick(['Merdeka', 'Melati', 'Kenanga', 'Diponegoro', 'Sudirman'])} No. ${1 + Math.floor(rnd() * 99)}`,
-        ayah: { nama: ayahNama, pekerjaan: pick(['Wiraswasta', 'Karyawan Swasta', 'PNS', 'Petani', 'Pedagang']), telepon: `08${Math.floor(rnd() * 1e10)}` },
-        ibu: { nama: nama('P'), pekerjaan: pick(['Ibu Rumah Tangga', 'Guru', 'Wiraswasta', 'Karyawan Swasta']) },
+        nik: `3273${String(Math.floor(rnd() * 1e12)).padStart(12, '0')}`,
+        // Satu contoh data belum lengkap (status hidup kosong) agar menu Validasi Data menampilkan temuan.
+        ayah: { nama: ayahNama, pekerjaan: pick(['Wiraswasta', 'Karyawan Swasta', 'PNS', 'Petani', 'Pedagang']), telepon: `08${Math.floor(rnd() * 1e10)}`, statusHidup: nm === '4A' && i === 11 ? undefined : rnd() < 0.04 ? 'Wafat' : 'Hidup' },
+        ibu: { nama: nama('P'), pekerjaan: pick(['Ibu Rumah Tangga', 'Guru', 'Wiraswasta', 'Karyawan Swasta']), statusHidup: nm === '4A' && i === 11 ? undefined : 'Hidup' },
         wali: {}, jenjang: j, tanggalMasuk: `${thn - (Number(t) ? (Number(t) - (j === 'SMP' ? 7 : 1)) : 0)}-07-15`,
         diterimaDiKelas: j === 'SD' ? '1' : j === 'SMP' ? '7' : t, asalSekolah: j === 'SMP' ? 'SD Harapan Bangsa' : j === 'SD' ? 'TK Harapan Bangsa' : undefined,
         status: 'Aktif',
@@ -123,7 +126,8 @@ export async function seedDemo() {
       await put('siswa', sw)
       ids.push(sw.id)
     }
-    const r: Rombel = { id: uid(), nama: nm, jenjang: j, tingkat: t, tahunAjaran: ta, waliKelasId: wali.id, kurikulumId: kur, siswaIds: ids }
+    const pembelajaran = mapel.filter((m) => m.jenjang.includes(j)).map((m) => ({ mapelId: m.id, guruId: wali.id, jp: j === 'TK' ? 2 : m.kelompok?.startsWith('Muatan') ? 2 : 4 }))
+    const r: Rombel = { id: uid(), nama: nm, jenjang: j, tingkat: t, tahunAjaran: ta, waliKelasId: wali.id, kurikulumId: kur, siswaIds: ids, jenis: 'Reguler', ruang: `Ruang ${nm}`, pembelajaran }
     rombel.push(r)
     await put('rombel', r)
   }

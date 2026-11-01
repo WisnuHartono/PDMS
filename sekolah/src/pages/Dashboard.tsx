@@ -5,6 +5,9 @@ import { getState, useCol, useSekolah } from '../store'
 import { Avatar, Btn, Card, useNav } from '../ui'
 import { KET_STATUS, klasifikasiKerusakan, pengajuanAktif, pillKerusakan } from '../prasarana'
 import { BULAN, fmtTanggalHari, isoDate, namaPegawai, parseIso, today, umur } from '../util'
+import { getKurikulum } from '../curricula'
+import { implementasiKurikulum } from '../validasi'
+import { useValidasi } from './Validasi'
 import { JENJANG, STATUS_HADIR_LABEL, type Absensi, type StatusHadir } from '../types'
 
 const WIDGETS: [string, string][] = [
@@ -17,6 +20,8 @@ const WIDGETS: [string, string][] = [
   ['nilai', 'Kelengkapan Nilai'],
   ['ultah', 'Ulang Tahun Bulan Ini'],
   ['sarpras', 'Prasarana (kondisi & pengajuan)'],
+  ['kurikulum', 'Implementasi Kurikulum'],
+  ['validasi', 'Status Validasi Data'],
 ]
 
 const WARNA: Record<StatusHadir, string> = { H: 'var(--ok)', S: 'var(--warn)', I: 'var(--info)', A: 'var(--bad)', T: 'var(--orange)', C: 'var(--muted)', DL: 'var(--violet)' }
@@ -55,6 +60,7 @@ export default function Dashboard() {
   const [hidden, setHidden] = useState<string[]>(loadHidden)
   const [menu, setMenu] = useState(false)
   const [, setTick] = useState(0)
+  const temuan = useValidasi()
 
   const toggle = (id: string) => {
     const next = hidden.includes(id) ? hidden.filter((h) => h !== id) : [...hidden, id]
@@ -100,6 +106,12 @@ export default function Dashboard() {
     ...aktif.filter((s) => s.tanggalLahir && parseIso(s.tanggalLahir).getMonth() === bulanIni).map((s) => ({ id: s.id, nama: s.nama, tgl: s.tanggalLahir!, ket: `Siswa · ${s.jenjang}` })),
     ...pegAktif.filter((p) => p.tanggalLahir && parseIso(p.tanggalLahir).getMonth() === bulanIni).map((p) => ({ id: p.id, nama: namaPegawai(p), tgl: p.tanggalLahir!, ket: p.jabatan ?? p.jenis })),
   ].sort((a, b) => parseIso(a.tgl).getDate() - parseIso(b.tgl).getDate())
+
+  const impl = implementasiKurikulum(rombel, sekolah.tahunAjaranAktif)
+  const totImpl = impl.reduce((a, x) => a + x.rombel, 0) || 1
+  const nInv = temuan.filter((t) => t.level === 'invalid').length
+  const nWarn = temuan.length - nInv
+  const katInv = [...new Set(temuan.filter((t) => t.level === 'invalid').map((t) => t.kategori))]
 
   const L = aktif.filter((s) => s.jk === 'L').length
   const P = aktif.length - L
@@ -258,6 +270,42 @@ export default function Dashboard() {
           </Card>
         )}
       </div>
+      {(show('kurikulum') || show('validasi')) && (
+        <div className="grid-2">
+          {show('kurikulum') && (
+            <Card title={`Implementasi Kurikulum ${sekolah.tahunAjaranAktif}`} actions={<button className="icon-btn" title="Rombel" onClick={() => nav.open('rombel')}><Icon name="edit" size={16} /></button>}>
+              <div className="muted right small">Dihitung otomatis dari data rombel (seperti Dapodik)</div>
+              <table className="mini">
+                <thead><tr><th>Kurikulum</th><th>Jenjang</th><th className="num">Rombel</th><th className="num">Peserta Didik</th><th style={{ width: '30%' }}></th></tr></thead>
+                <tbody>
+                  {impl.map((x) => (
+                    <tr key={x.kurikulumId}>
+                      <td><b>{getKurikulum(x.kurikulumId).nama}</b></td>
+                      <td>{x.jenjang.join(', ')}</td>
+                      <td className="num">{x.rombel}</td>
+                      <td className="num">{x.siswa}</td>
+                      <td><Meter pct={(x.rombel / totImpl) * 100} color="var(--accent)" /></td>
+                    </tr>
+                  ))}
+                  {!impl.length && <tr><td colSpan={5} className="muted">Belum ada rombel pada tahun ajaran aktif.</td></tr>}
+                </tbody>
+              </table>
+            </Card>
+          )}
+          {show('validasi') && (
+            <Card title="Status Validasi Data" actions={<button className="icon-btn" title="Validasi data" onClick={() => nav.open('validasi')}><Icon name="validasi" size={16} /></button>}>
+              <div className="stat-row">
+                <div><span>Invalid</span><b className="bad-t">{nInv}</b></div>
+                <div><span>Peringatan</span><b className="warn-t">{nWarn}</b></div>
+                <div><span>Status</span><b className={nInv ? 'bad-t' : 'ok-t'}>{nInv ? 'Belum valid' : 'Valid'}</b></div>
+              </div>
+              {katInv.length > 0 && <p className="small">Perlu diperbaiki: {katInv.join(', ')}</p>}
+              <p className="small muted">Validasi terakhir: {sekolah.validasiTerakhir ? new Date(sekolah.validasiTerakhir).toLocaleString('id-ID') : 'belum pernah'}</p>
+              <Btn kind="ghost" onClick={() => nav.open('validasi')}>Buka Validasi Data</Btn>
+            </Card>
+          )}
+        </div>
+      )}
       {show('sarpras') && (
         <div className="grid-3">
           {([['Kondisi Ruang', ruang], ['Kondisi Bangunan', bangunan]] as const).map(([judul, list]) => (

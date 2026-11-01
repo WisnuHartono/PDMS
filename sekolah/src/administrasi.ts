@@ -151,7 +151,7 @@ const anak: Bidang = {
       ],
     }),
     reg({
-      id: 'pip', nama: 'Penerima Bantuan / Beasiswa (PIP)', ket: 'PIP, KIP, beasiswa daerah atau yayasan', tanggal: 'tanggal', total: ['nominal'],
+      id: 'pip', nama: 'Penerima Bantuan / Beasiswa (PIP)', ket: 'Catatan internal; usulan PIP kini lewat SIPINTAR/DTSEN, bukan Dapodik', tanggal: 'tanggal', total: ['nominal'],
       fields: [
         { k: 'tanggal', l: 'Tanggal cair', t: 'date', daftar: true }, { k: 'siswa', l: 'Peserta didik', t: 'siswa', wajib: true, daftar: true },
         { k: 'program', l: 'Program', t: 'select', opsi: ['PIP/KIP', 'Beasiswa Daerah', 'Beasiswa Yayasan', 'Lainnya'], daftar: true },
@@ -483,6 +483,12 @@ const keuangan: Bidang = {
   ],
 }
 
+/** Kelompok alat sesuai referensi Dapodik (sarana PAUD + umum). */
+export const KELOMPOK_ALAT = [
+  'APE Sensori Motorik', 'APE Bermain Pembangunan', 'APE Bermain Peran', 'APE Bermain Keaksaraan', 'Bahan Bermain dari Lingkungan', 'APE Outdoor',
+  'Meubelair', 'Elektronik / TIK', 'Alat Peraga / Laboratorium', 'Olahraga', 'Kesenian', 'Lainnya',
+]
+
 // ---------- 07 Sarana Prasarana ----------
 const sarpras: Bidang = {
   id: 'sarpras', no: '07', nama: 'Administrasi Perlengkapan / Sarana Prasarana', ket: 'Inventaris dan pengelolaan fasilitas lembaga', tema: 'lavender', ikon: 'prasarana',
@@ -498,6 +504,18 @@ const sarpras: Bidang = {
         { k: 'sumber', l: 'Sumber dana', t: 'select', opsi: SUMBER_DANA, daftar: true }, { k: 'jumlah', l: 'Jumlah', t: 'number', wajib: true, daftar: true },
         { k: 'satuan', l: 'Satuan', ph: 'unit, buah, set' }, { k: 'harga', l: 'Harga satuan', t: 'rupiah' },
         { k: 'kondisi', l: 'Kondisi', t: 'select', opsi: KONDISI, daftar: true },
+        { k: 'kelompok', l: 'Kelompok alat (Dapodik)', t: 'select', opsi: KELOMPOK_ALAT, daftar: true },
+        { k: 'kepemilikan', l: 'Kepemilikan', t: 'select', opsi: ['Milik', 'Sewa', 'Pinjam'] },
+      ],
+    }),
+    reg({
+      id: 'buku-teks', nama: 'Buku Teks & Pendamping (SIBI)', ket: 'Buku pelajaran sesuai referensi SIBI Kemendikdasmen', total: ['jumlah'],
+      fields: [
+        { k: 'judul', l: 'Judul buku', span: 2, wajib: true, daftar: true }, { k: 'mapel', l: 'Mata pelajaran', daftar: true },
+        { k: 'kelas', l: 'Kelas / tingkat', daftar: true }, { k: 'kurikulum', l: 'Kurikulum', t: 'select', opsi: ['Kurikulum Merdeka', 'Kurikulum 2013', 'Lainnya'], daftar: true },
+        { k: 'jenis', l: 'Jenis', t: 'select', opsi: ['Buku Siswa', 'Buku Guru', 'Buku Pendamping', 'Buku Nonteks'], daftar: true },
+        { k: 'penerbit', l: 'Penerbit', daftar: true }, { k: 'tahun', l: 'Tahun terbit', t: 'number' }, { k: 'isbn', l: 'ISBN', daftar: true },
+        { k: 'jumlah', l: 'Jumlah eksemplar', t: 'number', wajib: true, daftar: true }, { k: 'kondisi', l: 'Kondisi', t: 'select', opsi: KONDISI },
       ],
     }),
     reg({
