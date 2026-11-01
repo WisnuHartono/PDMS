@@ -70,6 +70,23 @@ export interface Sekolah {
   ukuranKertas?: 'A4' | 'F4'
   /** Integrasi AI untuk menyusun narasi rapor. Kunci API disimpan di perangkat ini (ikut cadangan terenkripsi). */
   ai?: AiSetting
+  /** Tampilan header: kustomisasi logo & nama sekolah. */
+  tampilan?: TampilanSetting
+}
+
+export interface TampilanSetting {
+  logoUkuran?: number // px, 32-96
+  logoBentuk?: 'kotak' | 'sudut' | 'lingkaran' | 'tanpa'
+  logoLatar?: 'putih' | 'kaca' | 'transparan'
+  logoBingkai?: boolean
+  logoBayangan?: boolean
+  logoIsi?: 'contain' | 'cover'
+  logoZoom?: number // persen, 50-250
+  logoGeserX?: number // persen, -50..50
+  logoGeserY?: number
+  namaUkuran?: number // px, 13-26
+  tampilLegalitas?: boolean
+  tampilNama?: boolean
 }
 
 export interface AiSetting {

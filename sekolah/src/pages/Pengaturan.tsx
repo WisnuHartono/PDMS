@@ -6,11 +6,12 @@ import { KopSurat, alamatLengkap, kontakLengkap } from '../print'
 import { seedDemo } from '../seed'
 import { DEFAULT_SEKOLAH, cadanganTerenkripsi, exportTerenkripsi, importJson, put, resetAll, useCol, useSekolah } from '../store'
 import { JENJANG, type KopSetting, type Sekolah } from '../types'
+import { LogoSekolah, tampilanDari } from '../logo'
 import { AI_DEFAULT, PANDUAN, PENYEDIA, aiSiap, panggilAi } from '../ai'
 import { Btn, Card, Field, Inp, Modal, PageHead, Sel, toast, tanya } from '../ui'
 import { download, fotoKecil, namaPegawai, readFileAsText, today } from '../util'
 
-type Bagian = 'identitas' | 'lokasi' | 'pelengkap' | 'pejabat' | 'kop' | 'cetak' | 'kurikulum' | 'ai' | 'data'
+type Bagian = 'identitas' | 'lokasi' | 'pelengkap' | 'pejabat' | 'kop' | 'cetak' | 'kurikulum' | 'tampilan' | 'ai' | 'data'
 const BAGIAN: [Bagian, string, string][] = [
   ['identitas', 'Identitas & Legalitas', 'Nama, NPSN, status, SK pendirian/izin, akreditasi, jenjang'],
   ['lokasi', 'Lokasi & Kontak', 'Alamat lengkap, koordinat, telepon, email, laman'],
@@ -19,6 +20,7 @@ const BAGIAN: [Bagian, string, string][] = [
   ['kop', 'Kop Surat', 'Logo, baris kop, garis, huruf, pratinjau'],
   ['cetak', 'Administrasi & Cetak', 'Tahun ajaran, rapor, nomor surat, ukuran kertas'],
   ['kurikulum', 'Kurikulum', 'Kurikulum yang tersedia'],
+  ['tampilan', 'Tampilan & Logo', 'Ukuran, bentuk, bingkai, zoom logo dan nama di header'],
   ['ai', 'Integrasi AI', 'Penyusun narasi rapor: penyedia, kunci API, gaya'],
   ['data', 'Data & Cadangan', 'Cadangan terenkripsi, pulihkan, data contoh'],
 ]
@@ -273,6 +275,8 @@ export default function Pengaturan() {
             </Card>
           )}
 
+          {bagian === 'tampilan' && <PanelTampilan s={s} set={set} />}
+
           {bagian === 'ai' && <PanelAi s={s} set={set} />}
 
           {bagian === 'data' && <DataCadangan />}
@@ -379,7 +383,7 @@ function PanelAi({ s, set }: { s: Sekolah; set: (p: Partial<Sekolah>) => void })
               <option value="ringkas">Ringkas (2 kalimat)</option><option value="standar">Standar (3-4 kalimat)</option><option value="rinci">Rinci (5-6 kalimat)</option>
             </select>
           </Field>
-          <Field label="Humanize" span={2} hint="Gaya tulisan alami seperti guru, variasi kalimat, tanpa frasa klise."><label className="cek"><input type="checkbox" checked={a.humanize !== false} onChange={(e) => ubah({ humanize: e.target.checked })} /> Aktif (disarankan)</label></Field>
+          <Field label="Humanize" span={2} hint="Gaya tulisan alami seperti guru, variasi kalimat, tanpa frasa klise."><div className="radio-row"><input type="checkbox" checked={a.humanize !== false} onChange={(e) => ubah({ humanize: e.target.checked })} /> Aktif (disarankan)</div></Field>
           <Field label="Instruksi tambahan (opsional)" span={4} hint="Mis. “gunakan sapaan Ananda”, “hindari kata menguasai”."><input value={a.instruksi ?? ''} maxLength={400} onChange={(e) => ubah({ instruksi: e.target.value })} /></Field>
         </div>
         <div className="row-actions">
@@ -405,6 +409,69 @@ function PanelAi({ s, set }: { s: Sekolah; set: (p: Partial<Sekolah>) => void })
           <li><b>Kunci API</b> disimpan di perangkat ini dan ikut cadangan terenkripsi. Biaya pemakaian ditagihkan oleh penyedia ke akun Anda. Jika AI gagal, narasi otomatis lokal tetap tersedia.</li>
           <li>Pada aplikasi Windows, panggilan dilakukan lewat proses utama aplikasi (tanpa batasan CORS). Versi web dapat diblokir browser untuk sebagian penyedia.</li>
         </ul>
+      </Card>
+    </>
+  )
+}
+
+function PanelTampilan({ s, set }: { s: Sekolah; set: (p: Partial<Sekolah>) => void }) {
+  const t = tampilanDari(s)
+  const ubah = (p: Partial<typeof t>) => set({ tampilan: { ...s.tampilan, ...p } })
+  const geser = (k: keyof typeof t, label: string, min: number, max: number, sat = '') => (
+    <Field label={`${label}: ${t[k]}${sat}`}>
+      <input type="range" min={min} max={max} value={Number(t[k])} onChange={(e) => ubah({ [k]: Number(e.target.value) } as Partial<typeof t>)} />
+    </Field>
+  )
+  const legal = [s.npsn && `NPSN ${s.npsn}`, s.statusSekolah, s.akreditasi && `Akreditasi ${s.akreditasi}`].filter(Boolean).join(' · ')
+  return (
+    <>
+      <Card title="Pratinjau header" className="mb">
+        <div className="tampil-prev" style={{ minHeight: Math.max(60, t.logoUkuran + 16) }}>
+          <div className="top-sekolah" style={{ borderLeft: 0 }}>
+            <LogoSekolah logo={s.logo} t={t} />
+            {t.tampilNama && <div className="who"><b className="sk-nama" style={{ fontSize: t.namaUkuran }}>{s.nama || 'Nama Sekolah'}</b>{t.tampilLegalitas && <span className="sk-legal">{legal || 'NPSN · Status · Akreditasi'}</span>}</div>}
+          </div>
+        </div>
+      </Card>
+      <Card title="Logo" className="mb">
+        <div className="form-grid g4">
+          <Field label="Gambar logo" span={2}>
+            <div className="row-actions">
+              <label className="btn">Pilih gambar<input type="file" accept="image/*" hidden onChange={async (e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) set({ logo: await fotoKecil(f, 512) }) }} /></label>
+              {s.logo && <Btn kind="ghost" icon="trash" onClick={() => set({ logo: undefined })}>Hapus</Btn>}
+            </div>
+          </Field>
+          <Field label="Bentuk">
+            <select value={t.logoBentuk} onChange={(e) => ubah({ logoBentuk: e.target.value as typeof t.logoBentuk })}>
+              <option value="sudut">Sudut membulat</option><option value="lingkaran">Lingkaran</option><option value="kotak">Kotak</option><option value="tanpa">Tanpa bingkai latar</option>
+            </select>
+          </Field>
+          <Field label="Latar">
+            <select value={t.logoLatar} onChange={(e) => ubah({ logoLatar: e.target.value as typeof t.logoLatar })}>
+              <option value="putih">Putih</option><option value="kaca">Kaca (transparan)</option><option value="transparan">Tanpa latar</option>
+            </select>
+          </Field>
+          {geser('logoUkuran', 'Ukuran', 32, 96, ' px')}
+          {geser('logoZoom', 'Zoom', 50, 250, '%')}
+          {geser('logoGeserX', 'Geser kiri/kanan', -50, 50, '%')}
+          {geser('logoGeserY', 'Geser atas/bawah', -50, 50, '%')}
+          <Field label="Isi gambar">
+            <select value={t.logoIsi} onChange={(e) => ubah({ logoIsi: e.target.value as typeof t.logoIsi })}>
+              <option value="contain">Utuh (tanpa terpotong)</option><option value="cover">Penuh (dipotong)</option>
+            </select>
+          </Field>
+          <Field label="Bingkai putih"><div className="radio-row"><input type="checkbox" checked={t.logoBingkai} onChange={(e) => ubah({ logoBingkai: e.target.checked })} /> Tampilkan</div></Field>
+          <Field label="Bayangan"><div className="radio-row"><input type="checkbox" checked={t.logoBayangan} onChange={(e) => ubah({ logoBayangan: e.target.checked })} /> Tampilkan</div></Field>
+        </div>
+      </Card>
+      <Card title="Nama & legalitas di header">
+        <div className="form-grid g4">
+          <Field label="Nama sekolah"><div className="radio-row"><input type="checkbox" checked={t.tampilNama} onChange={(e) => ubah({ tampilNama: e.target.checked })} /> Tampilkan</div></Field>
+          <Field label="Baris legalitas"><div className="radio-row"><input type="checkbox" checked={t.tampilLegalitas} disabled={!t.tampilNama} onChange={(e) => ubah({ tampilLegalitas: e.target.checked })} /> Tampilkan</div></Field>
+          {geser('namaUkuran', 'Ukuran nama', 13, 26, ' px')}
+          <Field label=" "><Btn icon="refresh" onClick={() => set({ tampilan: undefined })} disabled={!s.tampilan}>Kembalikan standar</Btn></Field>
+        </div>
+        <p className="muted small">Tinggi header menyesuaikan ukuran logo. Perubahan berlaku setelah menekan “Simpan pengaturan”. Logo untuk kop surat diatur terpisah di bagian Kop Surat.</p>
       </Card>
     </>
   )

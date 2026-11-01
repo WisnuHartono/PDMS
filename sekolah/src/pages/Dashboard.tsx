@@ -1,14 +1,41 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { boleh, useSesi } from '../security/sesi'
 import { Bars, Donut, LineChart, Meter, MultiDonut } from '../charts'
 import { Icon } from '../icons'
 import { getState, useCol, useSekolah } from '../store'
-import { Avatar, Btn, Card, useNav } from '../ui'
+import { Avatar, Btn, Card, useNav, type PageId } from '../ui'
 import { KET_STATUS, klasifikasiKerusakan, pengajuanAktif, pillKerusakan } from '../prasarana'
 import { BULAN, fmtTanggalHari, isoDate, namaPegawai, parseIso, today, umur } from '../util'
 import { getKurikulum } from '../curricula'
 import { implementasiKurikulum } from '../validasi'
 import { useValidasi } from './Validasi'
 import { JENJANG, STATUS_HADIR_LABEL, type Absensi, type StatusHadir } from '../types'
+
+/** Angka yang berhitung naik saat tampil (dimatikan oleh pengaturan gerak browser). */
+function Angka({ n }: { n: number }) {
+  const [v, setV] = useState(0)
+  const dari = useRef(0)
+  useEffect(() => {
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches || n === dari.current) { setV(n); dari.current = n; return }
+    const a = dari.current, t0 = performance.now(), dur = 700
+    let raf = 0
+    const f = (t: number) => { const k = Math.min(1, (t - t0) / dur); setV(Math.round(a + (n - a) * (1 - Math.pow(1 - k, 3)))); if (k < 1) raf = requestAnimationFrame(f); else dari.current = n }
+    raf = requestAnimationFrame(f)
+    return () => cancelAnimationFrame(raf)
+  }, [n])
+  return <>{v}</>
+}
+
+const AKSI: { id: PageId; label: string; ket: string; icon: string; warna: string }[] = [
+  { id: 'absensiSiswa', label: 'Absensi Siswa', ket: 'Isi kehadiran hari ini', icon: 'absensi', warna: 'linear-gradient(135deg,#0f766e,#14b8a6)' },
+  { id: 'nilai', label: 'Input Nilai', ket: 'Nilai & narasi AI', icon: 'nilai', warna: 'linear-gradient(135deg,#1d4ed8,#38bdf8)' },
+  { id: 'rapor', label: 'Cetak Rapor', ket: 'Catatan & cetak', icon: 'rapor', warna: 'linear-gradient(135deg,#7c3aed,#c084fc)' },
+  { id: 'siswa', label: 'Peserta Didik', ket: 'Data & mutasi', icon: 'siswa', warna: 'linear-gradient(135deg,#ea580c,#fbbf24)' },
+  { id: 'administrasi', label: 'Administrasi', ket: 'Surat & dokumen', icon: 'administrasi', warna: 'linear-gradient(135deg,#be185d,#f472b6)' },
+  { id: 'validasi', label: 'Validasi Data', ket: 'Periksa kelengkapan', icon: 'validasi', warna: 'linear-gradient(135deg,#15803d,#4ade80)' },
+]
+
+const sapaan = () => { const j = new Date().getHours(); return j < 11 ? 'Selamat pagi' : j < 15 ? 'Selamat siang' : j < 18 ? 'Selamat sore' : 'Selamat malam' }
 
 const WIDGETS: [string, string][] = [
   ['ringkasan', 'Ringkasan Sekolah'],
@@ -61,6 +88,7 @@ export default function Dashboard() {
   const [menu, setMenu] = useState(false)
   const [, setTick] = useState(0)
   const temuan = useValidasi()
+  const sesi = useSesi()
 
   const toggle = (id: string) => {
     const next = hidden.includes(id) ? hidden.filter((h) => h !== id) : [...hidden, id]
@@ -116,8 +144,38 @@ export default function Dashboard() {
   const L = aktif.filter((s) => s.jk === 'L').length
   const P = aktif.length - L
 
+  const nilaiKurang = rombelAktif.filter((r) => {
+    const mp = mapel.filter((m) => m.jenjang.includes(r.jenjang)).length
+    const isi = nilai.filter((n) => n.rombelId === r.id && n.tahunAjaran === sekolah.tahunAjaranAktif && n.semester === sekolah.semesterAktif && Object.keys(n.data).length > 0).length
+    return mp > 0 && isi < mp
+  }).length
+  const belumDiabsen = tgl === today() ? Math.max(0, rombelAktif.length - absenSiswaHari.length) : 0
+  const ultahHariIni = ultah.filter((u) => parseIso(u.tgl).getDate() === new Date().getDate()).length
+
   return (
     <div className="dash">
+      <section className="hero">
+        <div className="hero-top">
+          <div>
+            <h2>{sapaan()}, {sesi?.akun.nama.split(' ')[0] ?? 'Pengguna'}</h2>
+            <p>{sekolah.nama} · TA {sekolah.tahunAjaranAktif} Semester {sekolah.semesterAktif === 1 ? 'Ganjil' : 'Genap'} · {fmtTanggalHari(today())}</p>
+          </div>
+          <div className="hero-chips">
+            {belumDiabsen > 0 && boleh('absensiSiswa') && <button className="chip kuning" onClick={() => nav.open('absensiSiswa')}><b>{belumDiabsen}</b> rombel belum diabsen</button>}
+            {nilaiKurang > 0 && boleh('nilai') && <button className="chip kuning" onClick={() => nav.open('nilai')}><b>{nilaiKurang}</b> rombel nilai belum lengkap</button>}
+            {nInv > 0 ? <button className="chip merah" onClick={() => nav.open('validasi')}><b>{nInv}</b> data invalid</button> : <button className="chip hijau" onClick={() => nav.open('validasi')}>Data valid</button>}
+            {ultahHariIni > 0 && <span className="chip">🎂 <b>{ultahHariIni}</b> berulang tahun hari ini</span>}
+          </div>
+        </div>
+      </section>
+      <div className="aksi-cepat">
+        {AKSI.filter((a) => boleh(a.id)).map((a, i) => (
+          <button key={a.id} className="aksi" style={{ animationDelay: `${i * 50}ms` }} onClick={() => nav.open(a.id)}>
+            <span className="aksi-ico" style={{ background: a.warna }}><Icon name={a.icon} size={18} /></span>
+            <span><b>{a.label}</b><small>{a.ket}</small></span>
+          </button>
+        ))}
+      </div>
       <div className="toolbar">
         <div className="dropdown">
           <Btn icon="plus" kind="primary" onClick={() => setMenu((m) => !m)}>Widget</Btn>
@@ -149,10 +207,10 @@ export default function Dashboard() {
                 </div>
               </div>
               <div className="kpis">
-                <button className="kpi" onClick={() => nav.open('siswa')}><span>Peserta Didik Aktif</span><b>{aktif.length}</b></button>
-                <button className="kpi" onClick={() => nav.open('pegawai')}><span>Guru</span><b>{guru.length}</b></button>
-                <button className="kpi" onClick={() => nav.open('pegawai')}><span>Tenaga Kependidikan</span><b>{tendik.length}</b></button>
-                <button className="kpi" onClick={() => nav.open('rombel')}><span>Rombel {sekolah.tahunAjaranAktif}</span><b>{rombelAktif.length}</b></button>
+                <button className="kpi" onClick={() => nav.open('siswa')}><span>Peserta Didik Aktif</span><b><Angka n={aktif.length} /></b></button>
+                <button className="kpi" onClick={() => nav.open('pegawai')}><span>Guru</span><b><Angka n={guru.length} /></b></button>
+                <button className="kpi" onClick={() => nav.open('pegawai')}><span>Tenaga Kependidikan</span><b><Angka n={tendik.length} /></b></button>
+                <button className="kpi" onClick={() => nav.open('rombel')}><span>Rombel {sekolah.tahunAjaranAktif}</span><b><Angka n={rombelAktif.length} /></b></button>
               </div>
             </div>
           </Card>
@@ -197,7 +255,7 @@ export default function Dashboard() {
                   const tot = r.siswaIds.length || 1
                   const pct = ((c.H + c.T) / tot) * 100
                   return (
-                    <tr key={r.id}>
+                    <tr key={r.id} className="klik" title="Buka absensi siswa" onClick={() => nav.open('absensiSiswa')}>
                       <td><b>{r.nama}</b> <span className="muted">{r.jenjang}</span></td>
                       <td>{namaPegawai(pegawai.find((p) => p.id === r.waliKelasId)) || '-'}</td>
                       <td className="num">{a ? `${c.H + c.T}/${r.siswaIds.length}` : '-'}</td>

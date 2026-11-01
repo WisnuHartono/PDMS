@@ -21,6 +21,7 @@ import Validasi, { useValidasi } from './pages/Validasi'
 import AkunPage, { ProfilSaya } from './pages/Akun'
 import { boleh, keluar, useSesi } from './security/sesi'
 import { namaPegawai } from './util'
+import { LogoSekolah, tampilanDari } from './logo'
 
 interface MenuItem { id: PageId; label: string; icon: string; group: string }
 
@@ -78,6 +79,8 @@ export default function App() {
     st.textContent = f4 ? '@page { size: 215mm 330mm; } @page landscape { size: 330mm 215mm; }' : '@page { size: A4; } @page landscape { size: A4 landscape; }'
   }, [sekolah.ukuranKertas])
   const jmlInvalid = useValidasi().filter((t) => t.level === 'invalid').length
+  const tm = tampilanDari(sekolah)
+  const tinggiTop = Math.max(60, tm.logoUkuran + 16)
   const menu = MENU.filter((m) => boleh(m.id))
 
   const [asal, setAsal] = useState<AsalNav | null>(null)
@@ -90,7 +93,7 @@ export default function App() {
 
   return (
     <Nav.Provider value={nav}>
-      <div className={`shell ${expanded ? 'expanded' : ''}`}>
+      <div className={`shell ${expanded ? 'expanded' : ''}`} style={{ '--top-h': `${tinggiTop}px` } as import('react').CSSProperties}>
         <header className="topbar">
           <button className="icon-btn light" onClick={() => setExpanded((e) => !e)} aria-label="Menu"><Icon name="menu" /></button>
           <div className="brand">
@@ -102,11 +105,13 @@ export default function App() {
           <div className="topbar-fill" />
           <QuickSearch />
           <div className="top-sekolah" title={[`TA ${sekolah.tahunAjaranAktif} Semester ${sekolah.semesterAktif === 1 ? 'Ganjil' : 'Genap'}`, sekolah.jenjang.join(' · '), sekolah.alamat].filter(Boolean).join(' · ')}>
-            {sekolah.logo ? <img src={sekolah.logo} alt="" className="top-logo" /> : <span className="top-logo"><Icon name="school" size={20} /></span>}
-            <div className="who">
-              <b className="sk-nama">{sekolah.nama}</b>
-              <span className="sk-legal">{[sekolah.npsn && `NPSN ${sekolah.npsn}`, sekolah.statusSekolah, sekolah.akreditasi && `Akreditasi ${sekolah.akreditasi}`, sekolah.skIzinOperasional && `SK Izin ${sekolah.skIzinOperasional}`].filter(Boolean).join(' · ') || sekolah.jenjang.join(' · ')}</span>
-            </div>
+            <LogoSekolah logo={sekolah.logo} t={tm} />
+            {tm.tampilNama && (
+              <div className="who">
+                <b className="sk-nama" style={{ fontSize: tm.namaUkuran }}>{sekolah.nama}</b>
+                {tm.tampilLegalitas && <span className="sk-legal">{[sekolah.npsn && `NPSN ${sekolah.npsn}`, sekolah.statusSekolah, sekolah.akreditasi && `Akreditasi ${sekolah.akreditasi}`, sekolah.skIzinOperasional && `SK Izin ${sekolah.skIzinOperasional}`].filter(Boolean).join(' · ') || sekolah.jenjang.join(' · ')}</span>}
+              </div>
+            )}
           </div>
           <div className="akun-wrap">
             <button className="akun-btn" onClick={() => setMenuAkun((x) => !x)} aria-haspopup="menu" aria-expanded={menuAkun}>
@@ -174,6 +179,11 @@ function QuickSearch() {
   const [q, setQ] = useState('')
   const siswa = useCol('siswa')
   const pegawai = useCol('pegawai')
+  useEffect(() => {
+    const k = (e: KeyboardEvent) => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); document.querySelector<HTMLInputElement>('input.qs')?.focus() } }
+    window.addEventListener('keydown', k)
+    return () => window.removeEventListener('keydown', k)
+  }, [])
   const hasil = useMemo(() => {
     const s = q.trim().toLowerCase()
     if (s.length < 2) return []
@@ -192,7 +202,7 @@ function SearchBox({ q, setQ, hasil }: { q: string; setQ: (s: string) => void; h
   return (
     <div className="qsearch">
       <Icon name="search" size={18} />
-      <input className="qs" placeholder="Cari siswa / guru…" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Pencarian cepat" />
+      <input className="qs" placeholder="Cari siswa / guru…  (Ctrl K)" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Pencarian cepat" />
       {hasil.length > 0 && (
         <div className="qsearch-res">
           {hasil.map((h) => (

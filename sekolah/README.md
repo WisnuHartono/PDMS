@@ -97,3 +97,8 @@ Pengaturan → **Integrasi AI**: pilih penyedia (Anthropic, Google Gemini, OpenA
 - Nama murid tidak dikirim (penanda `{NAMA}` diisi kembali di perangkat); NIS/NIK tidak pernah dikirim.
 - Aplikasi Windows memanggil API lewat proses utama (tanpa batasan CORS); versi web bergantung pada izin CORS penyedia.
 - Opsi **Humanize** (aktif secara default): narasi ditulis dengan gaya guru yang alami, kalimat bervariasi, pembuka berbeda per murid, tanpa frasa klise; sisa tanda pisah panjang dan kata klise dibersihkan otomatis.
+
+## Tampilan
+
+- **Pengaturan → Tampilan & Logo**: ukuran, bentuk, latar, bingkai, bayangan, zoom dan geser logo di header, serta ukuran nama dan baris legalitas, dengan pratinjau langsung.
+- Dashboard: sapaan, ringkasan prioritas (rombel belum diabsen, nilai belum lengkap, data invalid), aksi cepat, angka berhitung, dan animasi halus (mengikuti pengaturan "kurangi gerak" browser). Pintasan **Ctrl K** untuk pencarian cepat.
