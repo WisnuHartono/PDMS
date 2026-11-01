@@ -818,3 +818,16 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 .lbl-dua{display:flex;gap:5mm;align-items:flex-start}.lbl.kecil .lbl-dua{gap:3mm}
 
 .lbl-nama{flex:1 1 0;width:0;min-width:0;display:block}.lbl-nama b{display:inline-block;white-space:nowrap;font-weight:900;line-height:1.15}
+
+/* Sidebar: scrollbar tipis & serasi dengan tema gelap (bukan scrollbar putih bawaan) */
+.sidebar { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.18) transparent; overscroll-behavior: contain; scrollbar-gutter: stable; }
+.sidebar:not(:hover) { scrollbar-color: transparent transparent; }
+.sidebar::-webkit-scrollbar { width: 6px; }
+.sidebar::-webkit-scrollbar-track { background: transparent; }
+.sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,.16); border-radius: 6px; border: 0; }
+.sidebar:hover::-webkit-scrollbar-thumb { background: rgba(255,255,255,.34); }
+.sidebar::-webkit-scrollbar-thumb:hover { background: rgba(251,191,36,.7); }
+.sidebar::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+@media (max-height: 820px) { .side-item { height: 38px; } .side-item .ico { width: 20px; height: 20px; } }
+@media (max-height: 640px) { .side-item { height: 34px; } }
+.shell:not(.expanded) .side-badge{right:5px;top:3px}
