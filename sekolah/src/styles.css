@@ -794,7 +794,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 .lbl-data .t { text-align: center; color: #374151; }
 .lbl-data b { font-weight: 800; }
 .lbl-data b.kode { font-size: 9pt; letter-spacing: .01em; }
-.lbl-bar { margin-top: 1mm; width: 34mm; }
+.lbl-bar { margin-top: 1mm; width: 0; min-width: 100%; }
 .lbl-foot { text-align: center; font-style: italic; color: #6b7280; font-size: 7pt; padding: 0 2mm 1.5mm; flex: none; }
 .lbl.kecil { font-size: 6.5pt; } .lbl.kecil .lbl-judul { font-size: 6.5pt; padding: .8mm 1mm; } .lbl.kecil .lbl-body { padding: 1mm 2mm; gap: 2mm; } .lbl.kecil .lbl-sek img { height: 7mm; width: 7mm; } .lbl.kecil .lbl-sek b { font-size: 7.5pt; } .lbl.kecil .lbl-sek { padding-bottom: .6mm; margin-bottom: .6mm; } .lbl.kecil .lbl-data b.kode { font-size: 7pt; }
 .doc.label-sheet { min-height: 0; padding: 8mm; }
@@ -812,3 +812,5 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 .lbl-fit .lbl-body{flex:1 0 auto}
 .lbl-fit .lbl-body{min-width:max-content}.lbl-fit .lbl-judul{min-width:100%}
 .lbl-bar.solo{width:48mm}.lbl.kecil .lbl-bar.solo{width:36mm}
+
+.lbl-info{flex:0 0 auto !important}.lbl-fit .lbl-body{justify-content:center}.lbl-bar.solo,.lbl.kecil .lbl-bar.solo{width:0}
