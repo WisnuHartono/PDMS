@@ -31,6 +31,12 @@ const P: Record<string, ReactNode> = {
   chevR: <path d="m9 6 6 6-6 6" />,
   prasarana: <><path d="M3 21h18" /><path d="M5 21V8l7-4 7 4v13" /><path d="M9 21v-5h6v5" /><path d="M9 10h.01M15 10h.01M9 13h.01M15 13h.01" /></>,
   kunci: <><rect x="4" y="10.5" width="16" height="10.5" rx="2" /><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5" /><path d="M12 15v2.5" /></>,
+  administrasi: <><rect x="3" y="3" width="7.5" height="7.5" rx="2" /><rect x="13.5" y="3" width="7.5" height="7.5" rx="2" /><rect x="3" y="13.5" width="7.5" height="7.5" rx="2" /><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2" /></>,
+  anak: <><circle cx="12" cy="4.8" r="2.3" /><path d="M5 9.5c2.3 1 4.6 1.5 7 1.5s4.7-.5 7-1.5" /><path d="M12 11v4.5M9 21l1.2-5.5h3.6L15 21" /></>,
+  umum: <><path d="M3 21h18M4 21V10l8-6 8 6v11" /><path d="M8 21v-7h8v7M8 17.5h8" /></>,
+  kepsek: <><circle cx="12" cy="7" r="3.5" /><path d="M5 21c.8-4 3.5-6.5 7-6.5s6.2 2.5 7 6.5" /><path d="m12 14.5-1.2 2.3L12 21l1.2-4.2z" /></>,
+  uang: <><rect x="2.5" y="6" width="19" height="12" rx="2" /><circle cx="12" cy="12" r="2.8" /><path d="M6 9.5v5M18 9.5v5" /></>,
+  surat: <><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3.5 6.5 8.5 6.5 8.5-6.5" /></>,
   school: <><path d="M3 10 12 5l9 5-9 5z" /><path d="M7 12.5V17c1.5 1.3 3.2 2 5 2s3.5-.7 5-2v-4.5" /><path d="M21 10v5" /></>,
 }
 

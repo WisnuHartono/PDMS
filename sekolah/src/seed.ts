@@ -1,6 +1,6 @@
 // Data contoh agar aplikasi bisa langsung dicoba. Dipanggil dari menu Pengaturan atau saat database kosong.
 import { kurikulumDefault } from './curricula'
-import { defaultTahunAjaran, put, resetAll } from './store'
+import { defaultTahunAjaran, getState, put, resetAll } from './store'
 import type { Absensi, CatatanHadir, LembarNilai, Mapel, Pegawai, Rombel, Siswa, StatusHadir } from './types'
 import { isoDate, uid } from './util'
 
@@ -184,6 +184,7 @@ export async function seedDemo() {
     await put('nilai', { id: `${ta}|${sem}|${rtk.id}|${m.id}`, tahunAjaran: ta, semester: sem as 1 | 2, rombelId: rtk.id, mapelId: m.id, tujuan: [], data })
   }
   await seedPrasarana()
+  await seedAdministrasi()
 }
 
 async function seedPrasarana() {
@@ -218,4 +219,74 @@ async function seedPrasarana() {
     dokumen: [{ id: uid(), jenis: 'Surat keterangan kepala sekolah', namaBerkas: 'sk-kepsek-gedung-b.pdf', ukuran: 412000 }],
     periksa: [true, true, true, true, true, true, true], status: 'Disetujui', dibuat: isoDate(d), diajukan: isoDate(d), tarikData: false,
   })
+}
+
+/** Contoh isi buku administrasi: BKU, surat, inventaris, supervisi, notulen, dokumen wajib. */
+async function seedAdministrasi() {
+  const st = getState()
+  const peg = (jab: string) => st.pegawai.find((p) => p.jabatan?.includes(jab))?.id
+  const now = new Date()
+  const tgl = (hariLalu: number) => isoDate(new Date(now.getTime() - hariLalu * 864e5))
+  const y = now.getFullYear()
+  let i = 0
+  const add = (register: string, data: Record<string, string | number | undefined>) =>
+    put('arsip', { id: uid(), register, data, dibuat: new Date(now.getTime() + i++).toISOString() })
+  const tk = st.rombel.find((r) => r.jenjang === 'TK')
+  const anakTK = tk ? tk.siswaIds : []
+  const siswaSD = st.siswa.filter((x) => x.jenjang === 'SD').map((x) => x.id)
+
+  // 06 Keuangan
+  await add('bku', { tanggal: tgl(60), bukti: 'BKU-001', kode: '1.1', uraian: 'Penerimaan BOSP tahap II', sumber: 'BOSP Reguler', masuk: 96000000 })
+  await add('bku', { tanggal: tgl(55), bukti: 'BKU-002', kode: '5.1.02', uraian: 'Belanja ATK semester ganjil', sumber: 'BOSP Reguler', keluar: 4350000 })
+  await add('bku', { tanggal: tgl(40), bukti: 'BKU-003', kode: '5.1.03', uraian: 'Honor guru honorer bulan lalu', sumber: 'BOSP Reguler', keluar: 12000000 })
+  await add('bku', { tanggal: tgl(30), bukti: 'BKU-004', kode: '1.3', uraian: 'Iuran komite bulan berjalan', sumber: 'Komite/Orang Tua', masuk: 18500000 })
+  await add('bku', { tanggal: tgl(12), bukti: 'BKU-005', kode: '5.2.01', uraian: 'Pemeliharaan atap ruang kelas 4A', sumber: 'BOSP Reguler', keluar: 7800000 })
+  await add('pajak', { tanggal: tgl(55), bukti: 'BKU-002', uraian: 'PPN belanja ATK', jenis: 'PPN', pungut: 431000, setor: 431000 })
+  await add('rkas', { kode: '5.1.02', kegiatan: 'Pengadaan ATK dan bahan habis pakai', sumber: 'BOSP Reguler', volume: 2, satuan: 'semester', harga: 4500000, tw: 'I' })
+  await add('rkas', { kode: '5.2.01', kegiatan: 'Pemeliharaan sarana prasarana', sumber: 'BOSP Reguler', volume: 1, satuan: 'paket', harga: 15000000, tw: 'II' })
+  for (const [k, sid] of siswaSD.slice(0, 4).entries()) await add('bayar', { noKw: `KW/${y}/${String(k + 1).padStart(3, '0')}`, tanggal: tgl(20 - k), siswa: sid, jenis: 'SPP', periode: 'Oktober', jumlah: 250000, metode: k % 2 ? 'Transfer' : 'Tunai' })
+
+  // 08 TU / Persuratan
+  await add('surat-masuk', { agenda: '1', tglTerima: tgl(25), nomor: '421/1873/Disdik', tglSurat: tgl(27), pengirim: 'Dinas Pendidikan Kabupaten', perihal: 'Undangan sosialisasi Rapor Pendidikan', sifat: 'Penting', kepada: peg('Kepala Sekolah'), disposisi: 'Hadir bersama operator. Siapkan data PBD.' })
+  await add('surat-masuk', { agenda: '2', tglTerima: tgl(8), nomor: '005/77/KKG', tglSurat: tgl(9), pengirim: 'KKG Gugus 3', perihal: 'Jadwal pertemuan KKG', sifat: 'Biasa', kepada: peg('Guru Kelas SD') })
+  await add('surat-keluar', { tanggal: tgl(20), klas: '421', nomor: `001/421/20212345/${['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'][new Date(tgl(20)).getMonth()]}/${y}`, tujuan: 'Orang tua/wali peserta didik', perihal: 'Undangan rapat orang tua' })
+  if (siswaSD[0]) await add('suket', { tanggal: tgl(5), nomor: `001/421.2/20212345/${['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'][new Date(tgl(5)).getMonth()]}/${y}`, jenis: 'Keterangan Aktif Belajar', siswa: siswaSD[0], keperluan: 'pengajuan beasiswa' })
+
+  // 07 Sarpras
+  await add('inventaris', { kode: '02.06.01', nama: 'Meja siswa', merk: 'Kayu jati', ruang: 'Ruang Kelas 4A', tahun: y - 3, sumber: 'BOSP Reguler', jumlah: 28, satuan: 'buah', harga: 450000, kondisi: 'Baik' })
+  await add('inventaris', { kode: '02.06.02', nama: 'Kursi siswa', merk: 'Kayu jati', ruang: 'Ruang Kelas 4A', tahun: y - 3, sumber: 'BOSP Reguler', jumlah: 28, satuan: 'buah', harga: 250000, kondisi: 'Baik' })
+  await add('inventaris', { kode: '02.10.01', nama: 'Proyektor', merk: 'Epson EB-X51', ruang: 'Ruang Kelas 4A', tahun: y - 1, sumber: 'Komite/Orang Tua', jumlah: 1, satuan: 'unit', harga: 6500000, kondisi: 'Baik' })
+  await add('inventaris', { kode: '02.06.05', nama: 'Rak buku', ruang: 'Perpustakaan', tahun: y - 6, sumber: 'Yayasan', jumlah: 6, satuan: 'buah', harga: 1200000, kondisi: 'Rusak Ringan' })
+  await add('inventaris', { kode: '02.08.01', nama: 'Alat permainan edukatif (APE) balok', ruang: 'Ruang TK B', tahun: y - 2, sumber: 'BOP PAUD', jumlah: 4, satuan: 'set', harga: 850000, kondisi: 'Baik' })
+  await add('pinjam', { tanggal: tgl(3), peminjam: 'Agus Salim', barang: 'Proyektor', jumlah: 1, rencana: tgl(1) })
+  await add('pelihara', { tanggal: tgl(12), objek: 'Atap Ruang Kelas 4A', kerusakan: 'Genteng bocor', pelaksana: 'CV Karya Mandiri', biaya: 7800000 })
+
+  // 05 Kepala Sekolah
+  await add('supervisi', { tanggal: tgl(18), guru: peg('Guru Kelas SD'), rombel: st.rombel.find((r) => r.jenjang === 'SD')?.id, status: 'Selesai', perencanaan: 88, pelaksanaan: 84, penilaian: 80, temuan: 'Modul ajar lengkap; diferensiasi konten sudah tampak.', tindak: 'Perkuat asesmen formatif di akhir pembelajaran.' })
+  await add('supervisi', { tanggal: tgl(-7), guru: peg('Guru Matematika'), status: 'Terjadwal' })
+  await add('prokerks', { bidang: 'Kurikulum', program: 'Penguatan literasi dan numerasi', sasaran: 'Skor literasi rapor pendidikan naik', waktu: 'Juli–Desember', anggaran: 5000000, pj: peg('Kepala Sekolah'), status: 'Berjalan' })
+
+  // 04 Umum / Kelembagaan
+  await add('notulen', { tanggal: tgl(35), jam: '13:00', tempat: 'Ruang guru', jenis: 'Rapat dewan guru', pimpinan: peg('Kepala Sekolah'), notulis: peg('Tata Usaha'), peserta: '14 orang', agenda: '1. Persiapan asesmen sumatif\n2. Jadwal pembagian rapor', hasil: '1. Asesmen sumatif dilaksanakan minggu ke-2 Desember.\n2. Rapor dibagikan bersama orang tua.' })
+  await add('agenda', { tanggal: tgl(-14), kegiatan: 'Pembagian rapor semester ganjil', tempat: 'Ruang kelas', pj: peg('Kepala Sekolah'), status: 'Rencana' })
+
+  // 01 Anak didik & 02 Guru
+  for (const sid of anakTK.slice(0, 3)) await add('tumbuh', { tanggal: tgl(10), siswa: sid, bb: 17 + Math.round(rnd() * 40) / 10, tb: 108 + Math.round(rnd() * 80) / 10, lk: 50, ket: 'Sehat' })
+  if (anakTK[0]) await add('anekdot', { tanggal: tgl(6), siswa: anakTK[0], tempat: 'Sentra balok', peristiwa: 'Menyusun menara 10 balok lalu menghitung jumlahnya sambil menunjuk satu per satu.', analisis: 'Dasar matematika: membilang dan korespondensi satu-satu.', tindak: 'Beri tantangan pola warna.' })
+  await add('kaldik', { mulai: `${y}-07-14`, selesai: `${y}-07-16`, kegiatan: 'Masa Pengenalan Lingkungan Sekolah (MPLS)', jenis: 'MPLS' })
+  await add('kaldik', { mulai: `${y}-12-15`, selesai: `${y}-12-19`, kegiatan: 'Asesmen sumatif akhir semester', jenis: 'Asesmen' })
+  await add('jurnal', { tanggal: tgl(1), guru: peg('Guru Kelas SD'), rombel: st.rombel.find((r) => r.jenjang === 'SD')?.id, jamKe: '1-2', materi: 'Pecahan senilai dengan media kertas lipat', absen: '1 sakit' })
+
+  // 03 SDM & Humas
+  await add('tamu', { tanggal: tgl(4), jam: '09:30', nama: 'Bpk. Hendra', instansi: 'Pengawas Sekolah', keperluan: 'Monitoring program sekolah penggerak', bertemu: 'Kepala Sekolah' })
+  await add('diklat', { tanggal: tgl(45), pegawai: peg('Guru Kelas TK'), kegiatan: 'Pelatihan Asesmen PAUD Kurikulum Merdeka', penyelenggara: 'BGP Provinsi', jp: 32 })
+
+  // Dokumen wajib
+  const dok = (id: string, data: Record<string, string>) => put('arsip', { id: `dok|${id}`, register: '_dok', data, dibuat: now.toISOString() })
+  await dok('izin-op', { status: 'Ada', nomor: '421/123/Disdik/2015', tanggal: '2015-06-01', berlaku: `${y + 3}-06-01` })
+  await dok('npsn', { status: 'Ada' })
+  await dok('akreditasi', { status: 'Ada', nomor: '1234/BAN-PDM/SK/2021', tanggal: '2021-11-20', berlaku: tgl(-45) })
+  await dok('kosp', { status: 'Perlu diperbarui', tanggal: `${y - 1}-07-10`, berlaku: tgl(-20) })
+  await dok('visi-misi', { status: 'Ada' })
+  await dok('sk-bendahara', { status: 'Ada', nomor: '800/12/SK/' + y, tanggal: `${y}-01-05`, berlaku: `${y}-12-31` })
 }

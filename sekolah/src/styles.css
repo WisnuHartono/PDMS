@@ -376,6 +376,59 @@ select.mini-sel { height: 28px; font-size: 12.5px; color: var(--accent-2); }
 }
 @page landscape { size: A4 landscape; }
 
+
+/* ---------- Administrasi (8 bidang) ---------- */
+.r, .tbl th.r, .tbl td.r { text-align: right; }
+.mt { margin-top: 14px; }
+.pre { white-space: pre-wrap; }
+button.link { background: none; border: 0; padding: 0; color: var(--accent); cursor: pointer; font: inherit; }
+a.link { color: var(--accent); text-decoration: none; }
+a.link:hover, button.link:hover { text-decoration: underline; }
+.crumb { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+.adm-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 22px; }
+.adm-card, .adm-head { position: relative; display: flex; align-items: center; gap: 20px; text-align: left; padding: 22px 26px; border-radius: 26px; border: 1px solid; overflow: hidden; }
+.adm-card { cursor: pointer; font: inherit; color: inherit; box-shadow: 0 6px 18px rgba(60, 40, 110, 0.07); transition: transform .15s, box-shadow .15s; }
+.adm-card:hover { transform: translateY(-2px); box-shadow: 0 12px 26px rgba(60, 40, 110, 0.13); }
+.adm-card:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.adm-ikon { flex: none; display: grid; place-items: center; width: 64px; height: 64px; border-radius: 16px; background: #fff; color: #5b2a91; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); }
+.adm-teks { display: flex; flex-direction: column; gap: 4px; min-width: 0; padding-right: 44px; }
+.adm-teks b, .adm-head h2 { font-size: 18px; color: #241338; letter-spacing: -0.01em; }
+.adm-head h2 { margin: 0 0 2px; }
+.adm-head p { margin: 0; }
+.adm-teks > span { color: #55566a; font-size: 14px; }
+.adm-teks small { color: #6c6a80; font-size: 12px; margin-top: 2px; }
+.adm-no { position: absolute; right: 24px; top: 12px; font-size: 44px; font-weight: 700; color: rgba(90, 60, 140, 0.09); pointer-events: none; }
+.t-hijau { background: linear-gradient(120deg, #ecfdf3, #dcfce7); border-color: #bbf7d0; }
+.t-merah { background: linear-gradient(120deg, #fff1f1, #fde4e4); border-color: #fecaca; }
+.t-cyan { background: linear-gradient(120deg, #ecfeff, #d5f8fb); border-color: #a5f3fc; }
+.t-ungu { background: linear-gradient(120deg, #f6f5ff, #ecebff); border-color: #d9d6fe; }
+.t-biru { background: linear-gradient(120deg, #f1f6ff, #e1ebfd); border-color: #c7d7fb; }
+.t-kuning { background: linear-gradient(120deg, #fffdea, #fef7c3); border-color: #fde68a; }
+.t-lavender { background: linear-gradient(120deg, #faf5ff, #f1e8fe); border-color: #e4d4fb; }
+.t-jingga { background: linear-gradient(120deg, #fff8ee, #ffeed8); border-color: #fed7aa; }
+.adm-head { margin-bottom: 6px; }
+.adm-items { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.adm-item { display: flex; flex-direction: column; gap: 4px; text-align: left; padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px; background: #fff; cursor: pointer; font: inherit; color: inherit; }
+.adm-item:hover { border-color: var(--accent); box-shadow: 0 4px 12px rgba(15, 122, 140, 0.1); }
+.adm-item b { display: flex; align-items: center; gap: 4px; }
+.adm-item span { font-size: 13px; color: var(--muted); }
+.adm-item small { font-size: 12px; margin-top: 4px; }
+.adm-item.link-item { background: #f8fbfc; }
+ul.lampiran { list-style: none; padding: 0; margin: 0 0 8px; }
+ul.lampiran li { display: flex; align-items: center; gap: 8px; }
+.kw-jml { display: inline-block; margin: 14px 0; padding: 8px 18px; border: 2px solid #000; font-size: 15pt; font-weight: 700; }
+.doc.surat p { text-align: justify; line-height: 1.6; }
+.doc table.form-cetak td { padding: 6px 8px; }
+.paud-foto { max-width: 160px; max-height: 120px; border-radius: 4px; display: block; margin-top: 4px; }
+.doc .paud-foto { max-width: 55mm; max-height: 40mm; float: right; margin: 0 0 4px 8px; }
+.bintang { color: #d97706; letter-spacing: 1px; }
+@media (max-width: 900px) {
+  .adm-grid { grid-template-columns: 1fr; }
+  .adm-card, .adm-head { padding: 16px 18px; gap: 14px; }
+  .adm-ikon { width: 52px; height: 52px; }
+  .adm-no { font-size: 34px; }
+}
+
 /* ---------- Responsif ---------- */
 @media (max-width: 1100px) {
   .grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }

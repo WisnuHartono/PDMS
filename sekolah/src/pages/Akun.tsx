@@ -1,6 +1,7 @@
 import QRCode from 'qrcode'
 import { useEffect, useState } from 'react'
 import { MENU } from '../App'
+import { BIDANG } from '../administrasi'
 import {
   KEBIJAKAN_DEFAULT, SEMUA_HALAMAN, aktifkan2fa, buatAkun, buatKodePemulihanBaru, daftarAkun, daftarAudit, daftarPeran, gantiSandi, hapusAkun, hapusPeran,
   kebijakan, nonaktifkan2fa, resetAkun, sandiAcak, simpanKebijakan, simpanPeran, ubahAkun, type Akun as TAkun, type Audit, type Kebijakan, type Peran,
@@ -161,6 +162,17 @@ function PeranForm({ initial, onClose }: { initial: Peran; onClose: () => void }
       <div className="chips">
         {SEMUA_HALAMAN.filter((h) => h !== 'akun').map((h) => <label key={h} className={`chip ${p.halaman.includes(h) ? 'on' : ''}`}><input type="checkbox" checked={p.halaman.includes(h)} onChange={() => toggle(h)} />{label(h)}</label>)}
       </div>
+      {p.halaman.includes('administrasi') && (
+        <>
+          <h4 className="sec">Bidang administrasi (tidak ada yang dicentang = semua bidang)</h4>
+          <div className="chips">
+            {BIDANG.map((b) => {
+              const on = !!p.bidang?.includes(b.id)
+              return <label key={b.id} className={`chip ${on ? 'on' : ''}`}><input type="checkbox" checked={on} onChange={() => setP((o) => ({ ...o, bidang: on ? o.bidang?.filter((x) => x !== b.id) : [...(o.bidang ?? []), b.id] }))} />{b.no} {b.nama.replace('Administrasi ', '')}</label>
+            })}
+          </div>
+        </>
+      )}
       <label className="chk" style={{ marginTop: 10 }}><input type="checkbox" checked={!!p.wajib2fa} onChange={(e) => setP({ ...p, wajib2fa: e.target.checked })} /> Wajib memakai verifikasi 2 langkah</label>
       <p className="muted small">Menu Akun & Keamanan hanya untuk Administrator.</p>
     </Modal>

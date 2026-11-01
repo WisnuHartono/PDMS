@@ -29,7 +29,7 @@ export function KopSurat({ judul, sub }: { judul?: string; sub?: ReactNode }) {
 
 export function TandaTangan({ kiri, kanan, tanggal }: { kiri?: { jabatan: string; nama?: string; nip?: string }; kanan?: { jabatan: string; nama?: string; nip?: string }; tanggal?: string }) {
   const s = getSekolah()
-  const ttd = (x?: { jabatan: string; nama?: string; nip?: string }, top?: ReactNode) => (
+  const ttd = (x?: { jabatan: string; nama?: string; nip?: string }, top?: ReactNode) => !x ? <div className="ttd" /> : (
     <div className="ttd">
       <div>{top ?? ' '}</div>
       <div>{x?.jabatan ?? ' '}</div>

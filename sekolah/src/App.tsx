@@ -15,6 +15,7 @@ import Penilaian from './pages/Penilaian'
 import Rapor from './pages/Rapor'
 import Pengaturan from './pages/Pengaturan'
 import Prasarana from './pages/Prasarana'
+import Administrasi from './pages/Administrasi'
 import AkunPage, { ProfilSaya } from './pages/Akun'
 import { boleh, keluar, useSesi } from './security/sesi'
 import { namaPegawai } from './util'
@@ -33,7 +34,8 @@ export const MENU: MenuItem[] = [
   { id: 'absensiPegawai', label: 'Absensi Guru & Pegawai', icon: 'absenPegawai', group: 'Kehadiran' },
   { id: 'nilai', label: 'Penilaian', icon: 'nilai', group: 'Penilaian' },
   { id: 'rapor', label: 'Cetak Rapor', icon: 'rapor', group: 'Penilaian' },
-  { id: 'prasarana', label: 'Prasarana (Sarpras)', icon: 'prasarana', group: 'Sarana Prasarana' },
+  { id: 'administrasi', label: 'Administrasi Sekolah', icon: 'administrasi', group: 'Administrasi' },
+  { id: 'prasarana', label: 'Prasarana (Sarpras)', icon: 'prasarana', group: 'Administrasi' },
   { id: 'pengaturan', label: 'Pengaturan', icon: 'pengaturan', group: 'Sistem' },
   { id: 'akun', label: 'Akun & Keamanan', icon: 'kunci', group: 'Sistem' },
 ]
@@ -51,6 +53,7 @@ const PAGES: Record<PageId, () => ReactNode> = {
   nilai: () => <Penilaian />,
   rapor: () => <Rapor />,
   prasarana: () => <Prasarana />,
+  administrasi: () => <Administrasi />,
   pengaturan: () => <Pengaturan />,
   akun: () => <AkunPage />,
 }
@@ -79,7 +82,7 @@ export default function App() {
           <div className="brand">
             <span className="brand-mark"><Icon name="school" size={22} /></span>
             <div>
-              <b>SIMAS</b><span className="brand-sub">Administrasi Sekolah · v0.2</span>
+              <b>SIMAS</b><span className="brand-sub">Administrasi Sekolah · v0.3</span>
             </div>
           </div>
           <div className="topbar-fill" />

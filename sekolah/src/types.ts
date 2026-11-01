@@ -219,9 +219,10 @@ export interface Collections {
   bangunan: Bangunan
   ruang: Ruang
   pengajuan: PengajuanPrasarana
+  arsip: Arsip
 }
 export type CollectionName = keyof Collections
-export const COLLECTIONS: CollectionName[] = ['sekolah', 'siswa', 'pegawai', 'rombel', 'mapel', 'absensi', 'nilai', 'rapor', 'ekskul', 'tanah', 'bangunan', 'ruang', 'pengajuan']
+export const COLLECTIONS: CollectionName[] = ['sekolah', 'siswa', 'pegawai', 'rombel', 'mapel', 'absensi', 'nilai', 'rapor', 'ekskul', 'tanah', 'bangunan', 'ruang', 'pengajuan', 'arsip']
 
 // ---------- Prasarana (mengacu Panduan Pengajuan Data Prasarana Dapodik versi 2027) ----------
 
@@ -323,4 +324,20 @@ export interface PengajuanPrasarana {
   diajukan?: string
   catatanVerifikasi?: string
   tarikData?: boolean // Tarik Data di Aplikasi Dapodik sudah dilakukan & data diperiksa
+}
+
+// ---------- Administrasi sekolah (8 bidang) ----------
+
+export interface Lampiran { nama: string; ukuran: number; tipe: string; data: string }
+export type NilaiArsip = string | number | undefined
+
+/** Satu baris buku/register administrasi (BKU, surat masuk, inventaris, notulen, dll.) atau status dokumen wajib. */
+export interface Arsip {
+  id: string
+  register: string // id register, atau '_dok' untuk daftar dokumen kelembagaan
+  data: Record<string, NilaiArsip>
+  lampiran?: Lampiran[]
+  dibuat: string
+  diubah?: string
+  oleh?: string
 }

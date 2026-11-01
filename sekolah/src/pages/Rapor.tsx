@@ -66,6 +66,7 @@ export default function Rapor() {
 
 function CatatanForm({ siswa, rombel, semester, onClose }: { siswa: Siswa; rombel: Rombel; semester: 1 | 2; onClose: () => void }) {
   const ekskul = useCol('ekskul')
+  const arsip = useCol('arsip')
   const id = catatanId(rombel.tahunAjaran, semester, siswa.id)
   const awal = useCol('rapor').find((c) => c.id === id)
   const kur = getKurikulum(rombel.kurikulumId)
@@ -75,10 +76,19 @@ function CatatanForm({ siswa, rombel, semester, onClose }: { siswa: Siswa; rombe
   const numOrU = (v: string) => (v === '' ? undefined : Number(v))
   return (
     <Modal title={`Catatan Rapor · ${siswa.nama}`} onClose={onClose} wide footer={<><Btn onClick={onClose}>Batal</Btn><Btn kind="primary" onClick={async () => { await put('rapor', c); toast('Catatan rapor disimpan'); onClose() }}>Simpan</Btn></>}>
+      {kur.isianRapor.some((x) => x.angka) && (() => {
+        const ukur = arsip.filter((a) => a.register === 'tumbuh' && a.data.siswa === siswa.id).sort((a, b) => String(b.data.tanggal ?? '').localeCompare(String(a.data.tanggal ?? '')))[0]
+        return ukur ? (
+          <p className="small">Pengukuran terakhir ({String(ukur.data.tanggal ?? '')}): BB {ukur.data.bb ?? '-'} kg, TB {ukur.data.tb ?? '-'} cm, LK {ukur.data.lk ?? '-'} cm.{' '}
+            <button type="button" className="link" onClick={() => set({ isian: { ...c.isian, bb: String(ukur.data.bb ?? ''), tb: String(ukur.data.tb ?? ''), lk: String(ukur.data.lk ?? '') } })}>Pakai data ini</button></p>
+        ) : <p className="muted small">Data BB/TB dapat diambil otomatis bila dicatat di Administrasi Anak Didik → Pertumbuhan Anak.</p>
+      })()}
       <div className="form-grid">
         {kur.isianRapor.map((x) => (
-          <Field key={x.key} label={x.label} span={x.options ? 1 : 3}>
-            {x.options
+          <Field key={x.key} label={x.label} span={x.options || x.angka ? 1 : 3}>
+            {x.angka
+              ? <input type="number" min={0} step="0.1" value={c.isian[x.key] ?? ''} onChange={(e) => set({ isian: { ...c.isian, [x.key]: e.target.value } })} />
+              : x.options
               ? <select value={c.isian[x.key] ?? ''} onChange={(e) => set({ isian: { ...c.isian, [x.key]: e.target.value } })}><option value="">-</option>{x.options.map((o) => <option key={o}>{o}</option>)}</select>
               : <textarea rows={2} value={c.isian[x.key] ?? ''} onChange={(e) => set({ isian: { ...c.isian, [x.key]: e.target.value } })} />}
           </Field>

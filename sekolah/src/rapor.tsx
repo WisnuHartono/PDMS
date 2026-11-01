@@ -3,7 +3,8 @@ import { getKurikulum } from './curricula'
 import { KopSurat } from './print'
 import { getSekolah, getState } from './store'
 import type { CatatanRapor, Rombel, Siswa } from './types'
-import { fmtTanggal, namaPegawai, rekapAbsensi, rentangSemester } from './util'
+import { bintang, usiaTahunBulan } from './narasiPaud'
+import { fmtTanggal, namaPegawai, parseIso, rekapAbsensi, rentangSemester } from './util'
 
 export function fase(r: Pick<Rombel, 'jenjang' | 'tingkat'>): string | undefined {
   const t = Number(r.tingkat)
@@ -60,9 +61,33 @@ export function RaporDoc({ siswa, rombel, semester }: { siswa: Siswa; rombel: Ro
           <tr><td>{L.nama}</td><td>: <b>{siswa.nama.toUpperCase()}</b></td><td>{L.kelas}</td><td>: {rombel.nama}{f && !intl ? ` (Fase ${f})` : ''}</td></tr>
           <tr><td>{L.nis}</td><td>: {siswa.noInduk}{siswa.nisn ? ` / ${siswa.nisn}` : ''}</td><td>{L.sem}</td><td>: {semester} ({semester === 1 ? (intl ? 'First' : 'Ganjil') : (intl ? 'Second' : 'Genap')})</td></tr>
           <tr><td>{intl ? 'School' : 'Sekolah'}</td><td>: {s.nama}</td><td>{L.ta}</td><td>: {rombel.tahunAjaran}</td></tr>
+          {kur.naratif && <tr><td>Usia</td><td>: {usiaTahunBulan(siswa.tanggalLahir, parseIso(s.tanggalRapor ?? new Date().toISOString().slice(0, 10))) || '-'}</td><td>Nama panggilan</td><td>: {siswa.namaPanggilan || '-'}</td></tr>}
         </tbody>
       </table>
 
+      {kur.naratif ? (
+        <>
+          {baris.map((b) => (
+            <div key={b.mapel.id} className="box paud-el">
+              <div className="box-h" style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}><span>{b.mapel.nama}</span>{b.ada && b.hasil.extra?.capaian ? <span style={{ whiteSpace: 'nowrap' }}><span className="bintang">{bintang(String(b.hasil.extra.capaian))}</span> {b.hasil.predikat}</span> : null}</div>
+              <div className="box-b pre">
+                {typeof b.hasil.extra?.foto === 'string' && <img src={b.hasil.extra.foto} alt="" className="paud-foto" />}
+                {b.ada ? b.hasil.deskripsi : ' '}
+              </div>
+            </div>
+          ))}
+          {(catatan?.isian.bb || catatan?.isian.tb || catatan?.isian.lk) && (
+            <table className="nilai" style={{ marginTop: 8 }}>
+              <thead><tr><th colSpan={3}>Pertumbuhan Anak</th></tr><tr><th>Berat badan</th><th>Tinggi badan</th><th>Lingkar kepala</th></tr></thead>
+              <tbody><tr>
+                <td className="c">{catatan.isian.bb ? `${catatan.isian.bb} kg` : '-'}</td>
+                <td className="c">{catatan.isian.tb ? `${catatan.isian.tb} cm` : '-'}</td>
+                <td className="c">{catatan.isian.lk ? `${catatan.isian.lk} cm` : '-'}</td>
+              </tr></tbody>
+            </table>
+          )}
+        </>
+      ) : (
       <table className="nilai">
         <thead>
           <tr><th style={{ width: 30 }}>{L.no}</th><th>{L.mapel}</th>{kur.kolomRapor.map((k, i) => <th key={i} style={{ width: k.width }}>{k.label}</th>)}</tr>
@@ -83,8 +108,9 @@ export function RaporDoc({ siswa, rombel, semester }: { siswa: Siswa; rombel: Ro
           })}
         </tbody>
       </table>
+      )}
 
-      {kur.isianRapor.map((x) => catatan?.isian[x.key] ? (
+      {kur.isianRapor.filter((x) => !x.angka).map((x) => catatan?.isian[x.key] ? (
         <div key={x.key} className="box"><div className="box-h">{x.label}</div><div className="box-b">{catatan.isian[x.key]}</div></div>
       ) : null)}
 

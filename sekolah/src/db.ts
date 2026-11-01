@@ -12,7 +12,7 @@ export interface Backend {
 }
 
 const DB_NAME = 'simas-sekolah'
-const DB_VERSION = 2 // v2: tanah, bangunan, ruang, pengajuan
+const DB_VERSION = 3 // v2: tanah, bangunan, ruang, pengajuan · v3: arsip (administrasi)
 
 function req<T>(r: IDBRequest<T>): Promise<T> {
   return new Promise((res, rej) => {

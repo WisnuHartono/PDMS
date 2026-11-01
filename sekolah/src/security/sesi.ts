@@ -30,3 +30,6 @@ export function pasangIdle(menit: number) {
 }
 
 export const boleh = (halaman: string) => !!sesi && (sesi.akun.peranId === 'admin' || sesi.peran.halaman.includes(halaman as never))
+
+/** Hak membuka satu bidang administrasi (Administrator dan peran tanpa batasan bidang: semua). */
+export const bolehBidang = (id: string) => boleh('administrasi') && (sesi!.akun.peranId === 'admin' || !sesi!.peran.bidang?.length || sesi!.peran.bidang.includes(id))

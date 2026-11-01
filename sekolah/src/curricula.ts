@@ -41,7 +41,7 @@ export interface Kurikulum {
   hitung: (baris: Baris | undefined, tujuan: string[], kkm: number) => HasilAkhir
   kolomRapor: KolomRapor[]
   /** Isian naratif non-mapel di rapor (sikap, kokurikuler, dsb). */
-  isianRapor: { key: string; label: string; options?: string[] }[]
+  isianRapor: { key: string; label: string; options?: string[]; angka?: boolean }[]
   judulRapor: string
   /** true = rapor berupa narasi per elemen (PAUD), bukan tabel angka */
   naratif?: boolean
@@ -186,15 +186,19 @@ const PAUD: Kurikulum = {
   ],
   hitung(b) {
     const c = typeof b?.capaian === 'string' ? b.capaian : undefined
-    return { predikat: c ? CAPAIAN_PAUD_LABEL[c] ?? c : undefined, deskripsi: typeof b?.deskripsi === 'string' ? b.deskripsi : '' }
+    return { predikat: c ? CAPAIAN_PAUD_LABEL[c] ?? c : undefined, deskripsi: typeof b?.deskripsi === 'string' ? b.deskripsi : '', extra: { capaian: c, foto: typeof b?.foto === 'string' ? b.foto : undefined } }
   },
   kolomRapor: [
     { label: 'Capaian', width: '150px', align: 'center', get: (h) => h.predikat },
     { label: 'Narasi Perkembangan', get: (h) => h.deskripsi },
   ],
   isianRapor: [
-    { key: 'kokurikuler', label: 'Projek Penguatan Profil Pelajar Pancasila' },
-    { key: 'pertumbuhan', label: 'Catatan Pertumbuhan (TB/BB/lingkar kepala)' },
+    { key: 'bb', label: 'Berat badan (kg)', angka: true },
+    { key: 'tb', label: 'Tinggi badan (cm)', angka: true },
+    { key: 'lk', label: 'Lingkar kepala (cm)', angka: true },
+    { key: 'kokurikuler', label: 'Kokurikuler / Projek Penguatan Profil Pelajar Pancasila' },
+    { key: 'pertumbuhan', label: 'Catatan Pertumbuhan dan Kesehatan' },
+    { key: 'refleksiGuru', label: 'Refleksi Guru' },
     { key: 'refleksiOrtu', label: 'Refleksi Orang Tua' },
   ],
   judulRapor: 'LAPORAN PERKEMBANGAN ANAK DIDIK',
