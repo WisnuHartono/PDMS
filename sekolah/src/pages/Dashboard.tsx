@@ -212,15 +212,15 @@ export default function Dashboard() {
             ['SK pendirian', gabung(sekolah.skPendirian, tgl(sekolah.tglSkPendirian))], ['Izin operasional', gabung(sekolah.skIzinOperasional, tgl(sekolah.tglSkIzinOperasional))],
           ]],
           ['Alamat & Kontak', 'map', [
-            ['Alamat', alamatLengkap(sekolah) || undefined], ['Telepon / faks', gabung(sekolah.telepon, sekolah.fax)], ['Email', sekolah.email], ['Laman', sekolah.website],
+            ['Alamat', alamatLengkap(sekolah) || undefined], ['Telp / faks', gabung(sekolah.telepon, sekolah.fax)], ['Email', sekolah.email], ['Laman', sekolah.website],
             ['Koordinat', gabung(sekolah.lintang, sekolah.bujur)],
           ]],
           ['Pejabat Sekolah', 'pegawai', [
-            ['Kepala sekolah', p(sekolah.kepalaSekolahId)], ['Wakil kurikulum', p(sekolah.wakaKurikulumId)], ['Bendahara', p(sekolah.bendaharaId)],
+            ['Kepsek', p(sekolah.kepalaSekolahId)], ['Waka kurikulum', p(sekolah.wakaKurikulumId)], ['Bendahara', p(sekolah.bendaharaId)],
             ['Kepala TU', p(sekolah.kaTuId)], ['Operator', p(sekolah.operatorId)], ['Ketua komite', sekolah.ketuaKomite],
           ]],
           ['Tahun Ajaran & Data', 'rombel', [
-            ['Tahun ajaran', `${sekolah.tahunAjaranAktif} · Semester ${sekolah.semesterAktif}`], ['Peserta didik aktif', String(aktif.length)], ['Guru / tendik', `${guru.length} / ${tendik.length}`],
+            ['Tahun ajaran', `${sekolah.tahunAjaranAktif} · Smt ${sekolah.semesterAktif}`], ['Siswa aktif', String(aktif.length)], ['Guru / tendik', `${guru.length} / ${tendik.length}`],
             ['Rombel', String(rombelAktif.length)], ['Luas tanah', sekolah.luasTanahMilik ? `${sekolah.luasTanahMilik} m²` : undefined],
             ['Listrik / internet', gabung(sekolah.sumberListrik && `${sekolah.sumberListrik}${sekolah.dayaListrik ? ` ${sekolah.dayaListrik} VA` : ''}`, sekolah.aksesInternet)],
           ]],
@@ -230,7 +230,7 @@ export default function Dashboard() {
           <Card title="Profil & Informasi Sekolah" className="mb" actions={boleh('pengaturan') ? <button className="icon-btn" title="Ubah di Pengaturan" onClick={() => nav.open('pengaturan')}><Icon name="edit" size={16} /></button> : undefined}>
             <div className="profil-sk">
               <div className="profil-id">
-                <LogoSekolah logo={sekolah.logo} t={{ ...tampilanDari(sekolah), logoUkuran: 48, logoLatar: 'putih', logoBingkai: true }} />
+                <LogoSekolah logo={sekolah.logo} t={{ ...tampilanDari(sekolah), logoUkuran: 68, logoLatar: 'putih', logoBingkai: true }} />
                 <div>
                   <b>{sekolah.nama}</b>
                   <span>{gabung(sekolah.npsn && `NPSN ${sekolah.npsn}`, sekolah.statusSekolah, sekolah.akreditasi && `Akreditasi ${sekolah.akreditasi}`) ?? ' '}</span>
