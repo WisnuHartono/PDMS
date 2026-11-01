@@ -60,8 +60,8 @@ function Harian() {
               return (
                 <tr key={p.id}>
                   <td><Avatar nama={p.nama} foto={p.foto} size={28} /></td>
-                  <td><b>{namaPegawai(p)}</b><br /><span className="muted small">{p.jenis}</span></td>
-                  <td>{p.jabatan}</td>
+                  <td className="nowrap"><b>{namaPegawai(p)}</b><br /><span className="muted small">{p.jenis}</span></td>
+                  <td className="nowrap">{p.jabatan}</td>
                   <td>
                     <select className={`st-sel st-${c?.status ?? ''}`} value={c?.status ?? ''} onChange={(e) => e.target.value ? upd(p.id, { status: e.target.value as StatusHadir }) : (setData((d) => { const n = { ...d }; delete n[p.id]; return n }), setDirty(true))} aria-label={`Status ${p.nama}`}>
                       <option value="">— belum —</option>

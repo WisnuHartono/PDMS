@@ -48,7 +48,7 @@ code { background: var(--line-2); padding: 1px 4px; border-radius: 3px; }
   grid-template-areas: 'top top' 'side main';
   height: 100vh;
 }
-.shell.expanded { grid-template-columns: 220px 1fr; }
+.shell.expanded { grid-template-columns: 244px 1fr; }
 
 .topbar {
   grid-area: top;
@@ -607,3 +607,22 @@ table.mini td { padding: 3px 6px; }
 .form-grid.g6 .foto-box { grid-row: auto; }
 .contoh-no { height: 30px; }
 @media (max-width: 760px) { .ident-row { grid-template-columns: 1fr; } }
+
+/* Ikon tidak boleh menyusut; judul bagian lebih tebal dan jelas */
+.ico { flex: none; min-width: 0; }
+.side-item .ico { width: 22px; height: 22px; }
+.side-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; font-weight: 500; }
+.side-group { color: #b4c7d8; font-weight: 700; font-size: 11.5px; letter-spacing: 0.1em; padding-top: 14px; }
+.side-item.on .side-label { font-weight: 700; }
+.page-head h2 { font-weight: 800; letter-spacing: -0.01em; color: #0f2233; }
+.card-h h3 { font-weight: 800; font-size: 14px; color: #0f2233; }
+.setelan-h { font-weight: 800; color: #0f2233; }
+.setelan-nav button span { font-weight: 700; }
+h4.sec { font-weight: 800; font-size: 13px; letter-spacing: 0.01em; }
+.field-l { font-weight: 700; color: #34495c; }
+.tbl th { font-weight: 700; color: #34495c; }
+table.mini th { font-weight: 700; color: #4b5d6e; }
+.modal-h h3, .modal-h h2 { font-weight: 800; }
+.subtabs button.on { font-weight: 800; }
+.adm-teks b, .adm-head h2 { font-weight: 800; }
+.doc-title { font-weight: 800; }

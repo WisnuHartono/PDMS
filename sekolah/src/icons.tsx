@@ -12,7 +12,7 @@ const P: Record<string, ReactNode> = {
   absenPegawai: <><rect x="3" y="4.5" width="18" height="16.5" rx="2" /><path d="M3 9.5h18M8 2.5v4M16 2.5v4" /><circle cx="12" cy="14" r="2" /><path d="M8.5 19c.6-1.4 1.9-2.2 3.5-2.2s2.9.8 3.5 2.2" /></>,
   nilai: <><rect x="5" y="3.5" width="14" height="18" rx="2" /><path d="M9 3.5V2h6v1.5" /><path d="M8.5 10h7M8.5 14h7M8.5 18h4" /></>,
   rapor: <><path d="M6 9V3h12v6" /><rect x="3" y="9" width="18" height="8" rx="2" /><path d="M6 14h12v7H6z" /></>,
-  ekskul: <><circle cx="12" cy="12" r="9" /><path d="M12 3c2.5 2.5 3.8 5.5 3.8 9s-1.3 6.5-3.8 9M12 3c-2.5 2.5-3.8 5.5-3.8 9s1.3 6.5 3.8 9M3.5 9h17M3.5 15h17" /></>,
+  ekskul: <><path d="M8 4h8v5a4 4 0 0 1-8 0z" /><path d="M8 6H4.5a2.5 2.5 0 0 0 3 3.5M16 6h3.5a2.5 2.5 0 0 1-3 3.5M12 13v4M10 17h4M8.5 20.5h7" /></>,
   pengaturan: <><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" /></>,
   search: <><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></>,
   help: <><circle cx="12" cy="12" r="9" /><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6M12 17h.01" /></>,
@@ -31,7 +31,7 @@ const P: Record<string, ReactNode> = {
   chevR: <path d="m9 6 6 6-6 6" />,
   prasarana: <><path d="M3 21h18" /><path d="M5 21V8l7-4 7 4v13" /><path d="M9 21v-5h6v5" /><path d="M9 10h.01M15 10h.01M9 13h.01M15 13h.01" /></>,
   kunci: <><rect x="4" y="10.5" width="16" height="10.5" rx="2" /><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5" /><path d="M12 15v2.5" /></>,
-  administrasi: <><rect x="3" y="3" width="7.5" height="7.5" rx="2" /><rect x="13.5" y="3" width="7.5" height="7.5" rx="2" /><rect x="3" y="13.5" width="7.5" height="7.5" rx="2" /><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2" /></>,
+  administrasi: <><path d="M3 7a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><path d="M8 13h8M8 16h5" /></>,
   anak: <><circle cx="12" cy="4.8" r="2.3" /><path d="M5 9.5c2.3 1 4.6 1.5 7 1.5s4.7-.5 7-1.5" /><path d="M12 11v4.5M9 21l1.2-5.5h3.6L15 21" /></>,
   umum: <><path d="M3 21h18M4 21V10l8-6 8 6v11" /><path d="M8 21v-7h8v7M8 17.5h8" /></>,
   kepsek: <><circle cx="12" cy="7" r="3.5" /><path d="M5 21c.8-4 3.5-6.5 7-6.5s6.2 2.5 7 6.5" /><path d="m12 14.5-1.2 2.3L12 21l1.2-4.2z" /></>,
@@ -45,7 +45,7 @@ export type IconName = keyof typeof P
 
 export function Icon({ name, size = 20, className }: { name: IconName | string; size?: number; className?: string }) {
   return (
-    <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg className={className ? `ico ${className}` : 'ico'} width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       {P[name] ?? P.dashboard}
     </svg>
   )
