@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { getKurikulum } from '../curricula'
 import { aiSiap, isiNama, variasiHint, panggilAi, promptCatatan, systemPrompt } from '../ai'
+import { asesmenSiswa } from '../asesmen'
 import { RaporDoc, catatanId, dataRapor } from '../rapor'
 import { getState, put, useCol, useSekolah } from '../store'
 import type { CatatanRapor, Rombel, Siswa } from '../types'
@@ -10,6 +11,7 @@ export default function Rapor() {
   const sekolah = useSekolah()
   const rombel = useCol('rombel')
   const siswa = useCol('siswa')
+  const arsipAll = useCol('arsip')
   useCol('nilai'); useCol('rapor'); useCol('absensi') // render ulang saat data berubah
   const rombelAktif = rombel.filter((r) => r.tahunAjaran === sekolah.tahunAjaranAktif).sort((a, b) => a.nama.localeCompare(b.nama, 'id', { numeric: true }))
   const [rid, setRid] = useState('')
@@ -35,7 +37,7 @@ export default function Rapor() {
         {!anggota.length ? <Empty>Rombel belum memiliki anggota.</Empty> : (
           <div className="table-wrap">
             <table className="tbl">
-              <thead><tr><th className="num">No</th><th>Nama</th><th>NIS</th><th className="c">Mapel terisi</th>{!kur.naratif && <th className="c">Rata-rata</th>}<th className="c">S / I / A</th><th className="c">Catatan</th><th></th></tr></thead>
+              <thead><tr><th className="num">No</th><th>Nama</th><th>NIS</th><th className="c">Mapel terisi</th>{!kur.naratif && <th className="c">Rata-rata</th>}<th className="c">S / I / A</th><th className="c">Asesmen</th><th className="c">Catatan</th><th></th></tr></thead>
               <tbody>
                 {anggota.map((s, i) => {
                   const d = dataRapor(s, r, sem)
@@ -47,6 +49,11 @@ export default function Rapor() {
                       <td className="c"><span className={`pill ${terisi === d.baris.length ? 'ok' : 'warn'}`}>{terisi}/{d.baris.length}</span></td>
                       {!kur.naratif && <td className="c">{nil.length ? (nil.reduce((a, b) => a + b, 0) / nil.length).toFixed(1) : '-'}</td>}
                       <td className="c">{d.hadir.sakit} / {d.hadir.izin} / {d.hadir.alpa}</td>
+                      <td className="c">{(() => {
+                        const a = asesmenSiswa(arsipAll, r.tahunAjaran, sem, s.id)
+                        const f = a.filter((x) => x.rekam.final).length
+                        return a.length ? <span className={`pill ${f === a.length ? 'ok' : 'warn'}`} title={f === a.length ? 'Semua asesmen terkunci dan masuk rapor' : 'Asesmen yang belum dikunci tidak dicetak di rapor'}>{f}/{a.length} terkunci</span> : <span className="pill">-</span>
+                      })()}</td>
                       <td className="c">{d.catatan?.catatanWali ? <span className="pill ok">Ada</span> : <span className="pill">Belum</span>}</td>
                       <td className="row-actions">
                         <Btn icon="edit" kind="ghost" onClick={() => setEdit(s)}>Catatan</Btn>
@@ -94,6 +101,7 @@ function CatatanForm({ siswa, rombel, semester, onClose }: { siswa: Siswa; rombe
         mapel: d.baris.map((b) => ({ nama: b.mapel.nama, nilai: b.hasil.nilai, kkm: b.mapel.kkm ?? 70 })),
         hadir: { sakit: c.sakitManual ?? d.hadir.sakit, izin: c.izinManual ?? d.hadir.izin, alpa: c.alpaManual ?? d.hadir.alpa },
         ekskul: c.ekskul.filter((e) => e.nama).map((e) => ({ nama: e.nama, predikat: e.predikat })), capaian, teksGuru: c.catatanWali,
+        asesmen: asesmenSiswa(getState().arsip, rombel.tahunAjaran, semester, siswa.id).filter((x) => x.rekam.final && x.ringkas.predikat).map((x) => ({ nama: x.inst.nama, ringkas: `${x.ringkas.predikat}. ${x.ringkas.baris.map((b) => `${b.aspek} ${b.skor}/4`).join(', ')}` })),
       })
       if (!nil.length && !capaian?.length) throw new Error('Isi nilai/capaian mata pelajaran dulu agar catatan sesuai penilaian.')
       const t = await panggilAi(sekolah.ai, systemPrompt(sekolah.ai, 'catatan', kur.asal === 'Internasional'), pr + (sekolah.ai.humanize === false ? '' : variasiHint(siswa.id)), 700)

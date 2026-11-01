@@ -120,7 +120,7 @@ export function kategori(v: number, kkm: number) {
 
 const PANJANG = { ringkas: '2 kalimat (sekitar 35-50 kata)', standar: '3-4 kalimat (sekitar 60-90 kata)', rinci: '5-6 kalimat (sekitar 100-140 kata)' }
 
-export function systemPrompt(a: AiSetting, jenis: 'mapel' | 'paud' | 'catatan', inggris = false) {
+export function systemPrompt(a: AiSetting, jenis: 'mapel' | 'paud' | 'catatan' | 'asesmen', inggris = false) {
   const dasar = [
     'Anda adalah guru berpengalaman yang menulis narasi pada rapor sekolah.',
     inggris ? 'Tulis dalam bahasa Inggris yang formal dan hangat.' : 'Tulis dalam bahasa Indonesia baku yang hangat, positif, dan mudah dipahami orang tua.',
@@ -131,6 +131,7 @@ export function systemPrompt(a: AiSetting, jenis: 'mapel' | 'paud' | 'catatan', 
     `Panjang: ${PANJANG[a.gaya]}.`,
   ]
   if (jenis === 'catatan') dasar.push('Ini catatan wali kelas: rangkum gambaran keseluruhan (kekuatan, hal yang perlu ditingkatkan, kehadiran, ekstrakurikuler bila ada) dan tutup dengan saran tindak lanjut singkat.')
+  if (jenis === 'asesmen') dasar.push('Ini narasi hasil asesmen sikap/perkembangan: rangkum pola dari skor dan bukti observasi guru; rujuk bukti bila ada, jangan menambah kejadian baru.')
   if (jenis === 'paud') dasar.push('Ini rapor PAUD: gunakan bahasa yang menggambarkan perkembangan anak berdasarkan capaian (BB=Belum Berkembang, MB=Mulai Berkembang, BSH=Berkembang Sesuai Harapan, BSB=Berkembang Sangat Baik) tanpa membandingkan dengan anak lain.')
   if (a.humanize !== false) dasar.push(
     'GAYA MANUSIA: tulis seperti guru yang mengenal murid dan menulis sendiri, bukan seperti mesin. Variasikan panjang kalimat (campur kalimat pendek dan sedang), pakai kata sehari-hari yang tetap sopan, hindari frasa klise ("senantiasa", "luar biasa", "diharapkan terus", "dalam hal ini"), hindari tanda pisah panjang (—), hindari daftar tiga serangkai yang seragam, dan jangan mengulang pola pembuka yang sama. Boleh ada sedikit nada pribadi yang wajar, tetapi tetap berbasis data dan tidak berlebihan.')
@@ -170,6 +171,7 @@ export interface DataCatatan {
   ekskul: { nama: string; predikat: string }[]
   /** Rapor PAUD: capaian per elemen (BB/MB/BSH/BSB). */
   capaian?: { nama: string; capaian: string }[]
+  asesmen?: { nama: string; ringkas: string }[]
   teksGuru?: string
 }
 export function promptCatatan(d: DataCatatan) {
@@ -178,6 +180,7 @@ export function promptCatatan(d: DataCatatan) {
   const ada = d.mapel.filter((m) => m.nilai !== undefined)
   if (ada.length) { L.push('Nilai per mata pelajaran:'); ada.forEach((m) => L.push(`- ${m.nama}: ${m.nilai} (${kategori(m.nilai!, m.kkm)})`)) }
   if (d.capaian?.length) { L.push('Capaian perkembangan per elemen:'); d.capaian.forEach((c) => L.push(`- ${c.nama}: ${c.capaian}`)) }
+  d.asesmen?.forEach((x) => L.push(`Asesmen ${x.nama}: ${x.ringkas}`))
   L.push(`Ketidakhadiran: sakit ${d.hadir.sakit} hari, izin ${d.hadir.izin} hari, tanpa keterangan ${d.hadir.alpa} hari`)
   if (d.ekskul.length) L.push(`Ekstrakurikuler: ${d.ekskul.map((e) => `${e.nama} (${e.predikat})`).join(', ')}`)
   if (d.teksGuru?.trim()) L.push(`Catatan awal wali kelas (kembangkan, pertahankan maksud): ${d.teksGuru.trim().slice(0, 500)}`)
@@ -243,4 +246,14 @@ export const PANDUAN: Record<AiSetting['penyedia'], PanduanAi> = {
     ],
     catatan: ['Model lokal Ollama hanya dapat dipakai dari aplikasi Windows (bukan versi web) dan kualitas bahasa Indonesia bergantung pada model.', 'Alamat selain komputer sendiri harus HTTPS.'],
   },
+}
+
+export interface DataAsesmen { instrumen: string; kelas: string; rata?: string; aspek: { nama: string; skor: number; label: string; bukti?: string }[]; teksGuru?: string }
+export function promptAsesmen(d: DataAsesmen) {
+  const L = [`Instrumen: ${d.instrumen}`, `Kelas: ${d.kelas}`, 'Hasil observasi (skala 1-4):']
+  d.aspek.forEach((a) => L.push(`- ${a.nama}: ${a.skor}/4 (${a.label})${a.bukti ? `. Bukti guru: ${a.bukti.slice(0, 250)}` : ''}`))
+  if (d.rata) L.push(`Kategori keseluruhan: ${d.rata}`)
+  if (d.teksGuru?.trim()) L.push(`Catatan awal guru (kembangkan): ${d.teksGuru.trim().slice(0, 400)}`)
+  L.push('', 'Tulis narasi ringkas hasil asesmen untuk {NAMA}.')
+  return L.join('\n')
 }

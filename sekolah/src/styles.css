@@ -746,3 +746,28 @@ a.btn { text-decoration: none; color: inherit; }
 .tampil-prev .who span { font-size: 10.5px; opacity: .82; }
 .tampil-prev .top-sekolah { display: flex; align-items: center; gap: 12px; }
 input[type=range] { width: 100%; accent-color: var(--accent); }
+
+/* ---------- Asesmen siswa ---------- */
+.asm-tbl .asm-sel { width: 46px; text-align: center; padding: 0 2px; border-radius: 6px; font-weight: 700; }
+.sk-0 { background: #fff; } .sk-1 { background: #fee2e2; color: #991b1b; } .sk-2 { background: #fef3c7; color: #92400e; } .sk-3 { background: #dcfce7; color: #166534; } .sk-4 { background: #bbf7d0; color: #14532d; }
+.asm-final td { background: #f6fbf8; }
+.asm-rub td, .asm-rub th { vertical-align: top; min-width: 150px; }
+.asm-aspek { border: 1px solid var(--line); border-radius: 8px; margin: 0 0 8px; padding: 6px 10px 8px; min-inline-size: 0; }
+.asm-aspek legend { padding: 0 6px; font-size: 13px; }
+.asm-level { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-bottom: 6px; }
+.asm-opt { display: block; border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; cursor: pointer; font-size: 11.5px; transition: border-color .12s, box-shadow .12s, transform .12s; background: #fff; }
+.asm-opt:hover { transform: translateY(-1px); border-color: var(--accent); }
+.asm-opt input { position: absolute; opacity: 0; pointer-events: none; }
+.asm-opt b { display: block; font-size: 12px; margin-bottom: 2px; }
+.asm-opt span { color: var(--muted); }
+.asm-opt.on { box-shadow: 0 0 0 2px var(--accent); }
+.asm-opt.on.sk-1 { box-shadow: 0 0 0 2px #dc2626; } .asm-opt.on.sk-2 { box-shadow: 0 0 0 2px #d97706; } .asm-opt.on.sk-3, .asm-opt.on.sk-4 { box-shadow: 0 0 0 2px #16a34a; }
+.asm-bukti { width: 100%; }
+.asm-riwayat { margin-top: 8px; }
+.asm-edit { border: 1px solid var(--line-2); border-radius: 8px; padding: 6px 8px; margin-bottom: 8px; }
+@media (max-width: 900px) { .asm-level { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.asm-rapor { margin: 8px 0; page-break-inside: avoid; }
+.asm-rapor table td i { display: block; font-size: .92em; color: #333; }
+.asm-narasi { border: 1px solid #000; border-top: 0; padding: 4px 8px; font-size: 10pt; }
+.asm-meta { font-size: 8.5pt; margin-top: 2px; color: #333; }
+.asm-rapor table td, .asm-rapor table th { font-size: 9.5pt; padding: 2px 5px; }

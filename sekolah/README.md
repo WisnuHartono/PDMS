@@ -102,3 +102,11 @@ Pengaturan → **Integrasi AI**: pilih penyedia (Anthropic, Google Gemini, OpenA
 
 - **Pengaturan → Tampilan & Logo**: ukuran, bentuk, latar, bingkai, bayangan, zoom dan geser logo di header, serta ukuran nama dan baris legalitas, dengan pratinjau langsung.
 - Dashboard: sapaan, ringkasan prioritas (rombel belum diabsen, nilai belum lengkap, data invalid), aksi cepat, angka berhitung, dan animasi halus (mengikuti pengaturan "kurangi gerak" browser). Pintasan **Ctrl K** untuk pencarian cepat.
+
+## Asesmen siswa
+
+Menu **Asesmen Siswa** (grup Penilaian): instrumen berrubrik skala 1–4 (Sikap & Karakter, Profil Pelajar Pancasila, Keterampilan/Proyek, Observasi Perkembangan Anak, Diagnostik Awal) plus instrumen buatan sendiri.
+
+- **Panduan**: tiap aspek menampilkan deskriptor level 1–4 yang jelas; guru memilih dan menulis bukti observasi. **Isian cepat**: matriks siswa × aspek.
+- **Dapat dipertanggungjawabkan**: skor 1 dan 4 wajib berbukti, penilai dan tanggal tercatat, riwayat perubahan tersimpan, dan asesmen yang sudah **dikunci** hanya dapat dibuka oleh Administrator/Kepala Sekolah.
+- **Rapor**: hanya asesmen terkunci yang dicetak sebagai lampiran (aspek, capaian, deskripsi, bukti, penilai, tanggal) dan ikut menjadi bahan catatan wali kelas AI.

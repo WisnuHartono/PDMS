@@ -14,6 +14,7 @@ import AbsensiSiswa from './pages/AbsensiSiswa'
 import AbsensiPegawai from './pages/AbsensiPegawai'
 import Penilaian from './pages/Penilaian'
 import Rapor from './pages/Rapor'
+import Asesmen from './pages/Asesmen'
 import Pengaturan from './pages/Pengaturan'
 import Prasarana from './pages/Prasarana'
 import Administrasi from './pages/Administrasi'
@@ -36,6 +37,7 @@ export const MENU: MenuItem[] = [
   { id: 'absensiSiswa', label: 'Absensi Siswa', icon: 'absensi', group: 'Kehadiran' },
   { id: 'absensiPegawai', label: 'Absensi Guru & Pegawai', icon: 'absenPegawai', group: 'Kehadiran' },
   { id: 'nilai', label: 'Penilaian', icon: 'nilai', group: 'Penilaian' },
+  { id: 'asesmen', label: 'Asesmen Siswa', icon: 'asesmen', group: 'Penilaian' },
   { id: 'rapor', label: 'Cetak Rapor', icon: 'rapor', group: 'Penilaian' },
   { id: 'administrasi', label: 'Administrasi Sekolah', icon: 'administrasi', group: 'Administrasi' },
   { id: 'prasarana', label: 'Prasarana (Sarpras)', icon: 'prasarana', group: 'Administrasi' },
@@ -55,6 +57,7 @@ const PAGES: Record<PageId, () => ReactNode> = {
   absensiSiswa: () => <AbsensiSiswa />,
   absensiPegawai: () => <AbsensiPegawai />,
   nilai: () => <Penilaian />,
+  asesmen: () => <Asesmen />,
   rapor: () => <Rapor />,
   prasarana: () => <Prasarana />,
   administrasi: () => <Administrasi />,

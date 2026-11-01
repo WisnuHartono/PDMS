@@ -1,5 +1,6 @@
 // Penyusunan data rapor + dokumen cetak rapor per siswa.
 import { getKurikulum } from './curricula'
+import { asesmenFinal } from './asesmen'
 import { KopSurat } from './print'
 import { getSekolah, getState } from './store'
 import type { CatatanRapor, Rombel, Siswa } from './types'
@@ -37,13 +38,14 @@ export function dataRapor(siswa: Siswa, r: Rombel, semester: 1 | 2) {
     izin: catatan?.izinManual ?? rek?.I ?? 0,
     alpa: catatan?.alpaManual ?? rek?.A ?? 0,
   }
-  return { kur, baris, catatan, hadir }
+  const asesmen = asesmenFinal(st.arsip, r.tahunAjaran, semester, siswa.id)
+  return { kur, baris, catatan, hadir, asesmen }
 }
 
 export function RaporDoc({ siswa, rombel, semester }: { siswa: Siswa; rombel: Rombel; semester: 1 | 2 }) {
   const s = getSekolah()
   const st = getState()
-  const { kur, baris, catatan, hadir } = dataRapor(siswa, rombel, semester)
+  const { kur, baris, catatan, hadir, asesmen } = dataRapor(siswa, rombel, semester)
   const wali = st.pegawai.find((p) => p.id === rombel.waliKelasId)
   const kepsek = st.pegawai.find((p) => p.id === s.kepalaSekolahId)
   const intl = kur.asal === 'Internasional'
@@ -114,6 +116,24 @@ export function RaporDoc({ siswa, rombel, semester }: { siswa: Siswa; rombel: Ro
       {kur.isianRapor.filter((x) => !x.angka).map((x) => catatan?.isian[x.key] ? (
         <div key={x.key} className="box"><div className="box-h">{x.label}</div><div className="box-b">{catatan.isian[x.key]}</div></div>
       ) : null)}
+
+      {asesmen.map(({ inst, rekam, ringkas }) => (
+        <div key={inst.id} className="asm-rapor">
+          <table className="nilai">
+            <thead>
+              <tr><th colSpan={4} style={{ textAlign: 'left' }}>{intl ? 'Assessment' : 'Asesmen'}: {inst.nama}{ringkas.predikat ? ` — ${ringkas.predikat}` : ''}</th></tr>
+              <tr><th style={{ width: 30 }}>{L.no}</th><th style={{ width: '24%' }}>{intl ? 'Aspect' : 'Aspek'}</th><th style={{ width: 90 }}>{intl ? 'Level' : 'Capaian'}</th><th>{intl ? 'Description & evidence' : 'Deskripsi dan bukti pengamatan'}</th></tr>
+            </thead>
+            <tbody>
+              {ringkas.baris.map((b, i) => (
+                <tr key={b.aspek}><td className="c">{i + 1}</td><td>{b.aspek}</td><td className="c">{b.skor} · {b.label}</td><td>{b.deskripsi}{b.bukti ? <i> {intl ? 'Evidence' : 'Bukti'}: {b.bukti}</i> : null}</td></tr>
+              ))}
+            </tbody>
+          </table>
+          {rekam.umum && <div className="asm-narasi">{rekam.umum}</div>}
+          <div className="asm-meta">{intl ? 'Scale 1–4: Needs Guidance, Fair, Good, Excellent.' : 'Skala 1–4: Perlu Bimbingan, Cukup, Baik, Sangat Baik.'} {intl ? 'Assessed by' : 'Dinilai oleh'} {rekam.penilai ?? '-'}{rekam.tanggal ? `, ${fmtTanggal(rekam.tanggal)}` : ''}; {intl ? 'locked and verifiable.' : 'data terkunci dan dapat ditelusuri.'}</div>
+        </div>
+      ))}
 
       <div className="two">
         <table className="nilai">
