@@ -136,9 +136,11 @@ export function LembarInduk({ s }: { s: Siswa }) {
       ) : <p className="ket">Tidak ada wali (diasuh orang tua kandung).</p>}
       <h4 className="sec">F. Riwayat pendidikan</h4>
       <div className="kvn" data-grup="2">
-        {row('Diterima di sekolah ini', `${s.tanggalMasuk ? fmtTanggal(s.tanggalMasuk) : '-'}${s.diterimaDiKelas ? `, kelas ${s.diterimaDiKelas}` : ''}`)}
-        {row('Asal sekolah / no. ijazah', `${s.asalSekolah ?? '-'} / ${s.noIjazahAsal ?? '-'}`)}
-        {s.pindahanDari && row('Pindahan dari / alasan', `${s.pindahanDari} / ${s.alasanPindah ?? '-'}`)}
+        {row('Tanggal diterima', s.tanggalMasuk ? fmtTanggal(s.tanggalMasuk) : undefined)}{row('Diterima di kelompok', s.diterimaDiKelas)}
+        {row('Status penerimaan', s.jenisPendaftaran)}{row('Asal sekolah', s.asalSekolah)}
+        {s.noIjazahAsal && row('No. ijazah asal', s.noIjazahAsal)}
+        {s.pindahanDari && row('Pindahan dari', s.pindahanDari)}{s.alasanPindah && row('Alasan pindah', s.alasanPindah)}
+        {row('Kelas saat ini', kelas)}
       </div>
       <h4 className="sec">G. Perkembangan belajar</h4>
       <table className="nilai">
