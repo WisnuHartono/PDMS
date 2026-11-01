@@ -34,8 +34,8 @@ export default function Prasarana() {
 
   return (
     <div>
-      <PageHead title="Prasarana (Sarpras)" sub="Data tanah, bangunan, dan ruang serta pengajuan perubahannya ke Dapodik (Panduan Dapodik versi 2027)" />
-      <Tabs tabs={[['ringkasan', 'Ringkasan & Panduan'], ['tanah', 'Tanah'], ['bangunan', 'Bangunan'], ['ruang', 'Ruang'], ['pengajuan', 'Pengajuan Dapodik']]} value={tab} onChange={setTab} />
+      <PageHead title="Prasarana (Sarpras)" sub="Data tanah, bangunan, dan ruang serta pengajuan perubahan datanya" />
+      <Tabs tabs={[['ringkasan', 'Ringkasan & Panduan'], ['tanah', 'Tanah'], ['bangunan', 'Bangunan'], ['ruang', 'Ruang'], ['pengajuan', 'Pengajuan Perubahan']]} value={tab} onChange={setTab} />
       {tab === 'ringkasan' && <Ringkasan onTab={setTab} />}
       {tab === 'tanah' && <TanahTab ajukan={ajukan} />}
       {tab === 'bangunan' && <BangunanTab ajukan={ajukan} />}
@@ -51,8 +51,8 @@ type Ajukan = (o: ObjekPrasarana, j: JenisPengajuan, id?: string, nama?: string)
 function AksiAjukan({ objek, id, nama, ajukan, dihapus }: { objek: ObjekPrasarana; id: string; nama: string; ajukan: Ajukan; dihapus?: boolean }) {
   if (dihapus) return null
   return (
-    <select className="mini-sel" value="" onChange={(e) => e.target.value && ajukan(objek, e.target.value as JenisPengajuan, id, nama)} aria-label={`Ajukan ke Dapodik: ${nama}`}>
-      <option value="">Ajukan ke Dapodik…</option>
+    <select className="mini-sel" value="" onChange={(e) => e.target.value && ajukan(objek, e.target.value as JenisPengajuan, id, nama)} aria-label={`Ajukan perubahan: ${nama}`}>
+      <option value="">Ajukan perubahan…</option>
       <option value="Penambahan">Penambahan (data baru)</option>
       <option value="Perbaikan">Perbaikan data</option>
       <option value="Penghapusan">Penghapusan</option>
@@ -84,7 +84,7 @@ function Ringkasan({ onTab }: { onTab: (t: Tab) => void }) {
             <button className="kpi" onClick={() => onTab('ruang')}><span>Ruang</span><b>{ruang.length}</b><span>{ruang.filter((r) => r.jenisPrasarana === 'Ruang Teori/Kelas').length} ruang kelas</span></button>
             <button className="kpi" onClick={() => onTab('pengajuan')}><span>Pengajuan aktif</span><b>{aktif ? 1 : 0}</b><span>{aktif ? aktif.status : 'tidak ada'}</span></button>
           </div>
-          {perluTarik.length > 0 && <p className="small"><span className="pill warn">Perlu Tarik Data</span> {perluTarik.length} pengajuan disetujui belum ditarik ke Aplikasi Dapodik.</p>}
+          {perluTarik.length > 0 && <p className="small"><span className="pill warn">Perlu Realisasi</span> {perluTarik.length} pengajuan disetujui belum direalisasikan.</p>}
         </Card>
         {([['Kondisi Bangunan', bangunan], ['Kondisi Ruang', ruang]] as const).map(([judul, list]) => (
           <Card key={judul} title={judul}>
@@ -97,16 +97,16 @@ function Ringkasan({ onTab }: { onTab: (t: Tab) => void }) {
           </Card>
         ))}
       </div>
-      <Card title="Panduan Singkat Pengajuan Data Prasarana (Dapodik versi 2027)">
+      <Card title="Panduan Singkat Pengajuan Perubahan Data Prasarana">
         <div className="guide">
           <ol>
-            <li><b>Persiapan.</b> Periksa data prasarana di Aplikasi Dapodik, pastikan objek (tanah, bangunan, atau ruang) dan jenis pengajuan (penambahan, perbaikan, atau penghapusan), siapkan alasan dan dokumen pendukung.</li>
+            <li><b>Persiapan.</b> Periksa data prasarana yang tercatat, pastikan objek (tanah, bangunan, atau ruang) dan jenis pengajuan (penambahan, perbaikan, atau penghapusan), siapkan alasan dan dokumen pendukung.</li>
             <li><b>Isi data di SIMAS.</b> Catat atau perbaiki data di tab Tanah, Bangunan, atau Ruang. SIMAS memeriksa ketentuan pengisian, misalnya luas lahan tersedia tidak melebihi luas tanah, luas tapak tidak melebihi luas tanah, kode pos 5 digit, dan kode ruang tidak ganda.</li>
-            <li><b>Buat pengajuan.</b> Pilih <i>Ajukan ke Dapodik</i> pada baris data. SIMAS menampilkan dokumen wajib sesuai matriks panduan, dan dokumen harus PDF maksimal 2 MB.</li>
+            <li><b>Buat pengajuan.</b> Pilih <i>Ajukan perubahan</i> pada baris data. SIMAS menampilkan dokumen wajib sesuai matriks, dan dokumen harus PDF maksimal 2 MB.</li>
             <li><b>Daftar periksa.</b> Centang 7 butir pemeriksaan mandiri dan cetak lembar pengajuan untuk diperiksa kepala sekolah.</li>
-            <li><b>Kirim di Manajemen Satuan Pendidikan.</b> Masukkan data dan dokumen di <span className="nowrap">sp.datadik.kemendikdasmen.go.id</span> (menu Sarpras &gt; Pengajuan), lalu tandai pengajuan di SIMAS sebagai <i>Diajukan</i>.</li>
-            <li><b>Pantau verifikasi.</b> Dinas Pendidikan lalu BBPMP/BPMP memverifikasi. Selama status <i>Diajukan</i> atau <i>Proses Verifikasi</i>, pengajuan baru tidak dapat dibuat.</li>
-            <li><b>Tarik Data.</b> Setelah <i>Disetujui</i>, lakukan Tarik Data di Aplikasi Dapodik, periksa hasilnya, lalu centang <i>Tarik Data selesai</i>. Jika <i>Ditolak</i>, baca catatan penolakan dan buat pengajuan baru.</li>
+            <li><b>Ajukan.</b> Setelah kepala sekolah memeriksa lembar pengajuan, serahkan berkas kepada pihak yang berwenang (yayasan atau dinas), lalu tandai pengajuan sebagai <i>Diajukan</i>.</li>
+            <li><b>Pantau verifikasi.</b> Pihak yang berwenang memverifikasi pengajuan. Selama status <i>Diajukan</i> atau <i>Proses Verifikasi</i>, pengajuan baru tidak dapat dibuat.</li>
+            <li><b>Realisasi.</b> Setelah <i>Disetujui</i>, lakukan perubahan data, periksa hasilnya, lalu centang <i>Realisasi selesai</i>. Jika <i>Ditolak</i>, baca catatan penolakan dan buat pengajuan baru.</li>
           </ol>
           <table className="mini">
             <thead><tr><th>Dokumen wajib</th><th>Penambahan</th><th>Perbaikan</th><th>Penghapusan</th></tr></thead>
@@ -376,7 +376,7 @@ function PengajuanTab({ ajukan, onEdit }: { ajukan: Ajukan; onEdit: (p: Pengajua
         <select value={jenis} onChange={(e) => setJenis(e.target.value as JenisPengajuan)} aria-label="Jenis pengajuan">{JENIS_PENGAJUAN.map((j) => <option key={j}>{j}</option>)}</select>
         <Btn icon="plus" kind="primary" disabled={!!aktif} onClick={() => ajukan(objek, jenis)}>Buat Pengajuan</Btn>
       </>}>
-        {!list.length ? <Empty>Belum ada pengajuan. Pilih objek dan jenis pengajuan lalu klik <b>Buat Pengajuan</b>, atau gunakan <i>Ajukan ke Dapodik</i> pada baris data tanah, bangunan, atau ruang.</Empty> : (
+        {!list.length ? <Empty>Belum ada pengajuan. Pilih objek dan jenis pengajuan lalu klik <b>Buat Pengajuan</b>, atau gunakan <i>Ajukan perubahan</i> pada baris data tanah, bangunan, atau ruang.</Empty> : (
           <div className="table-wrap"><table className="tbl">
             <thead><tr><th>Nama Ajuan</th><th>Objek</th><th>Jenis</th><th>Data</th><th className="c">Dokumen</th><th>Status</th><th>Tindakan berikutnya</th><th></th></tr></thead>
             <tbody>{list.map((p) => {
@@ -387,7 +387,7 @@ function PengajuanTab({ ajukan, onEdit }: { ajukan: Ajukan; onEdit: (p: Pengajua
                   <td><b>{p.nama || '(tanpa nama)'}</b><br /><span className="muted small">dibuat {fmtTanggal(p.dibuat)}{p.diajukan ? ` · dikirim ${fmtTanggal(p.diajukan)}` : ''}</span></td>
                   <td>{p.objek}</td><td>{p.jenis}</td><td>{namaObjek(p)}</td>
                   <td className="c"><span className={`pill ${ada === wajib.length ? 'ok' : 'warn'}`}>{ada}/{wajib.length}</span></td>
-                  <td><span className={`pill ${KET_STATUS[p.status].pill}`}>{p.status}</span>{p.status === 'Disetujui' && (p.tarikData ? <span className="pill ok">Tarik Data selesai</span> : <span className="pill warn">Perlu Tarik Data</span>)}</td>
+                  <td><span className={`pill ${KET_STATUS[p.status].pill}`}>{p.status}</span>{p.status === 'Disetujui' && (p.tarikData ? <span className="pill ok">Realisasi selesai</span> : <span className="pill warn">Perlu Realisasi</span>)}</td>
                   <td className="small">{p.status === 'Disetujui' && p.tarikData ? 'Selesai' : KET_STATUS[p.status].tindakan}</td>
                   <td className="row-actions">
                     <Btn icon="print" kind="ghost" title="Cetak lembar pengajuan" onClick={() => printDoc(<LembarPengajuan p={p} />)} />
@@ -443,7 +443,7 @@ function PengajuanForm({ initial, onClose }: { initial: PengajuanPrasarana; onCl
       <div className="topbar-fill" />
       <Btn onClick={onClose}>Tutup</Btn>
       <Btn onClick={() => simpan()}>Simpan</Btn>
-      {draf && <Btn kind="primary" disabled={err.length > 0} title={err.length ? 'Lengkapi semua butir di bawah terlebih dahulu' : ''} onClick={() => simpan({ status: 'Diajukan', diajukan: today() })}>Tandai sudah dikirim</Btn>}
+      {draf && <Btn kind="primary" disabled={err.length > 0} title={err.length ? 'Lengkapi semua butir di bawah terlebih dahulu' : ''} onClick={() => simpan({ status: 'Diajukan', diajukan: today() })}>Tandai sudah diajukan</Btn>}
     </>}>
       <div className="form-grid">
         <Field label="Nama ajuan *" span={2} hint="mis. Penambahan Ruang Kelas Baru SMP Negeri 21"><Inp obj={p} k="nama" set={set} disabled={!draf} /></Field>
@@ -496,7 +496,7 @@ function PengajuanForm({ initial, onClose }: { initial: PengajuanPrasarana; onCl
       </div>
 
       {draf ? (
-        err.length ? <><h4 className="sec">Belum siap dikirim</h4><Errs e={err} /></> : <div className="notice ok">Pengajuan lengkap. Kirim melalui Manajemen Satuan Pendidikan (menu Sarpras &gt; Pengajuan), lalu klik <b>Tandai sudah dikirim</b>.</div>
+        err.length ? <><h4 className="sec">Belum siap diajukan</h4><Errs e={err} /></> : <div className="notice ok">Pengajuan lengkap. Serahkan berkas kepada pihak yang berwenang, lalu klik <b>Tandai sudah diajukan</b>.</div>
       ) : (
         <>
           <h4 className="sec">Status verifikasi</h4>
@@ -506,7 +506,7 @@ function PengajuanForm({ initial, onClose }: { initial: PengajuanPrasarana; onCl
           </div>
           <p className="small muted">{KET_STATUS[p.status].ket}. Tindakan: {KET_STATUS[p.status].tindakan}.</p>
           {p.status === 'Disetujui' && (
-            <label className="chip on"><input type="checkbox" checked={!!p.tarikData} onChange={(e) => set({ tarikData: e.target.checked })} />Tarik Data di Aplikasi Dapodik sudah dilakukan dan data {p.objek.toLowerCase()} sudah diperiksa</label>
+            <label className="chip on"><input type="checkbox" checked={!!p.tarikData} onChange={(e) => set({ tarikData: e.target.checked })} />Perubahan sudah direalisasikan dan data {p.objek.toLowerCase()} sudah diperiksa</label>
           )}
           {p.status === 'Disetujui' && p.jenis === 'Penghapusan' && <p className="small muted">Saat disimpan, data {p.objek.toLowerCase()} ini ditandai dihapus per {fmtTanggal(p.tanggalPenghapusan)} ({p.alasanPenghapusan}).</p>}
         </>
@@ -532,7 +532,7 @@ function LembarPengajuan({ p }: { p: PengajuanPrasarana }) {
   }
   return (
     <div className="doc">
-      <KopSurat judul="LEMBAR PEMERIKSAAN PENGAJUAN DATA PRASARANA" sub="Acuan: Panduan Pengajuan Data Prasarana pada Dapodik versi 2027" />
+      <KopSurat judul="LEMBAR PEMERIKSAAN PENGAJUAN DATA PRASARANA" sub="Diperiksa oleh kepala sekolah sebelum diajukan" />
       <table className="ident wide"><tbody>
         <tr><td className="lbl">Nama ajuan</td><td>: <b>{p.nama}</b></td></tr>
         <tr><td className="lbl">Objek / jenis pengajuan</td><td>: {p.objek} / {p.jenis}</td></tr>

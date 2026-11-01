@@ -96,7 +96,7 @@ export default function Pengaturan() {
                   <Field label="Berlaku sampai"><Inp obj={s} k="akreditasiBerlaku" set={set} type="date" /></Field>
                 </div>
               </Card>
-              <Card title="Jenjang & penetapan khusus (Dapodik 2027)">
+              <Card title="Jenjang & penetapan khusus">
                 <div className="field-l">Jenjang yang diselenggarakan</div>
                 <div className="chips" style={{ margin: '4px 0 10px' }}>{JENJANG.map((j) => <label key={j} className={`chip ${s.jenjang.includes(j) ? 'on' : ''}`}><input type="checkbox" checked={s.jenjang.includes(j)} onChange={() => toggle(j)} />{j}</label>)}</div>
                 <div className="form-grid g3">

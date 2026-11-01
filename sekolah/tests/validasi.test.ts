@@ -14,7 +14,7 @@ const siswa = (id: string, x: Partial<Siswa> = {}): Siswa => ({
 const rombel = (id: string, x: Partial<Rombel> = {}): Rombel => ({ id, nama: id, jenjang: 'SD', tingkat: '4', tahunAjaran: '2026/2027', kurikulumId: 'merdeka', waliKelasId: 'g', siswaIds: [], ...x })
 const data = (s: Siswa[], r: Rombel[], sk = sekolah()) => ({ sekolah: sk, siswa: s, pegawai: [], rombel: r, mapel: [], tanah: [], bangunan: [], ruang: [], arsip: [] })
 
-describe('validasi Dapodik 2027', () => {
+describe('validasi data', () => {
   it('jenis rombel khusus hanya tersedia dengan flag sekolah', () => {
     expect(jenisRombelTersedia(sekolah(), 'SD')).toEqual(['Reguler'])
     expect(jenisRombelTersedia(sekolah({ flag: { kelasRangkap: 'SK-1' } }), 'SD')).toContain('Kelas Rangkap')
@@ -66,7 +66,7 @@ describe('validasi Dapodik 2027', () => {
     expect(implementasiKurikulum(r, '2026/2027').map((x) => x.kurikulumId).sort()).toEqual(['k13', 'merdeka'])
   })
 
-  it('inventaris memakai kelompok alat Dapodik dan ada register buku teks SIBI', () => {
+  it('inventaris memakai kelompok alat dan ada register buku teks', () => {
     expect(KELOMPOK_ALAT).toContain('APE Sensori Motorik')
     expect(registerById('inventaris')?.fields.some((f) => f.k === 'kelompok')).toBe(true)
     expect(registerById('buku-teks')?.fields.map((f) => f.k)).toEqual(expect.arrayContaining(['judul', 'mapel', 'isbn', 'jumlah']))

@@ -166,7 +166,7 @@ export function SiswaForm({ initial, onClose }: { initial: Siswa; onClose: () =>
       )}
       {tab === 'ortu' && (
         <>
-          <p className="muted small">Dapodik 2027: status hidup ayah dan ibu kandung wajib diisi sesuai kondisi sebenarnya.</p>
+          <p className="muted small">Status hidup ayah dan ibu kandung wajib diisi sesuai kondisi sebenarnya.</p>
           <h4 className="sec">Ayah kandung</h4>
           <div className="form-grid"><OrtuForm kandung v={s.ayah} set={(p) => set({ ayah: { ...s.ayah, ...p } })} /></div>
           <h4 className="sec">Ibu kandung</h4>

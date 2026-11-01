@@ -4,7 +4,7 @@ import type { PengajuanPrasarana, Ruang, Tanah } from '../src/types'
 
 const tanah: Tanah = { id: 't', nama: 'Tanah Utama', noSertifikat: '12.34', panjang: 100, lebar: 80, luas: 8000, luasTersedia: 3500, statusKepemilikan: 'Milik', samaDenganSekolah: true }
 
-describe('aturan prasarana (Panduan Dapodik 2027)', () => {
+describe('aturan prasarana ', () => {
   it('klasifikasi kerusakan otomatis', () => {
     expect(klasifikasiKerusakan(0)).toBe('Tidak ada kerusakan')
     expect(klasifikasiKerusakan(25)).toBe('Rusak Ringan') // contoh di panduan

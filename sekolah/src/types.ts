@@ -39,7 +39,7 @@ export interface Sekolah {
   semesterAktif: 1 | 2
   kotaTtdRapor?: string
   tanggalRapor?: string // yyyy-mm-dd
-  // Data satuan pendidikan (Dapodik 2027: identitas, status operasional, akreditasi)
+  // Data satuan pendidikan: identitas, status operasional, akreditasi
   statusSekolah?: 'Negeri' | 'Swasta'
   statusOperasional?: 'Aktif' | 'Tutup sementara' | 'Tutup'
   akreditasi?: 'A' | 'B' | 'C' | 'Belum terakreditasi'
@@ -47,7 +47,7 @@ export interface Sekolah {
   flag?: { kelasRangkap?: string; pjj?: string; kln?: string } // isi = nomor SK penetapan
   validasiTerakhir?: string
 
-  // ---- Identitas & legalitas (rincian profil Dapodik) ----
+  // ---- Identitas & legalitas ----
   statusKepemilikan?: 'Pemerintah Pusat' | 'Pemerintah Daerah' | 'Yayasan' | 'Lainnya'
   skPendirian?: string; tglSkPendirian?: string
   skIzinOperasional?: string; tglSkIzinOperasional?: string
@@ -93,7 +93,7 @@ export type StatusSiswa = 'Aktif' | 'Lulus' | 'Mutasi Keluar' | 'Keluar' | 'Meni
 export interface OrangTua {
   nama?: string
   nik?: string
-  /** Dapodik 2027: status hidup ayah/ibu kandung */
+  /** Status hidup ayah/ibu kandung */
   statusHidup?: 'Hidup' | 'Wafat'
   pekerjaan?: string
   pendidikan?: string
@@ -175,7 +175,7 @@ export interface Pegawai {
   jurusan?: string
   tmt?: string // terhitung mulai tanggal
   mapelIds?: string[]
-  // Sertifikasi & tugas (Dapodik: GTK)
+  // Sertifikasi & tugas
   noSertifikatPendidik?: string
   tahunSertifikasi?: number
   bidangSertifikasi?: string
@@ -303,7 +303,7 @@ export interface Collections {
 export type CollectionName = keyof Collections
 export const COLLECTIONS: CollectionName[] = ['sekolah', 'siswa', 'pegawai', 'rombel', 'mapel', 'absensi', 'nilai', 'rapor', 'ekskul', 'tanah', 'bangunan', 'ruang', 'pengajuan', 'arsip']
 
-// ---------- Prasarana (mengacu Panduan Pengajuan Data Prasarana Dapodik versi 2027) ----------
+// ---------- Prasarana ----------
 
 export type StatusKepemilikan = 'Milik' | 'Sewa' | 'Pinjam' | 'Pinjam Pakai' | 'Bukan Milik'
 export type AlasanPenghapusan = 'Bencana' | 'Dibongkar' | 'Dipindahtangankan' | 'Disita' | 'Koreksi Data'
@@ -402,7 +402,7 @@ export interface PengajuanPrasarana {
   dibuat: string
   diajukan?: string
   catatanVerifikasi?: string
-  tarikData?: boolean // Tarik Data di Aplikasi Dapodik sudah dilakukan & data diperiksa
+  tarikData?: boolean // perubahan sudah direalisasikan & data diperiksa
 }
 
 // ---------- Administrasi sekolah (8 bidang) ----------

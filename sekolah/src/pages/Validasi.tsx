@@ -27,7 +27,7 @@ export default function Validasi() {
 
   return (
     <div>
-      <PageHead title="Validasi Data" sub="Pemeriksaan kualitas data mengacu ketentuan Dapodik 2027. Selesaikan data Invalid sebelum data dikirim atau dipakai untuk laporan.">
+      <PageHead title="Validasi Data" sub="Pemeriksaan kelengkapan dan kewajaran data. Selesaikan data Invalid sebelum dipakai untuk laporan.">
         <Btn icon="print" onClick={() => printDoc(<LaporanValidasi hasil={hasil} />)}>Cetak laporan</Btn>
         <Btn icon="refresh" kind="primary" onClick={tandai}>Validasi sekarang</Btn>
       </PageHead>

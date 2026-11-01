@@ -1,4 +1,4 @@
-// Aturan data prasarana mengacu "Panduan Pengajuan Data Prasarana pada Dapodik versi 2027".
+// Aturan data prasarana dan alur pengajuan perubahan data prasarana.
 import type {
   AlasanPenghapusan, Bangunan, JenisDokumen, JenisPengajuan, ObjekPrasarana, PengajuanPrasarana, Ruang, StatusKepemilikan, StatusPengajuan, Tanah,
 } from './types'
@@ -29,10 +29,10 @@ export const JENIS_PENGAJUAN: JenisPengajuan[] = ['Penambahan', 'Perbaikan', 'Pe
 export const STATUS_PENGAJUAN: StatusPengajuan[] = ['Draf', 'Diajukan', 'Proses Verifikasi', 'Disetujui', 'Ditolak', 'Dibatalkan']
 
 export const KET_STATUS: Record<StatusPengajuan, { ket: string; tindakan: string; pill: string }> = {
-  Draf: { ket: 'Belum dikirim ke Manajemen Satuan Pendidikan', tindakan: 'Lengkapi data, dokumen, dan daftar periksa', pill: '' },
-  Diajukan: { ket: 'Pengajuan telah dikirim', tindakan: 'Menunggu proses verifikasi', pill: 'info' },
-  'Proses Verifikasi': { ket: 'Pengajuan sedang diperiksa Dinas Pendidikan / BBPMP-BPMP', tindakan: 'Memantau status pengajuan', pill: 'warn' },
-  Disetujui: { ket: 'Pengajuan telah disetujui', tindakan: 'Lakukan Tarik Data di Aplikasi Dapodik lalu periksa hasilnya', pill: 'ok' },
+  Draf: { ket: 'Belum diajukan', tindakan: 'Lengkapi data, dokumen, dan daftar periksa', pill: '' },
+  Diajukan: { ket: 'Pengajuan telah diajukan', tindakan: 'Menunggu proses verifikasi', pill: 'info' },
+  'Proses Verifikasi': { ket: 'Pengajuan sedang diperiksa pihak yang berwenang', tindakan: 'Memantau status pengajuan', pill: 'warn' },
+  Disetujui: { ket: 'Pengajuan telah disetujui', tindakan: 'Realisasikan perubahan data lalu periksa hasilnya', pill: 'ok' },
   Ditolak: { ket: 'Pengajuan tidak dapat disetujui', tindakan: 'Baca catatan penolakan, perbaiki, lalu buat pengajuan baru bila perlu', pill: 'bad' },
   Dibatalkan: { ket: 'Pengajuan dibatalkan', tindakan: 'Buat pengajuan baru jika masih diperlukan', pill: '' },
 }

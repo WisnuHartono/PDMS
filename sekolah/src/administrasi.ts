@@ -151,7 +151,7 @@ const anak: Bidang = {
       ],
     }),
     reg({
-      id: 'pip', nama: 'Penerima Bantuan / Beasiswa (PIP)', ket: 'Catatan internal; usulan PIP kini lewat SIPINTAR/DTSEN, bukan Dapodik', tanggal: 'tanggal', total: ['nominal'],
+      id: 'pip', nama: 'Penerima Bantuan / Beasiswa (PIP)', ket: 'Catatan internal penerima bantuan / beasiswa', tanggal: 'tanggal', total: ['nominal'],
       fields: [
         { k: 'tanggal', l: 'Tanggal cair', t: 'date', daftar: true }, { k: 'siswa', l: 'Peserta didik', t: 'siswa', wajib: true, daftar: true },
         { k: 'program', l: 'Program', t: 'select', opsi: ['PIP/KIP', 'Beasiswa Daerah', 'Beasiswa Yayasan', 'Lainnya'], daftar: true },
@@ -355,7 +355,7 @@ const umum: Bidang = {
     }),
     dok('izin-op', 'Izin Operasional', 'Izin pendirian/operasional dari dinas pendidikan', true),
     dok('akta-yys', 'Akta Pendirian Yayasan & SK Kemenkumham', 'Untuk sekolah swasta'),
-    dok('npsn', 'Sertifikat NPSN', 'Unduh dari laman referensi data kemendikdasmen'),
+    dok('npsn', 'Sertifikat NPSN', 'Sertifikat nomor pokok sekolah nasional'),
     dok('akreditasi', 'Sertifikat Akreditasi', 'BAN-PDM, catat masa berlakunya', true),
     dok('kosp', 'Kurikulum Operasional Satuan Pendidikan (KOSP)', 'Disahkan kepala sekolah/dinas tiap tahun', true),
     dok('visi-misi', 'Visi, Misi, dan Tujuan Sekolah', 'Dipasang dan termuat di KOSP'),
@@ -483,7 +483,7 @@ const keuangan: Bidang = {
   ],
 }
 
-/** Kelompok alat sesuai referensi Dapodik (sarana PAUD + umum). */
+/** Kelompok alat (sarana PAUD + umum). */
 export const KELOMPOK_ALAT = [
   'APE Sensori Motorik', 'APE Bermain Pembangunan', 'APE Bermain Peran', 'APE Bermain Keaksaraan', 'Bahan Bermain dari Lingkungan', 'APE Outdoor',
   'Meubelair', 'Elektronik / TIK', 'Alat Peraga / Laboratorium', 'Olahraga', 'Kesenian', 'Lainnya',
@@ -493,7 +493,7 @@ export const KELOMPOK_ALAT = [
 const sarpras: Bidang = {
   id: 'sarpras', no: '07', nama: 'Administrasi Perlengkapan / Sarana Prasarana', ket: 'Inventaris dan pengelolaan fasilitas lembaga', tema: 'lavender', ikon: 'prasarana',
   items: [
-    hal('prasarana', 'Prasarana (Dapodik)', 'Tanah, bangunan, ruang, dan pengajuan perubahan data'),
+    hal('prasarana', 'Prasarana', 'Tanah, bangunan, ruang, dan pengajuan perubahan data'),
     reg({
       id: 'inventaris', nama: 'Buku Inventaris Barang', ket: 'Sarana/barang milik sekolah; cetak Kartu Inventaris Ruang (KIR)', total: ['jumlah', 'nilai'],
       hitung: (d) => ({ nilai: n(d.jumlah) * n(d.harga) || undefined }), kolomHitung: [{ k: 'nilai', l: 'Nilai', rupiah: true }],
@@ -504,12 +504,12 @@ const sarpras: Bidang = {
         { k: 'sumber', l: 'Sumber dana', t: 'select', opsi: SUMBER_DANA, daftar: true }, { k: 'jumlah', l: 'Jumlah', t: 'number', wajib: true, daftar: true },
         { k: 'satuan', l: 'Satuan', ph: 'unit, buah, set' }, { k: 'harga', l: 'Harga satuan', t: 'rupiah' },
         { k: 'kondisi', l: 'Kondisi', t: 'select', opsi: KONDISI, daftar: true },
-        { k: 'kelompok', l: 'Kelompok alat (Dapodik)', t: 'select', opsi: KELOMPOK_ALAT, daftar: true },
+        { k: 'kelompok', l: 'Kelompok alat', t: 'select', opsi: KELOMPOK_ALAT, daftar: true },
         { k: 'kepemilikan', l: 'Kepemilikan', t: 'select', opsi: ['Milik', 'Sewa', 'Pinjam'] },
       ],
     }),
     reg({
-      id: 'buku-teks', nama: 'Buku Teks & Pendamping (SIBI)', ket: 'Buku pelajaran sesuai referensi SIBI Kemendikdasmen', total: ['jumlah'],
+      id: 'buku-teks', nama: 'Buku Teks & Pendamping', ket: 'Buku pelajaran dan buku pendamping', total: ['jumlah'],
       fields: [
         { k: 'judul', l: 'Judul buku', span: 2, wajib: true, daftar: true }, { k: 'mapel', l: 'Mata pelajaran', daftar: true },
         { k: 'kelas', l: 'Kelas / tingkat', daftar: true }, { k: 'kurikulum', l: 'Kurikulum', t: 'select', opsi: ['Kurikulum Merdeka', 'Kurikulum 2013', 'Lainnya'], daftar: true },
@@ -551,7 +551,7 @@ const sarpras: Bidang = {
     }),
     dok('sk-sarpras', 'SK Tim / Wakasek Sarana Prasarana', 'Penanggung jawab inventaris'),
     dok('bast', 'Berita Acara Serah Terima (BAST) Barang', 'Bantuan pemerintah / pengadaan'),
-    dok('denah', 'Denah Sekolah', 'Sesuai data prasarana Dapodik'),
+    dok('denah', 'Denah Sekolah', 'Sesuai data prasarana'),
   ],
 }
 

@@ -1,4 +1,4 @@
-// Validasi lokal mengacu Panduan Aplikasi Dapodik versi 2027 (bab 4.11 & 5.3.3):
+// Validasi data lokal:
 // hasil Valid / Peringatan / Invalid; data Invalid harus diperbaiki sebelum dikirim/dipakai.
 // Termasuk ketentuan jenis rombel baru: Kelas Rangkap, PJJ, Keaksaraan, Kebekerjaan Luar Negeri.
 import { dokumenJatuhTempo } from './administrasi'
@@ -143,7 +143,7 @@ export function jalankanValidasi(d: DataValidasi): Temuan[] {
     if (!x.nisn && !dini) add('peringatan', 'Peserta Didik', o, 'NISN belum diisi.', 'siswa')
     if (!x.tanggalLahir || !x.tempatLahir) add('invalid', 'Peserta Didik', o, 'Tempat dan tanggal lahir wajib diisi.', 'siswa')
     if (!x.ibu.nama) add('invalid', 'Peserta Didik', o, 'Nama ibu kandung wajib diisi.', 'siswa')
-    if (!x.ayah.statusHidup || !x.ibu.statusHidup) add('invalid', 'Peserta Didik', o, 'Status hidup ayah dan ibu kandung wajib diisi (Dapodik 2027).', 'siswa')
+    if (!x.ayah.statusHidup || !x.ibu.statusHidup) add('invalid', 'Peserta Didik', o, 'Status hidup ayah dan ibu kandung wajib diisi .', 'siswa')
     if (x.ayah.statusHidup === 'Wafat' && x.ibu.statusHidup === 'Wafat' && !x.wali.nama) add('peringatan', 'Peserta Didik', o, 'Kedua orang tua wafat: data wali sebaiknya diisi.', 'siswa')
     if (x.ayah.nik && !digit(x.ayah.nik, 16)) add('invalid', 'Peserta Didik', o, 'NIK ayah harus 16 digit.', 'siswa')
     if (x.ibu.nik && !digit(x.ibu.nik, 16)) add('invalid', 'Peserta Didik', o, 'NIK ibu harus 16 digit.', 'siswa')
@@ -185,7 +185,7 @@ export function jalankanValidasi(d: DataValidasi): Temuan[] {
   return t
 }
 
-/** Implementasi kurikulum dihitung dari kurikulum tiap rombel (Dapodik 2027, 5.3.2). */
+/** Implementasi kurikulum dihitung dari kurikulum tiap rombel . */
 export function implementasiKurikulum(rombel: Rombel[], ta: string) {
   const m = new Map<string, { rombel: number; siswa: number; jenjang: Set<string> }>()
   for (const r of rombel.filter((x) => x.tahunAjaran === ta && rombelUtama(x))) {

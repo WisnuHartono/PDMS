@@ -274,7 +274,7 @@ export default function Dashboard() {
         <div className="grid-2">
           {show('kurikulum') && (
             <Card title={`Implementasi Kurikulum ${sekolah.tahunAjaranAktif}`} actions={<button className="icon-btn" title="Rombel" onClick={() => nav.open('rombel')}><Icon name="edit" size={16} /></button>}>
-              <div className="muted right small">Dihitung otomatis dari data rombel (seperti Dapodik)</div>
+              <div className="muted right small">Dihitung otomatis dari data rombel</div>
               <table className="mini">
                 <thead><tr><th>Kurikulum</th><th>Jenjang</th><th className="num">Rombel</th><th className="num">Peserta Didik</th><th style={{ width: '30%' }}></th></tr></thead>
                 <tbody>
@@ -319,7 +319,7 @@ export default function Dashboard() {
               </ul>
             </Card>
           ))}
-          <Card title="Pengajuan Prasarana Dapodik">
+          <Card title="Pengajuan Perubahan Prasarana">
             {(() => {
               const aktif = pengajuanAktif(pengajuan)
               const tarik = pengajuan.filter((p) => p.status === 'Disetujui' && !p.tarikData)
@@ -327,7 +327,7 @@ export default function Dashboard() {
               return (
                 <>
                   {aktif && <p className="small"><span className="pill warn">Aktif</span> {aktif.nama} ({aktif.status})</p>}
-                  {tarik.length > 0 && <p className="small"><span className="pill warn">Perlu Tarik Data</span> {tarik.length} pengajuan disetujui</p>}
+                  {tarik.length > 0 && <p className="small"><span className="pill warn">Perlu Realisasi</span> {tarik.length} pengajuan disetujui</p>}
                   <ul className="people">
                     {terakhir.map((p) => <li key={p.id}><div><b>{p.nama}</b><span className="muted">{p.objek} · {p.jenis}</span></div><em className={`pill ${KET_STATUS[p.status].pill}`}>{p.status}</em></li>)}
                     {!terakhir.length && <li className="muted">Belum ada pengajuan.</li>}
