@@ -215,6 +215,112 @@ export interface Collections {
   nilai: LembarNilai
   rapor: CatatanRapor
   ekskul: Ekskul
+  tanah: Tanah
+  bangunan: Bangunan
+  ruang: Ruang
+  pengajuan: PengajuanPrasarana
 }
 export type CollectionName = keyof Collections
-export const COLLECTIONS: CollectionName[] = ['sekolah', 'siswa', 'pegawai', 'rombel', 'mapel', 'absensi', 'nilai', 'rapor', 'ekskul']
+export const COLLECTIONS: CollectionName[] = ['sekolah', 'siswa', 'pegawai', 'rombel', 'mapel', 'absensi', 'nilai', 'rapor', 'ekskul', 'tanah', 'bangunan', 'ruang', 'pengajuan']
+
+// ---------- Prasarana (mengacu Panduan Pengajuan Data Prasarana Dapodik versi 2027) ----------
+
+export type StatusKepemilikan = 'Milik' | 'Sewa' | 'Pinjam' | 'Pinjam Pakai' | 'Bukan Milik'
+export type AlasanPenghapusan = 'Bencana' | 'Dibongkar' | 'Dipindahtangankan' | 'Disita' | 'Koreksi Data'
+
+/** Penanda objek yang sudah dihapus dari pencatatan (setelah pengajuan penghapusan disetujui). */
+export interface Penghapusan {
+  tanggal: string
+  alasan: AlasanPenghapusan
+}
+
+export interface Tanah {
+  id: string
+  nama: string
+  noSertifikat?: string
+  panjang?: number
+  lebar?: number
+  luas?: number
+  luasTersedia?: number
+  nilaiPerolehan?: number
+  statusKepemilikan?: StatusKepemilikan
+  keterangan?: string
+  samaDenganSekolah: boolean
+  provinsi?: string
+  kabupaten?: string
+  kecamatan?: string
+  desa?: string
+  alamatJalan?: string
+  rt?: string
+  rw?: string
+  dusun?: string
+  kodePos?: string
+  lintang?: number
+  bujur?: number
+  dihapus?: Penghapusan
+}
+
+export interface Bangunan {
+  id: string
+  tanahId?: string
+  jenisPrasarana: string
+  nama: string
+  panjang?: number
+  lebar?: number
+  luasTapak?: number
+  statusKepemilikan?: StatusKepemilikan
+  nilaiPerolehan?: number
+  jumlahLantai?: number
+  tahunPembangunan?: number
+  tanggalSk?: string
+  keterangan?: string
+  bobotKerusakan?: number
+  dihapus?: Penghapusan
+}
+
+export interface Ruang {
+  id: string
+  bangunanId?: string
+  jenisPrasarana: string
+  kode: string
+  nama: string
+  registrasi?: string
+  lantaiKe?: number
+  panjang?: number
+  lebar?: number
+  luas?: number
+  kapasitas?: number
+  bobotKerusakan?: number
+  dihapus?: Penghapusan
+}
+
+export type ObjekPrasarana = 'Tanah' | 'Bangunan' | 'Ruang'
+export type JenisPengajuan = 'Penambahan' | 'Perbaikan' | 'Penghapusan'
+export type StatusPengajuan = 'Draf' | 'Diajukan' | 'Proses Verifikasi' | 'Disetujui' | 'Ditolak' | 'Dibatalkan'
+export type JenisDokumen = 'Sertifikat tanah' | 'Foto lahan' | 'Foto bangunan' | 'Denah sekolah' | 'Surat BPKAD/yayasan' | 'Surat keterangan kepala sekolah' | 'Dokumen lain'
+
+export interface DokumenPengajuan {
+  id: string
+  jenis: JenisDokumen
+  namaBerkas: string
+  ukuran: number
+  data?: string // data URL PDF
+}
+
+export interface PengajuanPrasarana {
+  id: string
+  nama: string // Nama Ajuan
+  objek: ObjekPrasarana
+  jenis: JenisPengajuan
+  objekId: string // tanah/bangunan/ruang yang diajukan (untuk penambahan: data baru yang sudah diisi)
+  alasan: string
+  tanggalPenghapusan?: string
+  alasanPenghapusan?: AlasanPenghapusan
+  dokumen: DokumenPengajuan[]
+  periksa: boolean[] // daftar periksa mandiri sebelum pengiriman
+  status: StatusPengajuan
+  dibuat: string
+  diajukan?: string
+  catatanVerifikasi?: string
+  tarikData?: boolean // Tarik Data di Aplikasi Dapodik sudah dilakukan & data diperiksa
+}

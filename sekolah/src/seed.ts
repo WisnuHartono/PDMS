@@ -183,4 +183,39 @@ export async function seedDemo() {
     }
     await put('nilai', { id: `${ta}|${sem}|${rtk.id}|${m.id}`, tahunAjaran: ta, semester: sem as 1 | 2, rombelId: rtk.id, mapelId: m.id, tujuan: [], data })
   }
+  await seedPrasarana()
+}
+
+async function seedPrasarana() {
+  const tanahId = uid()
+  await put('tanah', {
+    id: tanahId, nama: 'Tanah Utama Sekolah Harapan Bangsa', noSertifikat: '10.13.05.02.1.00412', panjang: 100, lebar: 80, luas: 8000, luasTersedia: 3200,
+    nilaiPerolehan: 2500000000, statusKepemilikan: 'Milik', keterangan: 'Lokasi utama TK, SD, dan SMP.', samaDenganSekolah: true,
+    provinsi: 'Jawa Barat', kabupaten: 'Kota Bandung', kecamatan: 'Coblong', desa: 'Sukamaju', alamatJalan: 'Jl. Pendidikan No. 10', rt: '3', rw: '5', kodePos: '40132', lintang: -6.8915, bujur: 107.6107,
+  })
+  const gA = uid(), gB = uid(), lap = uid()
+  await put('bangunan', { id: gA, tanahId, jenisPrasarana: 'Bangunan', nama: 'Gedung A (SD)', panjang: 40, lebar: 12, luasTapak: 480, statusKepemilikan: 'Milik', nilaiPerolehan: 1800000000, jumlahLantai: 2, tahunPembangunan: 2012, tanggalSk: '2012-07-01', bobotKerusakan: 12, keterangan: 'Ruang kelas SD, ruang guru, dan perpustakaan.' })
+  await put('bangunan', { id: gB, tanahId, jenisPrasarana: 'Bangunan', nama: 'Gedung B (SMP)', panjang: 36, lebar: 12, luasTapak: 432, statusKepemilikan: 'Milik', nilaiPerolehan: 2100000000, jumlahLantai: 3, tahunPembangunan: 2018, tanggalSk: '2018-07-02', bobotKerusakan: 0, keterangan: 'Ruang kelas SMP dan laboratorium.' })
+  await put('bangunan', { id: lap, tanahId, jenisPrasarana: 'Lapangan', nama: 'Lapangan Upacara', panjang: 40, lebar: 25, luasTapak: 1000, statusKepemilikan: 'Milik', jumlahLantai: 1, tahunPembangunan: 2010, bobotKerusakan: 35 })
+  const ruang: [string, string, string, number, number, number, number, number][] = [
+    [gA, 'RK-01', 'Ruang Kelas 4A', 1, 8, 7, 28, 10],
+    [gA, 'RK-02', 'Ruang Kelas 4B', 1, 8, 7, 28, 25],
+    [gA, 'RG-01', 'Ruang Guru', 1, 10, 8, 20, 0],
+    [gA, 'PRP-01', 'Perpustakaan', 2, 12, 8, 40, 5],
+    [gB, 'RK-07', 'Ruang Kelas 7A', 1, 8, 7, 32, 0],
+    [gB, 'RK-09', 'Ruang Kelas 9A', 2, 8, 7, 32, 0],
+    [gB, 'LAB-01', 'Laboratorium IPA', 3, 12, 9, 32, 50],
+    [gB, 'KS-01', 'Ruang Kepala Sekolah', 1, 6, 5, 6, 0],
+  ]
+  const jenis: Record<string, string> = { RK: 'Ruang Teori/Kelas', RG: 'Ruang Guru', PRP: 'Perpustakaan', LAB: 'Laboratorium IPA', KS: 'Ruang Kepala Sekolah' }
+  for (const [b, kode, nama, lantai, p, l, kap, bobot] of ruang) {
+    await put('ruang', { id: uid(), bangunanId: b, jenisPrasarana: jenis[kode.split('-')[0]], kode, nama, lantaiKe: lantai, panjang: p, lebar: l, luas: p * l, kapasitas: kap, bobotKerusakan: bobot, registrasi: `03.11.01.${kode.replace(/\D/g, '')}` })
+  }
+  const d = new Date(); d.setDate(d.getDate() - 20)
+  await put('pengajuan', {
+    id: uid(), nama: 'Perbaikan Data Bangunan Gedung B (SMP)', objek: 'Bangunan', jenis: 'Perbaikan', objekId: gB,
+    alasan: 'Jumlah lantai tercatat 2, kondisi sebenarnya 3 lantai setelah penambahan lantai tahun 2018.',
+    dokumen: [{ id: uid(), jenis: 'Surat keterangan kepala sekolah', namaBerkas: 'sk-kepsek-gedung-b.pdf', ukuran: 412000 }],
+    periksa: [true, true, true, true, true, true, true], status: 'Disetujui', dibuat: isoDate(d), diajukan: isoDate(d), tarikData: false,
+  })
 }

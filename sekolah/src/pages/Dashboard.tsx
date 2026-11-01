@@ -3,6 +3,7 @@ import { Bars, Donut, LineChart, Meter, MultiDonut } from '../charts'
 import { Icon } from '../icons'
 import { getState, useCol, useSekolah } from '../store'
 import { Avatar, Btn, Card, useNav } from '../ui'
+import { KET_STATUS, klasifikasiKerusakan, pengajuanAktif, pillKerusakan } from '../prasarana'
 import { BULAN, fmtTanggalHari, isoDate, namaPegawai, parseIso, today, umur } from '../util'
 import { JENJANG, STATUS_HADIR_LABEL, type Absensi, type StatusHadir } from '../types'
 
@@ -15,6 +16,7 @@ const WIDGETS: [string, string][] = [
   ['jenjang', 'Peserta Didik per Jenjang'],
   ['nilai', 'Kelengkapan Nilai'],
   ['ultah', 'Ulang Tahun Bulan Ini'],
+  ['sarpras', 'Prasarana (kondisi & pengajuan)'],
 ]
 
 const WARNA: Record<StatusHadir, string> = { H: 'var(--ok)', S: 'var(--warn)', I: 'var(--info)', A: 'var(--bad)', T: 'var(--orange)', C: 'var(--muted)', DL: 'var(--violet)' }
@@ -43,6 +45,9 @@ export default function Dashboard() {
   const siswa = useCol('siswa')
   const pegawai = useCol('pegawai')
   const rombel = useCol('rombel')
+  const ruang = useCol('ruang').filter((r) => !r.dihapus)
+  const bangunan = useCol('bangunan').filter((b) => !b.dihapus)
+  const pengajuan = useCol('pengajuan')
   const mapel = useCol('mapel')
   const absensi = useCol('absensi')
   const nilai = useCol('nilai')
@@ -253,6 +258,38 @@ export default function Dashboard() {
           </Card>
         )}
       </div>
+      {show('sarpras') && (
+        <div className="grid-3">
+          {([['Kondisi Ruang', ruang], ['Kondisi Bangunan', bangunan]] as const).map(([judul, list]) => (
+            <Card key={judul} title={judul} actions={<button className="icon-btn" title="Prasarana" onClick={() => nav.open('prasarana')}><Icon name="edit" size={16} /></button>}>
+              <ul className="progress-list">
+                {['Tidak ada kerusakan', 'Rusak Ringan', 'Rusak Sedang', 'Rusak Berat', 'Rusak Total'].map((k) => {
+                  const n = list.filter((x) => klasifikasiKerusakan(x.bobotKerusakan) === k).length
+                  return n ? <li key={k}><div><b>{k}</b><em className={`pill ${pillKerusakan(k)}`}>{n}</em></div><Meter pct={(n / list.length) * 100} color={pillKerusakan(k) === 'ok' ? 'var(--ok)' : pillKerusakan(k) === 'warn' ? 'var(--warn)' : 'var(--bad)'} /></li> : null
+                })}
+                {!list.length && <li className="muted">Belum ada data.</li>}
+              </ul>
+            </Card>
+          ))}
+          <Card title="Pengajuan Prasarana Dapodik">
+            {(() => {
+              const aktif = pengajuanAktif(pengajuan)
+              const tarik = pengajuan.filter((p) => p.status === 'Disetujui' && !p.tarikData)
+              const terakhir = [...pengajuan].sort((a, b) => b.dibuat.localeCompare(a.dibuat)).slice(0, 4)
+              return (
+                <>
+                  {aktif && <p className="small"><span className="pill warn">Aktif</span> {aktif.nama} ({aktif.status})</p>}
+                  {tarik.length > 0 && <p className="small"><span className="pill warn">Perlu Tarik Data</span> {tarik.length} pengajuan disetujui</p>}
+                  <ul className="people">
+                    {terakhir.map((p) => <li key={p.id}><div><b>{p.nama}</b><span className="muted">{p.objek} · {p.jenis}</span></div><em className={`pill ${KET_STATUS[p.status].pill}`}>{p.status}</em></li>)}
+                    {!terakhir.length && <li className="muted">Belum ada pengajuan.</li>}
+                  </ul>
+                </>
+              )
+            })()}
+          </Card>
+        </div>
+      )}
     </div>
   )
 }

@@ -14,6 +14,7 @@ import AbsensiPegawai from './pages/AbsensiPegawai'
 import Penilaian from './pages/Penilaian'
 import Rapor from './pages/Rapor'
 import Pengaturan from './pages/Pengaturan'
+import Prasarana from './pages/Prasarana'
 import { namaPegawai } from './util'
 
 interface MenuItem { id: PageId; label: string; icon: string; group: string }
@@ -30,6 +31,7 @@ export const MENU: MenuItem[] = [
   { id: 'absensiPegawai', label: 'Absensi Guru & Pegawai', icon: 'absenPegawai', group: 'Kehadiran' },
   { id: 'nilai', label: 'Penilaian', icon: 'nilai', group: 'Penilaian' },
   { id: 'rapor', label: 'Cetak Rapor', icon: 'rapor', group: 'Penilaian' },
+  { id: 'prasarana', label: 'Prasarana (Sarpras)', icon: 'prasarana', group: 'Sarana Prasarana' },
   { id: 'pengaturan', label: 'Pengaturan', icon: 'pengaturan', group: 'Sistem' },
 ]
 
@@ -45,6 +47,7 @@ const PAGES: Record<PageId, () => ReactNode> = {
   absensiPegawai: () => <AbsensiPegawai />,
   nilai: () => <Penilaian />,
   rapor: () => <Rapor />,
+  prasarana: () => <Prasarana />,
   pengaturan: () => <Pengaturan />,
 }
 

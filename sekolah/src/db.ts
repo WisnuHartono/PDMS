@@ -11,7 +11,7 @@ export interface Backend {
 }
 
 const DB_NAME = 'simas-sekolah'
-const DB_VERSION = 1
+const DB_VERSION = 2 // v2: tanah, bangunan, ruang, pengajuan
 
 function req<T>(r: IDBRequest<T>): Promise<T> {
   return new Promise((res, rej) => {

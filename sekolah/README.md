@@ -16,6 +16,7 @@ Aplikasi administrasi sekolah untuk **PAUD, TK, SD, SMP, SMA/SMK** yang berjalan
 | Absensi | Input harian siswa (H/S/I/A/T) per rombel dan guru/pegawai (termasuk jam masuk/pulang, cuti, dinas luar); rekap bulanan, cetak & CSV |
 | Penilaian | Berbasis definisi kurikulum: **Kurikulum Merdeka** (sumatif per TP + SAS, deskripsi capaian otomatis), **K13** (pengetahuan, keterampilan, predikat A–D), **Merdeka PAUD** (capaian BB/MB/BSH/BSB + narasi), dan contoh **kurikulum internasional** (skala A*–U) |
 | Rapor | Cetak rapor per siswa atau satu kelas sekaligus; ketidakhadiran otomatis dari absensi; catatan wali kelas, sikap/kokurikuler, ekskul, keputusan kenaikan |
+| Prasarana (Sarpras) | Data tanah, bangunan, ruang sesuai isian Dapodik; validasi ketentuan pengisian; klasifikasi kerusakan otomatis; pengajuan penambahan/perbaikan/penghapusan dengan matriks dokumen wajib (PDF ≤ 2 MB), daftar periksa, status verifikasi, pembatasan pengajuan aktif, Tarik Data, dan lembar pemeriksaan cetak. Mengacu *Panduan Pengajuan Data Prasarana pada Dapodik versi 2027* |
 | Pengaturan | Profil sekolah/yayasan & logo (kop surat), tahun ajaran & semester aktif, cadangan/pulihkan data (JSON), data contoh |
 
 ## Arsitektur
