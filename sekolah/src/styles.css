@@ -539,3 +539,6 @@ table.mini td { padding: 3px 6px; }
 .tbl td.clip { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .form-grid { align-items: end; }
 .form-grid > .foto-box { align-self: center; }
+.back-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.back-bar .crumb { margin: 0; }
+.back-bar .btn { height: 28px; padding: 0 10px 0 6px; }

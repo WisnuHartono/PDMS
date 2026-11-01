@@ -7,8 +7,10 @@ export type PageId =
   | 'dashboard' | 'siswa' | 'pegawai' | 'induk' | 'rombel' | 'mapel' | 'ekskul'
   | 'absensiSiswa' | 'absensiPegawai' | 'nilai' | 'rapor' | 'prasarana' | 'administrasi' | 'validasi' | 'pengaturan' | 'akun'
 
+/** Asal navigasi: dipakai untuk tombol "Kembali" ke halaman/menu sebelumnya. */
+export interface AsalNav { label: string; page: PageId; onBack?: () => void }
 export interface NavCtx {
-  open: (p: PageId) => void
+  open: (p: PageId, asal?: AsalNav) => void
 }
 export const Nav = createContext<NavCtx>({ open: () => {} })
 export const useNav = () => useContext(Nav)

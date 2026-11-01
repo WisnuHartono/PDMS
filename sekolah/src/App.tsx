@@ -1,7 +1,7 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { Icon } from './icons'
 import { useCol, useSekolah } from './store'
-import { Avatar, KonfirmasiHost, Nav, ToastHost, useNav, type PageId } from './ui'
+import { Avatar, Btn, KonfirmasiHost, Nav, ToastHost, useNav, type AsalNav, type PageId } from './ui'
 import { PrintHost } from './PratinjauCetak'
 import Dashboard from './pages/Dashboard'
 import SiswaPage from './pages/Siswa'
@@ -72,8 +72,9 @@ export default function App() {
   const jmlInvalid = useValidasi().filter((t) => t.level === 'invalid').length
   const menu = MENU.filter((m) => boleh(m.id))
 
+  const [asal, setAsal] = useState<AsalNav | null>(null)
   const nav = useMemo(() => ({
-    open: (p: PageId) => { if (boleh(p)) setActive(p) },
+    open: (p: PageId, dari?: AsalNav) => { if (boleh(p)) { setActive(p); setAsal(dari ?? null) } },
   }), [])
 
   let lastGroup = ''
@@ -142,7 +143,15 @@ export default function App() {
         </nav>
 
         <main className="content">
-          <div key={halaman} className="page">{PAGES[halaman]()}</div>
+          <div key={halaman} className="page">
+            {asal && (
+              <div className="back-bar">
+                <Btn icon="chevL" onClick={() => { asal.onBack?.(); nav.open(asal.page) }}>Kembali</Btn>
+                <span className="muted small">ke {asal.label}</span>
+              </div>
+            )}
+            {PAGES[halaman]()}
+          </div>
         </main>
       </div>
       {profil && <ProfilSaya onClose={() => setProfil(false)} />}

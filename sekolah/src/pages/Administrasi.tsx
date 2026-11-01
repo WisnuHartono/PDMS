@@ -15,9 +15,28 @@ export const rupiah = (v: NilaiArsip) => (v === undefined || v === '' ? '' : `Rp
 const MAKS_LAMPIRAN = 2 * 1024 * 1024
 
 type Lokasi = { bidang?: string; reg?: string }
+/** Posisi terakhir di Administrasi, dipulihkan saat pengguna menekan "Kembali" dari modul terkait. */
+let lokKembali: Lokasi | null = null
+
+function BackBar({ onBack, ke, children }: { onBack: () => void; ke: string; children: ReactNode }) {
+  useEffect(() => {
+    // Alt+← atau tombol "back" mouse juga kembali ke menu sebelumnya
+    const k = (e: KeyboardEvent) => { if (e.altKey && e.key === 'ArrowLeft') { e.preventDefault(); onBack() } }
+    const m = (e: MouseEvent) => { if (e.button === 3) { e.preventDefault(); onBack() } }
+    window.addEventListener('keydown', k); window.addEventListener('mouseup', m)
+    return () => { window.removeEventListener('keydown', k); window.removeEventListener('mouseup', m) }
+  }, [onBack])
+  return (
+    <div className="back-bar">
+      <Btn icon="chevL" onClick={onBack} title={`Kembali ke ${ke} (Alt+←)`}>Kembali</Btn>
+      <div className="crumb">{children}</div>
+    </div>
+  )
+}
 
 export default function Administrasi() {
-  const [lok, setLok] = useState<Lokasi>({})
+  const [lok, setLokState] = useState<Lokasi>(() => { const l = lokKembali ?? {}; lokKembali = null; return l })
+  const setLok = (l: Lokasi) => { setLokState(l); document.querySelector('.content')?.scrollTo(0, 0) }
   const bidang = BIDANG.filter((b) => bolehBidang(b.id))
   const b = bidang.find((x) => x.id === lok.bidang)
   const r = b?.items.find((i): i is Extract<ItemDef, { jenis: 'register' }> => i.jenis === 'register' && i.reg.id === lok.reg)?.reg
@@ -70,7 +89,7 @@ function BidangView({ bidang, onBack, onReg }: { bidang: Bidang; onBack: () => v
   const doks = bidang.items.filter((i): i is Extract<ItemDef, { jenis: 'dokumen' }> => i.jenis === 'dokumen')
   return (
     <div>
-      <div className="crumb"><button className="link" onClick={onBack}>Administrasi</button> / {bidang.nama}</div>
+      <BackBar onBack={onBack} ke="Administrasi Sekolah"><button className="link" onClick={onBack}>Administrasi Sekolah</button> / <b>{bidang.nama}</b></BackBar>
       <div className={`adm-head t-${bidang.tema}`}>
         <span className="adm-ikon"><Icon name={bidang.ikon} size={28} /></span>
         <div><h2>{bidang.nama}</h2><p className="muted">{bidang.ket}</p></div>
@@ -82,7 +101,7 @@ function BidangView({ bidang, onBack, onReg }: { bidang: Bidang; onBack: () => v
           <h4 className="sec">Modul terkait</h4>
           <div className="adm-items">
             {halaman.map((h) => (
-              <button key={h.page} className="adm-item link-item" onClick={() => nav.open(h.page)}>
+              <button key={h.page} className="adm-item link-item" onClick={() => nav.open(h.page, { label: bidang.nama, page: 'administrasi', onBack: () => { lokKembali = { bidang: bidang.id } } })}>
                 <b>{h.nama} <Icon name="chevR" size={14} /></b><span>{h.ket}</span>
               </button>
             ))}
@@ -207,7 +226,7 @@ function RegisterView({ bidang, reg, onBack }: { bidang: Bidang; reg: RegisterDe
 
   return (
     <div>
-      <div className="crumb"><button className="link" onClick={onBack}>{bidang.nama}</button> / {reg.nama}</div>
+      <BackBar onBack={onBack} ke={bidang.nama}><button className="link" onClick={onBack}>{bidang.nama}</button> / <b>{reg.nama}</b></BackBar>
       <PageHead title={reg.nama} sub={reg.ket}>
         <Btn icon="print" onClick={cetakDaftar} disabled={!baris.rows.length}>Cetak{reg.kelompokCetak ? ' KIR' : ''}</Btn>
         <Btn icon="plus" kind="primary" onClick={() => setEdit(baru())}>Tambah</Btn>
