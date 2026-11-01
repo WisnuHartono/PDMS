@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import { getKurikulum } from '../curricula'
 import { KopSurat, TandaTangan } from '../print'
 import { getState, useCol } from '../store'
@@ -70,7 +70,7 @@ function Register({ list, onPick }: { list: Siswa[]; onPick?: (id: string) => vo
   )
 }
 
-const row = (l: string, v?: string | number) => <tr><td className="lbl">{l}</td><td>: {v ?? '-'}</td></tr>
+const row = (l: string, v?: string | number) => <Fragment key={l}><span className="k">{l}</span><span className="t">:</span><span className="v">{v === undefined || v === '' ? '-' : v}</span></Fragment>
 
 export function LembarInduk({ s }: { s: Siswa }) {
   const st = getState()
@@ -80,25 +80,23 @@ export function LembarInduk({ s }: { s: Siswa }) {
     <div className="doc induk">
       <KopSurat judul="LEMBAR BUKU INDUK PESERTA DIDIK" />
       <div className="induk-top">
-        <table className="ident wide">
-          <tbody>
+        <div className="kvg">
             {row('Nomor Induk / NISN', `${s.noInduk || '-'} / ${s.nisn || '-'}`)}
             {row('NIK', s.nik)}
-          </tbody>
-        </table>
+        </div>
         <div className="pasfoto">{s.foto ? <img src={s.foto} alt="" /> : <span>Pas foto<br />3 x 4</span>}</div>
       </div>
       <h4 className="sec">A. Keterangan Tentang Diri Peserta Didik</h4>
-      <table className="ident wide"><tbody>
+      <div className="kvg">
         {row('Nama lengkap', s.nama)}{row('Nama panggilan', s.namaPanggilan)}{row('Jenis kelamin', s.jk === 'L' ? 'Laki-laki' : 'Perempuan')}
         {row('Tempat, tanggal lahir', `${s.tempatLahir ?? '-'}, ${fmtTanggal(s.tanggalLahir)}`)}{row('Agama', s.agama)}{row('Kewarganegaraan', s.kewarganegaraan)}
         {row('Anak ke- / jumlah saudara', `${s.anakKe ?? '-'} / ${s.jumlahSaudara ?? '-'}`)}{row('Bahasa sehari-hari', s.bahasaRumah)}
         {row('Alamat / telepon', `${s.alamat ?? '-'}${s.telepon ? ` / ${s.telepon}` : ''}`)}{row('Tinggal dengan', s.tinggalDengan)}
-      </tbody></table>
+      </div>
       <h4 className="sec">B. Keterangan Kesehatan</h4>
-      <table className="ident wide"><tbody>
+      <div className="kvg">
         {row('Golongan darah', s.golDarah)}{row('Tinggi / berat badan', `${s.tinggiBadan ?? '-'} cm / ${s.beratBadan ?? '-'} kg`)}{row('Penyakit yang pernah diderita', s.riwayatPenyakit)}
-      </tbody></table>
+      </div>
       <h4 className="sec">C. Keterangan Orang Tua / Wali</h4>
       <table className="nilai"><thead><tr><th></th><th>Ayah</th><th>Ibu</th><th>Wali</th></tr></thead><tbody>
         {(['nama', 'pekerjaan', 'pendidikan', 'telepon', 'alamat'] as const).map((k) => (
@@ -106,11 +104,11 @@ export function LembarInduk({ s }: { s: Siswa }) {
         ))}
       </tbody></table>
       <h4 className="sec">D. Riwayat Pendidikan</h4>
-      <table className="ident wide"><tbody>
+      <div className="kvg">
         {row('Diterima di sekolah ini', `${fmtTanggal(s.tanggalMasuk)}${s.diterimaDiKelas ? `, kelas ${s.diterimaDiKelas}` : ''}`)}
         {row('Asal sekolah / no. ijazah', `${s.asalSekolah ?? '-'} / ${s.noIjazahAsal ?? '-'}`)}
         {s.pindahanDari && row('Pindahan dari / alasan', `${s.pindahanDari} / ${s.alasanPindah ?? '-'}`)}
-      </tbody></table>
+      </div>
       <h4 className="sec">E. Perkembangan Belajar</h4>
       <table className="nilai">
         <thead><tr><th>Tahun Pelajaran</th><th>Kelas</th><th>Wali Kelas</th><th>Kurikulum</th><th className="c">Rata-rata Smt 1</th><th className="c">Rata-rata Smt 2</th></tr></thead>
@@ -130,10 +128,10 @@ export function LembarInduk({ s }: { s: Siswa }) {
         </tbody>
       </table>
       <h4 className="sec">F. Meninggalkan Sekolah</h4>
-      <table className="ident wide"><tbody>
+      <div className="kvg">
         {row('Status', s.status)}{row('Tanggal', s.tanggalKeluar ? fmtTanggal(s.tanggalKeluar) : '-')}{row('Alasan / pindah ke', s.alasanKeluar)}
         {row('No. ijazah', s.noIjazah)}{row('Melanjutkan ke', s.melanjutkanKe)}
-      </tbody></table>
+      </div>
       {s.catatan && <><h4 className="sec">G. Catatan</h4><p>{s.catatan}</p></>}
       <TandaTangan kanan={{ jabatan: 'Kepala Sekolah', nama: kepsek ? namaPegawai(kepsek) : undefined, nip: kepsek?.nip ?? '' }} />
     </div>

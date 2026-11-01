@@ -831,3 +831,16 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 @media (max-height: 820px) { .side-item { height: 38px; } .side-item .ico { width: 20px; height: 20px; } }
 @media (max-height: 640px) { .side-item { height: 34px; } }
 .shell:not(.expanded) .side-badge{right:5px;top:3px}
+
+/* Lembar Buku Induk: data berbentuk daftar tanpa garis, titik dua sejajar */
+.doc.induk { font-family: 'Times New Roman', Times, serif; font-size: 11pt; line-height: 1.35; }
+.doc.induk .kvg { display: grid; grid-template-columns: 52mm 4mm 1fr; column-gap: 1mm; row-gap: 1.2mm; margin: 2mm 0 3mm; align-items: baseline; }
+.doc.induk .kvg .k { color: #000; }
+.doc.induk .kvg .t { text-align: center; }
+.doc.induk .kvg .v { font-weight: 600; overflow-wrap: anywhere; }
+.doc.induk h4.sec { margin: 5mm 0 1mm; font-size: 11.5pt; text-transform: uppercase; letter-spacing: .02em; border-bottom: .4mm solid #000; padding-bottom: .6mm; }
+.doc.induk .induk-top { align-items: flex-start; gap: 6mm; margin-top: 2mm; }
+.doc.induk .induk-top .kvg { flex: 1; margin-top: 0; }
+.doc.induk table.nilai { margin: 2mm 0 3mm; }
+.doc.induk table.nilai td.lbl { font-weight: 700; white-space: nowrap; }
+.doc.induk .pasfoto { flex: none; }
