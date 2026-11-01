@@ -41,8 +41,8 @@ const UKURAN: Record<string, { l: number; t: number; nama: string }> = {
   '90x50': { l: 90, t: 50, nama: '90 × 50 mm (kartu)' }, '100x60': { l: 100, t: 60, nama: '100 × 60 mm (besar)' },
 }
 const WARNA: Record<string, string> = { teal: '#0f766e', biru: '#1d4ed8', hitam: '#111827', jingga: '#c2410c' }
-interface OpsiLabel { ukuran: string; isi: 'qr' | 'barcode' | 'keduanya'; perUnit: boolean; logo: boolean; sekolah: boolean; lokasi: boolean; tahun: boolean; kondisi: boolean; warna: string }
-const OPSI: OpsiLabel = { ukuran: '90x50', isi: 'qr', perUnit: false, logo: true, sekolah: true, lokasi: true, tahun: true, kondisi: true, warna: 'teal' }
+interface OpsiLabel { judul: string; footer: string; ukuran: string; isi: 'qr' | 'barcode' | 'keduanya'; perUnit: boolean; logo: boolean; sekolah: boolean; lokasi: boolean; tahun: boolean; kondisi: boolean; warna: string }
+const OPSI: OpsiLabel = { judul: 'KARTU INVENTARIS BARANG', footer: 'Pindai QR untuk menuju data inventaris', ukuran: '90x50', isi: 'qr', perUnit: false, logo: true, sekolah: true, lokasi: true, tahun: true, kondisi: true, warna: 'teal' }
 
 interface ItemLabel { kode: string; b: Butir }
 const itemLabel = (butir: Butir[], perUnit: boolean): ItemLabel[] =>
@@ -52,24 +52,28 @@ export function KartuLabel({ it, o, qr, s }: { it: ItemLabel; o: OpsiLabel; qr?:
   const u = UKURAN[o.ukuran]
   const w = WARNA[o.warna]
   const kecil = u.t <= 30
+  const baris: [string, string, boolean][] = [['Kode', it.kode, true], ['Nama', it.b.nama + (it.b.merk && !kecil ? ` (${it.b.merk})` : ''), false]]
+  if (o.lokasi && it.b.ruang) baris.push(['Lokasi', it.b.ruang, false])
+  const th = o.tahun && it.b.tahun ? it.b.tahun : ''
+  const kd = o.kondisi ? it.b.kondisi : ''
   return (
-    <div className="lbl" style={{ width: `${u.l}mm`, height: `${u.t}mm`, borderColor: w }}>
-      {(o.sekolah || o.logo) && !kecil && (
-        <div className="lbl-top" style={{ background: w }}>
-          {o.logo && s.logo && <img src={s.logo} alt="" />}
-          {o.sekolah && <span>{s.nama}</span>}
-        </div>
-      )}
+    <div className={`lbl ${kecil ? 'kecil' : ''}`} style={{ width: `${u.l}mm`, height: `${u.t}mm`, borderColor: w }}>
+      <div className="lbl-judul" style={{ background: w }}>{o.judul || 'KARTU INVENTARIS BARANG'}</div>
       <div className="lbl-body">
         {o.isi !== 'barcode' && (qr ? <img className="lbl-qr" src={qr} alt={`QR ${it.kode}`} /> : <div className="lbl-qr" />)}
         <div className="lbl-info">
-          <div className="lbl-kode" style={{ color: w }}>{it.kode}</div>
-          <div className="lbl-nama">{it.b.nama}{it.b.merk && !kecil ? ` · ${it.b.merk}` : ''}</div>
-          {!kecil && o.lokasi && it.b.ruang && <div>📍 {it.b.ruang}</div>}
-          {!kecil && (o.tahun || o.kondisi) && <div>{[o.tahun && it.b.tahun && `Thn ${it.b.tahun}`, o.kondisi && it.b.kondisi].filter(Boolean).join(' · ')}</div>}
-          {o.isi !== 'qr' && <div className="lbl-bar"><Barcode128 teks={it.kode} tinggi={u.t <= 30 ? 20 : 28} /></div>}
+          {(o.sekolah || o.logo) && (
+            <div className="lbl-sek">
+              {o.logo && s.logo && <img src={s.logo} alt="" />}
+              {o.sekolah && <b style={{ color: w }}>{s.nama}</b>}
+            </div>
+          )}
+          {baris.map(([k, v, tebal]) => <div key={k} className="lbl-baris"><span>{k}:</span> <b className={tebal ? 'kode' : ''} style={tebal ? { color: w } : undefined}>{v}</b></div>)}
+          {(th || kd) && <div className="lbl-baris">{th && <><span>Tahun:</span> <b>{th}</b></>}{th && kd && <i className="gap" />}{kd && <><span>Kondisi:</span> <b>{kd}</b></>}</div>}
+          {o.isi !== 'qr' && <div className="lbl-bar"><Barcode128 teks={it.kode} tinggi={kecil ? 16 : 24} /></div>}
         </div>
       </div>
+      {o.footer && !kecil && <div className="lbl-foot">{o.footer}</div>}
     </div>
   )
 }
@@ -145,6 +149,10 @@ export function LabelInventaris({ butir, onClose }: { butir: Butir[]; onClose: (
             <label className="field"><span className="field-l">Isi kode</span><select value={o.isi} onChange={(e) => set({ isi: e.target.value as OpsiLabel['isi'] })}><option value="qr">QR Code</option><option value="barcode">Barcode (Code 128)</option><option value="keduanya">QR + Barcode</option></select></label>
             <label className="field"><span className="field-l">Warna</span><select value={o.warna} onChange={(e) => set({ warna: e.target.value })}><option value="teal">Hijau tosca</option><option value="biru">Biru</option><option value="jingga">Jingga</option><option value="hitam">Hitam</option></select></label>
             <label className="field"><span className="field-l">Jumlah</span><div className="radio-row"><input type="checkbox" checked={o.perUnit} onChange={(e) => set({ perUnit: e.target.checked })} /> Satu label per unit (-01, -02, …)</div></label>
+          </div>
+          <div className="form-grid g2">
+            <label className="field"><span className="field-l">Judul label</span><input value={o.judul} onChange={(e) => set({ judul: e.target.value })} /></label>
+            <label className="field"><span className="field-l">Teks bawah (opsional)</span><input value={o.footer} onChange={(e) => set({ footer: e.target.value })} /></label>
           </div>
           <div className="radio-row" style={{ flexWrap: 'wrap', rowGap: 4 }}>
             {([['logo', 'Logo'], ['sekolah', 'Nama sekolah'], ['lokasi', 'Lokasi'], ['tahun', 'Tahun'], ['kondisi', 'Kondisi']] as const).map(([k, l]) => (
