@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import { Icon } from './icons'
 import type { Sekolah, TampilanSetting } from './types'
 
@@ -6,8 +6,11 @@ export const TAMPILAN_DEFAULT: Required<TampilanSetting> = {
   logoUkuran: 42, logoBentuk: 'sudut', logoLatar: 'putih', logoBingkai: false, logoBayangan: false, logoIsi: 'contain',
   logoZoom: 100, logoGeserX: 0, logoGeserY: 0, namaUkuran: 17, tampilLegalitas: true, tampilNama: true,
   dokFont: 'times', dokUkuran: 11.5, dokJarak: 135, appFont: 'segoe', appUkuran: 14,
+  appNama: 'SIMAS', appSub: 'Administrasi Sekolah', appLogo: '', appLogoUkuran: 36, appLogoBentuk: 'sudut', appLogoLatar: 'kuning',
+  appNamaUkuran: 19, appSubUkuran: 11, appNamaFont: 'segoe', appNamaTebal: true, appNamaWarna: '#ffffff', appNamaSpasi: 2,
+  appTampilSub: true, appTampilVersi: true, appTampilLampu: true,
 }
-export const tampilanDari = (s: Pick<Sekolah, 'tampilan'>): Required<TampilanSetting> => ({ ...TAMPILAN_DEFAULT, ...s.tampilan })
+export const tampilanDari = (s: Pick<Sekolah, 'tampilan'>): Required<TampilanSetting> => ({ ...TAMPILAN_DEFAULT, ...Object.fromEntries(Object.entries(s.tampilan ?? {}).filter(([, v]) => v !== undefined)) })
 
 /** Logo sekolah dengan kustomisasi ukuran, bentuk, latar, bingkai, zoom, dan geser. */
 export function LogoSekolah({ logo, t }: { logo?: string; t: Required<TampilanSetting> }) {
@@ -26,6 +29,31 @@ export function LogoSekolah({ logo, t }: { logo?: string; t: Required<TampilanSe
     </span>
   )
 }
+
+export const VERSI_APP = 'v0.4'
+
+/** Nama + logo aplikasi (pojok kiri atas); `bawah` ditampilkan tepat di bawahnya (mis. lampu status koneksi). */
+export function BrandApp({ t, bawah }: { t: Required<TampilanSetting>; bawah?: ReactNode }) {
+  const r = t.appLogoBentuk === 'lingkaran' ? '50%' : t.appLogoBentuk === 'kotak' ? 0 : t.appLogoBentuk === 'tanpa' ? 4 : Math.round(t.appLogoUkuran * 0.28)
+  const latar = t.appLogoBentuk === 'tanpa' || t.appLogoLatar === 'transparan' ? 'transparent' : t.appLogoLatar === 'putih' ? '#fff' : t.appLogoLatar === 'kaca' ? 'rgba(255,255,255,.22)' : '#fbbf24'
+  const sub = [t.appTampilSub ? t.appSub : '', t.appTampilVersi ? VERSI_APP : ''].filter(Boolean).join(' · ')
+  return (
+    <div className="brand brand-app">
+      <div className="brand-row">
+        <span className="brand-mark" style={{ width: t.appLogoUkuran, height: t.appLogoUkuran, borderRadius: r, background: latar }}>
+          {t.appLogo ? <img src={t.appLogo} alt="" draggable={false} /> : <Icon name="school" size={Math.round(t.appLogoUkuran * 0.6)} />}
+        </span>
+        <div className="brand-teks">
+          <b style={{ fontSize: t.appNamaUkuran, fontFamily: (FONT_APP[t.appNamaFont] ?? FONT_APP.segoe).css, fontWeight: t.appNamaTebal ? 800 : 500, color: t.appNamaWarna, letterSpacing: t.appNamaSpasi * 0.5 }}>{t.appNama || 'SIMAS'}</b>
+          {sub && <span className="brand-sub" style={{ fontSize: t.appSubUkuran, fontFamily: (FONT_APP[t.appNamaFont] ?? FONT_APP.segoe).css }}>{sub}</span>}
+        </div>
+      </div>
+      {bawah}
+    </div>
+  )
+}
+/** Tinggi minimal bilah atas agar identitas aplikasi (logo/nama + lampu) tidak terpotong. */
+export const tinggiBrand = (t: Required<TampilanSetting>) => Math.max(t.appLogoUkuran, Math.round(t.appNamaUkuran * 1.05 + (t.appTampilSub || t.appTampilVersi ? t.appSubUkuran * 1.35 : 0))) + (t.appTampilLampu ? 22 : 0) + 12
 
 export const FONT_DOK: Record<string, { nama: string; css: string }> = {
   times: { nama: 'Times New Roman (resmi, serif)', css: "'Times New Roman', Times, 'Liberation Serif', serif" },

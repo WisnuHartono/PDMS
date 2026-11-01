@@ -94,6 +94,22 @@ export interface TampilanSetting {
   dokJarak?: number // tinggi baris x100, 110-180
   appFont?: string // kunci FONT_APP
   appUkuran?: number // px, 12-17
+  /** Identitas aplikasi di pojok kiri atas (diatur Administrator) */
+  appNama?: string
+  appSub?: string
+  appLogo?: string // data URL; kosong = ikon bawaan
+  appLogoUkuran?: number // px, 24-64
+  appLogoBentuk?: 'sudut' | 'lingkaran' | 'kotak' | 'tanpa'
+  appLogoLatar?: 'kuning' | 'putih' | 'kaca' | 'transparan'
+  appNamaUkuran?: number // px, 14-30
+  appSubUkuran?: number // px, 9-14
+  appNamaFont?: string // kunci FONT_APP
+  appNamaTebal?: boolean
+  appNamaWarna?: string // #rrggbb
+  appNamaSpasi?: number // letter-spacing px x0,5 : 0-6
+  appTampilSub?: boolean
+  appTampilVersi?: boolean
+  appTampilLampu?: boolean
 }
 
 export interface AiSetting {

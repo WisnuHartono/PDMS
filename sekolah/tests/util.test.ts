@@ -32,3 +32,13 @@ describe('util', () => {
     expect(parseCsv('a,b\n1,2')).toEqual([['a', 'b'], ['1', '2']])
   })
 })
+
+import { TAMPILAN_DEFAULT, tampilanDari, tinggiBrand } from '../src/logo'
+describe('tampilan aplikasi', () => {
+  it('nilai undefined kembali ke bawaan dan tinggi bilah memuat lampu', () => {
+    const t = tampilanDari({ tampilan: { appNama: undefined, appNamaUkuran: 24 } })
+    expect(t.appNama).toBe(TAMPILAN_DEFAULT.appNama)
+    expect(t.appNamaUkuran).toBe(24)
+    expect(tinggiBrand({ ...t, appTampilLampu: true })).toBeGreaterThan(tinggiBrand({ ...t, appTampilLampu: false }))
+  })
+})

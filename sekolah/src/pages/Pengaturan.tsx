@@ -6,7 +6,9 @@ import { Icon } from '../icons'
 import { KopSurat, alamatLengkap, kontakLengkap } from '../print'
 import { put, useCol, useSekolah } from '../store'
 import { JENJANG, type KopSetting, type Sekolah } from '../types'
-import { FONT_APP, FONT_DOK, LogoSekolah, tampilanDari } from '../logo'
+import { BrandApp, FONT_APP, FONT_DOK, LogoSekolah, tampilanDari, tinggiBrand } from '../logo'
+import { LampuKoneksi } from '../koneksi'
+import { getSesi } from '../security/sesi'
 import { AI_DEFAULT, PANDUAN, PENYEDIA, aiSiap, panggilAi } from '../ai'
 import { Btn, Card, Field, Inp, Modal, PageHead, Sel, toast } from '../ui'
 import { fotoKecil, namaPegawai, today } from '../util'
@@ -388,6 +390,7 @@ function PanelAi({ s, set }: { s: Sekolah; set: (p: Partial<Sekolah>) => void })
 
 function PanelTampilan({ s, set }: { s: Sekolah; set: (p: Partial<Sekolah>) => void }) {
   const t = tampilanDari(s)
+  const admin = getSesi()?.akun.peranId === 'admin'
   const ubah = (p: Partial<typeof t>) => set({ tampilan: { ...s.tampilan, ...p } })
   const geser = (k: keyof typeof t, label: string, min: number, max: number, sat = '', step = 1) => (
     <Field label={`${label}: ${t[k]}${sat}`}>
@@ -397,7 +400,39 @@ function PanelTampilan({ s, set }: { s: Sekolah; set: (p: Partial<Sekolah>) => v
   const legal = [s.npsn && `NPSN ${s.npsn}`, s.statusSekolah, s.akreditasi && `Akreditasi ${s.akreditasi}`].filter(Boolean).join(' · ')
   return (
     <>
-      <Card title="Pratinjau header" className="mb">
+      <Card title="Nama & logo aplikasi (pojok kiri atas)" className="mb">
+        {!admin && <p className="small bad-t">Hanya Administrator yang dapat mengubah identitas aplikasi. Pengaturan di bawah hanya dapat dilihat.</p>}
+        <div className="tampil-prev brand-prev" style={{ minHeight: tinggiBrand(t) }}>
+          <BrandApp t={t} bawah={t.appTampilLampu ? <LampuKoneksi /> : undefined} />
+        </div>
+        <fieldset disabled={!admin} className="fs-plain">
+          <div className="form-grid g4">
+            <Field label="Nama aplikasi" span={2}><input value={t.appNama} maxLength={40} onChange={(e) => ubah({ appNama: e.target.value })} /></Field>
+            <Field label="Teks di bawah nama" span={2}><input value={t.appSub} maxLength={60} onChange={(e) => ubah({ appSub: e.target.value })} /></Field>
+            <Field label="Logo aplikasi" span={2}>
+              <div className="row-actions">
+                <label className="btn">Pilih gambar<input type="file" accept="image/*" hidden onChange={async (e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) ubah({ appLogo: await fotoKecil(f, 256) }) }} /></label>
+                {t.appLogo && <Btn kind="ghost" icon="trash" onClick={() => ubah({ appLogo: '' })}>Kembali ke ikon bawaan</Btn>}
+              </div>
+            </Field>
+            <Field label="Bentuk logo"><select value={t.appLogoBentuk} onChange={(e) => ubah({ appLogoBentuk: e.target.value as typeof t.appLogoBentuk })}><option value="sudut">Sudut membulat</option><option value="lingkaran">Lingkaran</option><option value="kotak">Kotak</option><option value="tanpa">Tanpa latar</option></select></Field>
+            <Field label="Latar logo"><select value={t.appLogoLatar} onChange={(e) => ubah({ appLogoLatar: e.target.value as typeof t.appLogoLatar })}><option value="kuning">Kuning</option><option value="putih">Putih</option><option value="kaca">Kaca</option><option value="transparan">Tanpa latar</option></select></Field>
+            {geser('appLogoUkuran', 'Ukuran logo', 24, 64, ' px')}
+            <Field label="Jenis huruf nama" span={2}>
+              <select value={t.appNamaFont} onChange={(e) => ubah({ appNamaFont: e.target.value })}>{Object.entries(FONT_APP).map(([k, v]) => <option key={k} value={k}>{v.nama}</option>)}</select>
+            </Field>
+            {geser('appNamaUkuran', 'Ukuran nama', 14, 30, ' px')}
+            {geser('appSubUkuran', 'Ukuran teks bawah', 9, 14, ' px')}
+            {geser('appNamaSpasi', 'Jarak antarhuruf', 0, 8, '', 1)}
+            <Field label="Warna nama"><input type="color" value={t.appNamaWarna} onChange={(e) => ubah({ appNamaWarna: e.target.value })} style={{ width: 60, height: 30, padding: 0 }} /></Field>
+            <Field label="Tebal"><div className="radio-row"><input type="checkbox" checked={t.appNamaTebal} onChange={(e) => ubah({ appNamaTebal: e.target.checked })} /> Huruf tebal</div></Field>
+            <Field label="Tampilkan"><div className="radio-row"><label><input type="checkbox" checked={t.appTampilSub} onChange={(e) => ubah({ appTampilSub: e.target.checked })} /> Teks bawah</label> <label><input type="checkbox" checked={t.appTampilVersi} onChange={(e) => ubah({ appTampilVersi: e.target.checked })} /> Versi</label> <label><input type="checkbox" checked={t.appTampilLampu} onChange={(e) => ubah({ appTampilLampu: e.target.checked })} /> Lampu status koneksi</label></div></Field>
+          </div>
+          <Btn kind="ghost" onClick={() => ubah({ appNama: undefined, appSub: undefined, appLogo: undefined, appLogoUkuran: undefined, appLogoBentuk: undefined, appLogoLatar: undefined, appNamaUkuran: undefined, appSubUkuran: undefined, appNamaFont: undefined, appNamaTebal: undefined, appNamaWarna: undefined, appNamaSpasi: undefined, appTampilSub: undefined, appTampilVersi: undefined, appTampilLampu: undefined })}>Kembalikan ke bawaan</Btn>
+        </fieldset>
+        <p className="muted small">Logo dan nama ini muncul di bilah atas semua halaman, lampu status koneksi tepat di bawahnya. Tekan “Simpan pengaturan” di kanan atas untuk menerapkan. Halaman masuk (sebelum login) tetap memakai tampilan bawaan karena pengaturan tersimpan terenkripsi di dalam data.</p>
+      </Card>
+      <Card title="Pratinjau header sekolah" className="mb">
         <div className="tampil-prev" style={{ minHeight: Math.max(60, t.logoUkuran + 16) }}>
           <div className="top-sekolah" style={{ borderLeft: 0 }}>
             <LogoSekolah logo={s.logo} t={t} />

@@ -25,7 +25,7 @@ import Validasi, { useValidasi } from './pages/Validasi'
 import AkunPage, { ProfilSaya } from './pages/Akun'
 import { boleh, keluar, useSesi } from './security/sesi'
 import { namaPegawai } from './util'
-import { LogoSekolah, tampilanDari, terapkanHuruf } from './logo'
+import { BrandApp, LogoSekolah, tampilanDari, terapkanHuruf, tinggiBrand } from './logo'
 
 interface MenuItem { id: PageId; label: string; icon: string; group: string }
 
@@ -105,7 +105,8 @@ export default function App() {
   cloudRef.current = sekolah.cloud
   useEffect(() => mulaiSinkron(() => cloudRef.current), [])
   useEffect(() => { void sinkronSekarang(sekolah.cloud) }, [sekolah.cloud?.sinkron, sekolah.cloud?.tujuan, sekolah.cloud?.sandiOto])
-  const tinggiTop = Math.max(60, tm.logoUkuran + 16)
+  const tinggiTop = Math.max(60, tm.logoUkuran + 16, tinggiBrand(tm))
+  useEffect(() => { document.title = `${tm.appNama || 'SIMAS'} - ${tm.appSub || 'Administrasi Sekolah'}` }, [tm.appNama, tm.appSub])
   const menu = MENU.filter((m) => boleh(m.id))
 
   const [asal, setAsal] = useState<AsalNav | null>(null)
@@ -121,15 +122,9 @@ export default function App() {
       <div className={`shell ${expanded ? 'expanded' : ''}`} style={{ '--top-h': `${tinggiTop}px` } as import('react').CSSProperties}>
         <header className="topbar">
           <button className="icon-btn light" onClick={() => setExpanded((e) => !e)} aria-label="Menu"><Icon name="menu" /></button>
-          <div className="brand">
-            <span className="brand-mark"><Icon name="school" size={22} /></span>
-            <div>
-              <b>SIMAS</b><span className="brand-sub">Administrasi Sekolah · v0.4</span>
-            </div>
-          </div>
+          <BrandApp t={tm} bawah={tm.appTampilLampu ? <LampuKoneksi /> : undefined} />
           <div className="topbar-fill" />
           <QuickSearch />
-          <LampuKoneksi />
           <div className="top-sekolah" title={[`TA ${sekolah.tahunAjaranAktif} Semester ${sekolah.semesterAktif === 1 ? 'Ganjil' : 'Genap'}`, sekolah.jenjang.join(' · '), sekolah.alamat].filter(Boolean).join(' · ')}>
             <LogoSekolah logo={sekolah.logo} t={tm} />
             {tm.tampilNama && (
