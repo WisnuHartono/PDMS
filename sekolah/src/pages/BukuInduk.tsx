@@ -82,9 +82,13 @@ export function LembarInduk({ s }: { s: Siswa }) {
   useLayoutEffect(() => {
     const fit = () => {
       const d = akar.current; if (!d) return
-      let maks = 0
-      d.querySelectorAll<HTMLElement>('.kvn .k').forEach((e) => { e.style.width = 'max-content'; maks = Math.max(maks, e.offsetWidth); e.style.width = '' })
-      if (maks) d.style.setProperty('--kolom-k', `${Math.ceil(maks) + 2}px`)
+      // Bagian A–C berbagi satu lebar kolom, bagian F dan H berbagi lebar lain sesuai label terpanjangnya
+      const lebar = (k: Element) => { let m = 0; k.querySelectorAll<HTMLElement>('.k').forEach((e) => { e.style.width = 'max-content'; m = Math.max(m, e.offsetWidth); e.style.width = '' }); return m }
+      ;['1', '2'].forEach((g) => {
+        const grup = Array.from(d.querySelectorAll<HTMLElement>(`.kvn[data-grup="${g}"]`))
+        const mg = Math.max(0, ...grup.map(lebar))
+        if (mg) grup.forEach((k) => k.style.setProperty('--kolom-k', `${Math.ceil(mg) + 4}px`))
+      })
     }
     fit(); document.fonts?.ready.then(fit).catch(() => undefined)
   })
@@ -98,7 +102,7 @@ export function LembarInduk({ s }: { s: Siswa }) {
       <KopSurat judul="LEMBAR BUKU INDUK PESERTA DIDIK" sub={`${kelas ? `Kelas ${kelas} | ` : ''}Status: ${s.status}`} />
       <h4 className="sec">A. Keterangan tentang anak</h4>
       <div className="induk-top">
-        <div className="kvn">
+        <div className="kvn" data-grup="1">
           {row('Nama lengkap', s.nama, true)}{row('Nama panggilan', s.namaPanggilan)}{row('Jenis kelamin', s.jk === 'L' ? 'Laki-laki' : 'Perempuan')}
           {row('Tempat, tanggal lahir', `${s.tempatLahir ?? '-'}, ${tglLahir}`)}{row('NIK', s.nik)}{row('NISN / NIPD', `${s.nisn || '-'} / ${s.noInduk || '-'}`)}
           {row('Agama', s.agama)}{row('Kewarganegaraan', s.kewarganegaraan)}{row('Status dalam keluarga', s.statusKeluarga)}
@@ -107,14 +111,14 @@ export function LembarInduk({ s }: { s: Siswa }) {
         <div className="pasfoto">{s.foto ? <img src={s.foto} alt="" /> : <span>Pas foto<br />3 × 4</span>}</div>
       </div>
       <h4 className="sec">B. Keterangan tempat tinggal</h4>
-      <div className="kvn">
+      <div className="kvn" data-grup="1">
         {row('Alamat', s.alamat)}{row('Kelurahan/desa, kecamatan', [s.kelurahan, s.kecamatan].filter(Boolean).join(', '))}
         {row('Kabupaten/kota, provinsi, kode pos', [s.kabupaten, s.provinsi, s.kodePos].filter(Boolean).join(', '))}
         {row('Tinggal bersama', s.tinggalDengan)}{row('Jarak dan transportasi ke sekolah', [s.jarakSekolah, s.transportasi].filter(Boolean).join(', '))}
         {row('No. HP orang tua', s.ayah.telepon || s.ibu.telepon || s.wali.telepon || s.telepon)}
       </div>
       <h4 className="sec">C. Keterangan kesehatan</h4>
-      <div className="kvn">
+      <div className="kvn" data-grup="1">
         {row('Golongan darah', s.golDarah)}{row('Berat / tinggi badan', `${s.beratBadan ?? '-'} kg / ${s.tinggiBadan ?? '-'} cm`)}
         {row('Penyakit yang pernah diderita', s.riwayatPenyakit)}{row('Kebutuhan khusus', s.kebutuhanKhusus)}
       </div>
@@ -131,7 +135,7 @@ export function LembarInduk({ s }: { s: Siswa }) {
         </div>
       ) : <p className="ket">Tidak ada wali (diasuh orang tua kandung).</p>}
       <h4 className="sec">F. Riwayat pendidikan</h4>
-      <div className="kvn">
+      <div className="kvn" data-grup="2">
         {row('Diterima di sekolah ini', `${s.tanggalMasuk ? fmtTanggal(s.tanggalMasuk) : '-'}${s.diterimaDiKelas ? `, kelas ${s.diterimaDiKelas}` : ''}`)}
         {row('Asal sekolah / no. ijazah', `${s.asalSekolah ?? '-'} / ${s.noIjazahAsal ?? '-'}`)}
         {s.pindahanDari && row('Pindahan dari / alasan', `${s.pindahanDari} / ${s.alasanPindah ?? '-'}`)}
@@ -155,7 +159,7 @@ export function LembarInduk({ s }: { s: Siswa }) {
         </tbody>
       </table>
       <h4 className="sec">H. Meninggalkan sekolah</h4>
-      <div className="kvn">
+      <div className="kvn" data-grup="2">
         {row('Status', s.status)}{row('Tanggal', s.tanggalKeluar ? fmtTanggal(s.tanggalKeluar) : '-')}{row('Alasan / pindah ke', s.alasanKeluar)}
         {row('No. ijazah', s.noIjazah)}{row('Melanjutkan ke', s.melanjutkanKe)}
       </div>
