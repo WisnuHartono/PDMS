@@ -6,8 +6,8 @@ import { KopSurat, alamatLengkap, kontakLengkap } from '../print'
 import { seedDemo } from '../seed'
 import { DEFAULT_SEKOLAH, cadanganTerenkripsi, exportTerenkripsi, importJson, put, resetAll, useCol, useSekolah } from '../store'
 import { JENJANG, type KopSetting, type Sekolah } from '../types'
-import { AI_DEFAULT, PENYEDIA, aiSiap, panggilAi } from '../ai'
-import { Btn, Card, Field, Inp, PageHead, Sel, toast, tanya } from '../ui'
+import { AI_DEFAULT, PANDUAN, PENYEDIA, aiSiap, panggilAi } from '../ai'
+import { Btn, Card, Field, Inp, Modal, PageHead, Sel, toast, tanya } from '../ui'
 import { download, fotoKecil, namaPegawai, readFileAsText, today } from '../util'
 
 type Bagian = 'identitas' | 'lokasi' | 'pelengkap' | 'pejabat' | 'kop' | 'cetak' | 'kurikulum' | 'ai' | 'data'
@@ -347,6 +347,8 @@ function PanelAi({ s, set }: { s: Sekolah; set: (p: Partial<Sekolah>) => void })
   const [lihat, setLihat] = useState(false)
   const [uji, setUji] = useState<{ ok: boolean; pesan: string } | null>(null)
   const [sibuk, setSibuk] = useState(false)
+  const [panduan, setPanduan] = useState(false)
+  const pg = PANDUAN[a.penyedia]
   const pilih = (v: typeof a.penyedia) => ubah({ penyedia: v, endpoint: PENYEDIA[v].endpoint, model: PENYEDIA[v].model })
   const tes = async () => {
     setSibuk(true); setUji(null)
@@ -383,10 +385,19 @@ function PanelAi({ s, set }: { s: Sekolah; set: (p: Partial<Sekolah>) => void })
         <div className="row-actions">
           <Btn icon="refresh" onClick={tes} disabled={sibuk || !(a.apiKey || a.penyedia === 'kompatibel') || !a.model}>{sibuk ? 'Menguji…' : 'Uji koneksi'}</Btn>
           {uji && <span className={`pill ${uji.ok ? 'ok' : 'bad'}`} role="status">{uji.ok ? `Berhasil: ${uji.pesan}` : uji.pesan}</span>}
+          <Btn icon="help" onClick={() => setPanduan(true)}>Panduan integrasi</Btn>
           {!aiSiap(s.ai) && a.aktif && <span className="muted small">Lengkapi model dan kunci API, lalu simpan.</span>}
         </div>
         <p className="muted small">Simpan pengaturan (tombol di atas) setelah mengubah. Pengujian memakai nilai di layar.</p>
       </Card>
+      {panduan && (
+        <Modal title={`Panduan integrasi · ${pg.judul}`} onClose={() => setPanduan(false)} footer={<><a className="btn" href={pg.tautan} target="_blank" rel="noopener noreferrer">{pg.tautanLabel}</a><Btn kind="primary" onClick={() => setPanduan(false)}>Mengerti</Btn></>}>
+          <p className="muted small">Panduan mengikuti penyedia yang sedang dipilih. Ganti penyedia untuk melihat panduan lainnya.</p>
+          <ol className="panduan">{pg.langkah.map((l, i) => <li key={i}>{l}</li>)}</ol>
+          <h4 className="sec">Catatan</h4>
+          <ul className="panduan">{pg.catatan.map((l, i) => <li key={i}>{l}</li>)}</ul>
+        </Modal>
+      )}
       <Card title="Privasi & cara kerja">
         <ul className="kur-list">
           <li><b>Nama murid tidak dikirim.</b> Yang dikirim hanya nama mata pelajaran, tujuan pembelajaran, skor/capaian, kehadiran, dan ekskul. Nama diisi kembali di perangkat ini.</li>

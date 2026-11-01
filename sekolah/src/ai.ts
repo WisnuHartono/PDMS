@@ -199,3 +199,48 @@ export async function jalankanBatch<T>(items: T[], kerja: (x: T) => Promise<void
   await Promise.all(pekerja)
   return { gagal, galat }
 }
+
+export interface PanduanAi { judul: string; tautan: string; tautanLabel: string; langkah: string[]; catatan: string[] }
+export const PANDUAN: Record<AiSetting['penyedia'], PanduanAi> = {
+  gemini: {
+    judul: 'Google Gemini', tautan: 'https://aistudio.google.com/apikey', tautanLabel: 'Buka Google AI Studio',
+    langkah: [
+      'Buka Google AI Studio (tombol di bawah) dan masuk dengan akun Google.',
+      'Klik "Create API key" (Buat kunci API), pilih proyek, lalu salin kuncinya (diawali "AIza").',
+      'Kembali ke SIMAS: pilih penyedia "Google Gemini". Alamat API dan model terisi otomatis.',
+      'Tempel kunci pada kolom Kunci API, centang "Aktifkan", lalu klik "Uji koneksi".',
+      'Jika berhasil muncul tulisan hijau. Klik "Simpan pengaturan" di kanan atas.',
+    ],
+    catatan: ['Model yang disarankan: gemini-2.5-flash (cepat dan hemat). Tersedia jatah gratis dengan batas permintaan per menit; bila muncul "Batas pemakaian", tunggu sebentar.', 'Pada jatah gratis, Google dapat memakai data permintaan untuk peningkatan layanan. Nama murid tidak pernah dikirim oleh SIMAS.'],
+  },
+  anthropic: {
+    judul: 'Anthropic (Claude)', tautan: 'https://console.anthropic.com/settings/keys', tautanLabel: 'Buka Anthropic Console',
+    langkah: [
+      'Buka Anthropic Console (tombol di bawah), masuk, dan isi saldo kredit pada menu Billing.',
+      'Pada menu API Keys, klik "Create Key", beri nama (mis. SIMAS), lalu salin kuncinya (diawali "sk-ant-").',
+      'Di SIMAS: pilih penyedia "Anthropic (Claude)". Alamat API dan model terisi otomatis.',
+      'Tempel kunci, centang "Aktifkan", klik "Uji koneksi", lalu "Simpan pengaturan".',
+    ],
+    catatan: ['Kunci hanya ditampilkan sekali di Console, simpan baik-baik. Biaya mengikuti pemakaian token dan ditagihkan ke akun Anda.'],
+  },
+  openai: {
+    judul: 'OpenAI', tautan: 'https://platform.openai.com/api-keys', tautanLabel: 'Buka OpenAI Platform',
+    langkah: [
+      'Buka OpenAI Platform (tombol di bawah), masuk, dan pastikan akun memiliki saldo pada menu Billing.',
+      'Klik "Create new secret key", salin kuncinya (diawali "sk-").',
+      'Di SIMAS: pilih penyedia "OpenAI". Alamat API dan model (gpt-4o-mini) terisi otomatis.',
+      'Tempel kunci, centang "Aktifkan", klik "Uji koneksi", lalu "Simpan pengaturan".',
+    ],
+    catatan: ['Langganan ChatGPT tidak sama dengan API; API memakai saldo terpisah di Platform.'],
+  },
+  kompatibel: {
+    judul: 'Kompatibel OpenAI (OpenRouter, Ollama, dll.)', tautan: 'https://openrouter.ai/keys', tautanLabel: 'Buka OpenRouter (contoh)',
+    langkah: [
+      'OpenRouter: buat kunci di tautan di bawah, lalu isi Alamat API https://openrouter.ai/api/v1/chat/completions dan Model mis. google/gemini-2.5-flash.',
+      'Ollama (model lokal, gratis, offline): pasang Ollama, jalankan "ollama pull llama3.1", lalu biarkan Alamat API http://localhost:11434/v1/chat/completions dan isi Model llama3.1. Kunci API boleh kosong.',
+      'Layanan lain yang mendukung format OpenAI (Groq, Together, LM Studio, dll.): isi alamat /v1/chat/completions dan nama model dari dokumentasinya.',
+      'Centang "Aktifkan", klik "Uji koneksi", lalu "Simpan pengaturan".',
+    ],
+    catatan: ['Model lokal Ollama hanya dapat dipakai dari aplikasi Windows (bukan versi web) dan kualitas bahasa Indonesia bergantung pada model.', 'Alamat selain komputer sendiri harus HTTPS.'],
+  },
+}
