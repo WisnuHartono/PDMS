@@ -117,6 +117,8 @@ function OrtuForm({ v, set, kandung }: { v: OrangTua; set: (p: Partial<OrangTua>
       <Field label="NIK"><Inp obj={v} k="nik" set={set} inputMode="numeric" maxLength={16} /></Field>
       <Field label="Pekerjaan"><Inp obj={v} k="pekerjaan" set={set} /></Field>
       <Field label="Pendidikan"><Inp obj={v} k="pendidikan" set={set} /></Field>
+      <Field label="Tahun lahir"><Inp obj={v} k="tahunLahir" set={set} inputMode="numeric" maxLength={4} /></Field>
+      <Field label="Penghasilan per bulan"><Inp obj={v} k="penghasilan" set={set} /></Field>
       <Field label="Telepon"><Inp obj={v} k="telepon" set={set} /></Field>
       <Field label="Alamat" span={2}><Inp obj={v} k="alamat" set={set} /></Field>
     </>
@@ -161,7 +163,16 @@ export function SiswaForm({ initial, onClose }: { initial: Siswa; onClose: () =>
           <Field label="Riwayat penyakit" span={2}><Inp obj={s} k="riwayatPenyakit" set={set} /></Field>
           <Field label="Tinggal dengan"><Sel obj={s} k="tinggalDengan" set={set} options={['Orang tua', 'Wali', 'Asrama', 'Lainnya']} empty="-" /></Field>
           <Field label="Telepon"><Inp obj={s} k="telepon" set={set} /></Field>
+          <Field label="Status dalam keluarga"><Sel obj={s} k="statusKeluarga" set={set} options={['Anak kandung', 'Anak tiri', 'Anak angkat', 'Lainnya']} empty="-" /></Field>
+          <Field label="Kebutuhan khusus"><Inp obj={s} k="kebutuhanKhusus" set={set} /></Field>
           <Field label="Alamat" span={4}><Inp obj={s} k="alamat" set={set} /></Field>
+          <Field label="Kelurahan / desa"><Inp obj={s} k="kelurahan" set={set} /></Field>
+          <Field label="Kecamatan"><Inp obj={s} k="kecamatan" set={set} /></Field>
+          <Field label="Kabupaten / kota"><Inp obj={s} k="kabupaten" set={set} /></Field>
+          <Field label="Provinsi"><Inp obj={s} k="provinsi" set={set} /></Field>
+          <Field label="Kode pos"><Inp obj={s} k="kodePos" set={set} inputMode="numeric" maxLength={5} /></Field>
+          <Field label="Jarak ke sekolah"><Inp obj={s} k="jarakSekolah" set={set} /></Field>
+          <Field label="Transportasi"><Inp obj={s} k="transportasi" set={set} /></Field>
         </div>
       )}
       {tab === 'ortu' && (

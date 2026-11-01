@@ -70,43 +70,63 @@ function Register({ list, onPick }: { list: Siswa[]; onPick?: (id: string) => vo
   )
 }
 
-const row = (l: string, v?: string | number) => <Fragment key={l}><span className="k">{l}</span><span className="t">:</span><span className="v">{v === undefined || v === '' ? '-' : v}</span></Fragment>
+const val = (v?: string | number) => (v === undefined || v === '' || v === null ? '-' : v)
 
 export function LembarInduk({ s }: { s: Siswa }) {
   const st = getState()
   const kepsek = st.pegawai.find((p) => p.id === st.sekolah[0]?.kepalaSekolahId)
   const riwayat = st.rombel.filter((r) => r.siswaIds.includes(s.id)).sort((a, b) => a.tahunAjaran.localeCompare(b.tahunAjaran))
+  const kelas = riwayat[riwayat.length - 1]?.nama
+  let no = 0
+  const row = (l: string, v?: string | number, tebal = false) => { no += 1; return <Fragment key={l}><span className="n">{no}.</span><span className="k">{l}</span><span className="t">:</span><span className={`v ${tebal ? 'b' : ''}`}>{val(v)}</span></Fragment> }
+  const plain = (l: string, v?: string | number) => <Fragment key={l}><span className="n" /><span className="k">{l}</span><span className="t">:</span><span className="v">{val(v)}</span></Fragment>
+  const ortu = (k: keyof NonNullable<Siswa['ayah']>) => [s.ayah[k], s.ibu[k]].map(String)
+  const tglLahir = s.tanggalLahir ? fmtTanggal(s.tanggalLahir) : '-'
+  const wali = s.wali.nama || s.wali.pekerjaan || s.wali.telepon
   return (
     <div className="doc induk">
-      <KopSurat judul="LEMBAR BUKU INDUK PESERTA DIDIK" />
-      <h4 className="sec">A. Keterangan Tentang Diri Peserta Didik</h4>
+      <KopSurat judul="LEMBAR BUKU INDUK PESERTA DIDIK" sub={`${kelas ? `Kelas ${kelas} | ` : ''}Status: ${s.status}`} />
+      <h4 className="sec">A. Keterangan tentang anak</h4>
       <div className="induk-top">
-        <div className="kvg">
-          {row('Nomor Induk / NISN', `${s.noInduk || '-'} / ${s.nisn || '-'}`)}{row('NIK', s.nik)}
-          {row('Nama lengkap', s.nama)}{row('Nama panggilan', s.namaPanggilan)}{row('Jenis kelamin', s.jk === 'L' ? 'Laki-laki' : 'Perempuan')}
-          {row('Tempat, tanggal lahir', `${s.tempatLahir ?? '-'}, ${fmtTanggal(s.tanggalLahir)}`)}{row('Agama', s.agama)}{row('Kewarganegaraan', s.kewarganegaraan)}
-          {row('Anak ke- / jumlah saudara', `${s.anakKe ?? '-'} / ${s.jumlahSaudara ?? '-'}`)}{row('Bahasa sehari-hari', s.bahasaRumah)}
-          {row('Alamat / telepon', `${s.alamat ?? '-'}${s.telepon ? ` / ${s.telepon}` : ''}`)}{row('Tinggal dengan', s.tinggalDengan)}
+        <div className="kvn">
+          {row('Nama lengkap', s.nama, true)}{row('Nama panggilan', s.namaPanggilan)}{row('Jenis kelamin', s.jk === 'L' ? 'Laki-laki' : 'Perempuan')}
+          {row('Tempat, tanggal lahir', `${s.tempatLahir ?? '-'}, ${tglLahir}`)}{row('NIK', s.nik)}{row('NISN / NIPD', `${s.nisn || '-'} / ${s.noInduk || '-'}`)}
+          {row('Agama', s.agama)}{row('Kewarganegaraan', s.kewarganegaraan)}{row('Status dalam keluarga', s.statusKeluarga)}
+          {row('Anak ke-', s.anakKe)}{row('Jumlah saudara', s.jumlahSaudara)}{row('Bahasa sehari-hari', s.bahasaRumah)}
         </div>
-        <div className="pasfoto">{s.foto ? <img src={s.foto} alt="" /> : <span>Pas foto<br />3 x 4</span>}</div>
+        <div className="pasfoto">{s.foto ? <img src={s.foto} alt="" /> : <span>Pas foto<br />3 × 4</span>}</div>
       </div>
-      <h4 className="sec">B. Keterangan Kesehatan</h4>
-      <div className="kvg">
-        {row('Golongan darah', s.golDarah)}{row('Tinggi / berat badan', `${s.tinggiBadan ?? '-'} cm / ${s.beratBadan ?? '-'} kg`)}{row('Penyakit yang pernah diderita', s.riwayatPenyakit)}
+      <h4 className="sec">B. Keterangan tempat tinggal</h4>
+      <div className="kvn">
+        {row('Alamat', s.alamat)}{row('Kelurahan/desa, kecamatan', [s.kelurahan, s.kecamatan].filter(Boolean).join(', '))}
+        {row('Kabupaten/kota, provinsi, kode pos', [s.kabupaten, s.provinsi, s.kodePos].filter(Boolean).join(', '))}
+        {row('Tinggal bersama', s.tinggalDengan)}{row('Jarak dan transportasi ke sekolah', [s.jarakSekolah, s.transportasi].filter(Boolean).join(', '))}
+        {row('No. HP orang tua', s.ayah.telepon || s.ibu.telepon || s.wali.telepon || s.telepon)}
       </div>
-      <h4 className="sec">C. Keterangan Orang Tua / Wali</h4>
-      <table className="nilai"><thead><tr><th></th><th>Ayah</th><th>Ibu</th><th>Wali</th></tr></thead><tbody>
-        {(['nama', 'pekerjaan', 'pendidikan', 'telepon', 'alamat'] as const).map((k) => (
-          <tr key={k}><td className="lbl">{k[0].toUpperCase() + k.slice(1)}</td><td>{s.ayah[k] ?? ''}</td><td>{s.ibu[k] ?? ''}</td><td>{s.wali[k] ?? ''}</td></tr>
+      <h4 className="sec">C. Keterangan kesehatan</h4>
+      <div className="kvn">
+        {row('Golongan darah', s.golDarah)}{row('Berat / tinggi badan', `${s.beratBadan ?? '-'} kg / ${s.tinggiBadan ?? '-'} cm`)}
+        {row('Penyakit yang pernah diderita', s.riwayatPenyakit)}{row('Kebutuhan khusus', s.kebutuhanKhusus)}
+      </div>
+      <h4 className="sec">D. Keterangan orang tua kandung</h4>
+      <table className="nilai ortu"><thead><tr><th>Keterangan</th><th>Ayah</th><th>Ibu</th></tr></thead><tbody>
+        {([['Nama', 'nama'], ['NIK', 'nik'], ['Tahun lahir', 'tahunLahir'], ['Pendidikan terakhir', 'pendidikan'], ['Pekerjaan', 'pekerjaan'], ['Penghasilan per bulan', 'penghasilan'], ['No. HP', 'telepon']] as const).map(([l, k]) => (
+          <tr key={k}><td>{l}</td><td>{val(ortu(k)[0] === 'undefined' ? undefined : ortu(k)[0])}</td><td>{val(ortu(k)[1] === 'undefined' ? undefined : ortu(k)[1])}</td></tr>
         ))}
       </tbody></table>
-      <h4 className="sec">D. Riwayat Pendidikan</h4>
-      <div className="kvg">
-        {row('Diterima di sekolah ini', `${fmtTanggal(s.tanggalMasuk)}${s.diterimaDiKelas ? `, kelas ${s.diterimaDiKelas}` : ''}`)}
-        {row('Asal sekolah / no. ijazah', `${s.asalSekolah ?? '-'} / ${s.noIjazahAsal ?? '-'}`)}
-        {s.pindahanDari && row('Pindahan dari / alasan', `${s.pindahanDari} / ${s.alasanPindah ?? '-'}`)}
+      <h4 className="sec">E. Keterangan wali</h4>
+      {wali ? (
+        <div className="kvn">
+          {plain('Nama', s.wali.nama)}{plain('NIK', s.wali.nik)}{plain('Pendidikan terakhir', s.wali.pendidikan)}{plain('Pekerjaan', s.wali.pekerjaan)}{plain('No. HP', s.wali.telepon)}{plain('Alamat', s.wali.alamat)}
+        </div>
+      ) : <p className="ket">Tidak ada wali (diasuh orang tua kandung).</p>}
+      <h4 className="sec">F. Riwayat pendidikan</h4>
+      <div className="kvn">
+        {plain('Diterima di sekolah ini', `${s.tanggalMasuk ? fmtTanggal(s.tanggalMasuk) : '-'}${s.diterimaDiKelas ? `, kelas ${s.diterimaDiKelas}` : ''}`)}
+        {plain('Asal sekolah / no. ijazah', `${s.asalSekolah ?? '-'} / ${s.noIjazahAsal ?? '-'}`)}
+        {s.pindahanDari && plain('Pindahan dari / alasan', `${s.pindahanDari} / ${s.alasanPindah ?? '-'}`)}
       </div>
-      <h4 className="sec">E. Perkembangan Belajar</h4>
+      <h4 className="sec">G. Perkembangan belajar</h4>
       <table className="nilai">
         <thead><tr><th>Tahun Pelajaran</th><th>Kelas</th><th>Wali Kelas</th><th>Kurikulum</th><th className="c">Rata-rata Smt 1</th><th className="c">Rata-rata Smt 2</th></tr></thead>
         <tbody>
@@ -124,12 +144,12 @@ export function LembarInduk({ s }: { s: Siswa }) {
           {!riwayat.length && <tr><td colSpan={6} className="c muted">Belum tercatat di rombel mana pun.</td></tr>}
         </tbody>
       </table>
-      <h4 className="sec">F. Meninggalkan Sekolah</h4>
-      <div className="kvg">
-        {row('Status', s.status)}{row('Tanggal', s.tanggalKeluar ? fmtTanggal(s.tanggalKeluar) : '-')}{row('Alasan / pindah ke', s.alasanKeluar)}
-        {row('No. ijazah', s.noIjazah)}{row('Melanjutkan ke', s.melanjutkanKe)}
+      <h4 className="sec">H. Meninggalkan sekolah</h4>
+      <div className="kvn">
+        {plain('Status', s.status)}{plain('Tanggal', s.tanggalKeluar ? fmtTanggal(s.tanggalKeluar) : '-')}{plain('Alasan / pindah ke', s.alasanKeluar)}
+        {plain('No. ijazah', s.noIjazah)}{plain('Melanjutkan ke', s.melanjutkanKe)}
       </div>
-      {s.catatan && <><h4 className="sec">G. Catatan</h4><p>{s.catatan}</p></>}
+      {s.catatan && <><h4 className="sec">I. Catatan</h4><p>{s.catatan}</p></>}
       <TandaTangan kanan={{ jabatan: 'Kepala Sekolah', nama: kepsek ? namaPegawai(kepsek) : undefined, nip: kepsek?.nip ?? '' }} />
     </div>
   )

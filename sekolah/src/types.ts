@@ -141,6 +141,8 @@ export interface OrangTua {
   pendidikan?: string
   telepon?: string
   alamat?: string
+  tahunLahir?: string
+  penghasilan?: string
 }
 
 /** Identitas peserta didik sekaligus isi Buku Induk. */
@@ -166,6 +168,15 @@ export interface Siswa {
   alamat?: string
   telepon?: string
   tinggalDengan?: string
+  statusKeluarga?: string
+  kelurahan?: string
+  kecamatan?: string
+  kabupaten?: string
+  provinsi?: string
+  kodePos?: string
+  jarakSekolah?: string
+  transportasi?: string
+  kebutuhanKhusus?: string
   ayah: OrangTua
   ibu: OrangTua
   wali: OrangTua
