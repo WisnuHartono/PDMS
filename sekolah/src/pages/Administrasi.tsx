@@ -14,6 +14,19 @@ import { BULAN, fmtTanggal, readFileAsDataUrl, today, uid } from '../util'
 export const rupiah = (v: NilaiArsip) => (v === undefined || v === '' ? '' : `Rp ${Number(v).toLocaleString('id-ID')}`)
 const MAKS_LAMPIRAN = 2 * 1024 * 1024
 
+/** Susun isian per baris 4 kolom: sisa kolom di ujung baris diberikan ke isian terakhir agar rata kanan. */
+function rapatkan(items: { key: string; span: number; node: (span: number) => ReactNode }[]) {
+  const spans = items.map((i) => Math.min(4, i.span))
+  let used = 0
+  for (let i = 0; i < items.length; i++) {
+    if (used + spans[i] > 4) { spans[i - 1] += 4 - used; used = 0 }
+    used += spans[i]
+    if (used === 4) used = 0
+  }
+  if (used > 0) spans[items.length - 1] += 4 - used
+  return items.map((it, i) => it.node(spans[i]))
+}
+
 type Lokasi = { bidang?: string; reg?: string }
 /** Posisi terakhir di Administrasi, dipulihkan saat pengguna menekan "Kembali" dari modul terkait. */
 let lokKembali: Lokasi | null = null
@@ -344,14 +357,16 @@ function FormArsip({ judul, fields, awal, lampiran, reg, onClose, onSimpan }: {
   return (
     <Modal title={judul} onClose={onClose} wide footer={<><Btn onClick={onClose}>Batal</Btn><Btn kind="primary" onClick={simpan}>Simpan</Btn></>}>
       <div className="form-grid four">
-        {fields.map((f) => (
-          <Field key={f.k} label={`${f.l}${f.wajib ? ' *' : ''}`} span={f.span ?? (f.t === 'textarea' ? 4 : 1)}>
-            <Masukan f={f} v={a.data[f.k]} on={(v) => set(f.k, v)} otomatis={reg?.nomor?.k === f.k} />
-          </Field>
-        ))}
-        {reg?.kolomHitung?.map((k) => (
-          <Field key={k.k} label={`${k.l} (otomatis)`}><input readOnly value={k.rupiah ? rupiah(hitung[k.k]) : String(hitung[k.k] ?? '')} /></Field>
-        ))}
+        {rapatkan([
+          ...fields.map((f) => ({ key: f.k, span: f.span ?? (f.t === 'textarea' ? 4 : 1), node: (span: number) => (
+            <Field key={f.k} label={`${f.l}${f.wajib ? ' *' : ''}`} span={span as 1 | 2 | 3 | 4}>
+              <Masukan f={f} v={a.data[f.k]} on={(v) => set(f.k, v)} otomatis={reg?.nomor?.k === f.k} />
+            </Field>
+          ) })),
+          ...(reg?.kolomHitung ?? []).map((k) => ({ key: k.k, span: 1, node: (span: number) => (
+            <Field key={k.k} label={`${k.l} (otomatis)`} span={span as 1 | 2 | 3 | 4}><input readOnly value={k.rupiah ? rupiah(hitung[k.k]) : String(hitung[k.k] ?? '')} /></Field>
+          ) })),
+        ])}
       </div>
       {lampiran && (
         <>

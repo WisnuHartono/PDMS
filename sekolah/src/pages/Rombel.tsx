@@ -181,7 +181,7 @@ function RombelForm({ initial, onClose }: { initial: Rombel; onClose: () => void
             <Field label="Kurikulum" span={2} hint={getKurikulum(r.kurikulumId).asal === 'Internasional' ? 'Kurikulum internasional: nilai dan rapor memakai format kurikulum tersebut.' : 'Implementasi kurikulum di Beranda dihitung dari pilihan ini.'}>
               <Sel obj={r} k="kurikulumId" set={set} options={(kurOk.length ? kurOk : KURIKULUM).map((k) => [k.id, `${k.nama}${k.asal === 'Internasional' ? ' (Int.)' : ''}`] as [string, string])} />
             </Field>
-            <Field label="Ruang"><Inp obj={r} k="ruang" set={set} /></Field>
+            <Field label="Ruang" span={2}><Inp obj={r} k="ruang" set={set} /></Field>
             {jenis === 'Kelas Rangkap' && (
               <>
                 <Field label="Sebagai Rombel Induk"><select value={r.rombelInduk ? '1' : ''} onChange={(e) => set({ rombelInduk: e.target.value === '1' || undefined, indukId: undefined })}><option value="1">Ya (pusat pembelajaran)</option><option value="">Tidak (rombel anggota)</option></select></Field>

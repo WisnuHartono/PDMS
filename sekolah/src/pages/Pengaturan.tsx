@@ -65,32 +65,34 @@ export default function Pengaturan() {
           {bagian === 'identitas' && (
             <>
               <Card title="Identitas satuan pendidikan" className="mb">
-                <div className="form-grid g6">
-                  <div className="foto-box span-1">
+                <div className="ident-row">
+                  <div className="logo-col">
                     {s.logo ? <img src={s.logo} alt="Logo sekolah" className="logo-prev" /> : <div className="logo-prev" />}
-                    <label className="btn btn-ghost">Logo sekolah<input type="file" accept="image/*" hidden onChange={gambar((logo) => set({ logo }), 240)} /></label>
+                    <label className="btn btn-ghost">Pilih logo<input type="file" accept="image/*" hidden onChange={gambar((logo) => set({ logo }), 240)} /></label>
                     {s.logo && <button className="link small" onClick={() => set({ logo: undefined })}>Hapus logo</button>}
                   </div>
-                  <Field label="Nama sekolah *" span={3}><Inp obj={s} k="nama" set={set} /></Field>
-                  <Field label="NPSN"><Inp obj={s} k="npsn" set={set} inputMode="numeric" maxLength={8} /></Field>
-                  <Field label="NSS"><Inp obj={s} k="nss" set={set} /></Field>
-                  <Field label="Yayasan / instansi induk" span={3}><Inp obj={s} k="yayasan" set={set} /></Field>
-                  <Field label="Status sekolah"><Sel obj={s} k="statusSekolah" set={set} options={['Negeri', 'Swasta']} empty="-" /></Field>
-                  <Field label="Status kepemilikan"><Sel obj={s} k="statusKepemilikan" set={set} options={['Pemerintah Pusat', 'Pemerintah Daerah', 'Yayasan', 'Lainnya']} empty="-" /></Field>
-                  <Field label="Status operasional"><Sel obj={s} k="statusOperasional" set={set} options={['Aktif', 'Tutup sementara', 'Tutup']} empty="-" /></Field>
-                  <Field label="Waktu penyelenggaraan"><Sel obj={s} k="waktuPenyelenggaraan" set={set} options={['Pagi', 'Siang', 'Pagi/6 hari', 'Pagi/5 hari', 'Kombinasi']} empty="-" /></Field>
-                  <Field label="Manajemen Berbasis Sekolah"><Sel obj={s} k="mbs" set={set} options={['Ya', 'Tidak']} empty="-" /></Field>
+                  <div className="form-grid g6">
+                    <Field label="Nama sekolah *" span={4}><Inp obj={s} k="nama" set={set} /></Field>
+                    <Field label="NPSN"><Inp obj={s} k="npsn" set={set} inputMode="numeric" maxLength={8} /></Field>
+                    <Field label="NSS"><Inp obj={s} k="nss" set={set} /></Field>
+                    <Field label="Yayasan / instansi induk" span={4}><Inp obj={s} k="yayasan" set={set} /></Field>
+                    <Field label="Status sekolah"><Sel obj={s} k="statusSekolah" set={set} options={['Negeri', 'Swasta']} empty="-" /></Field>
+                    <Field label="Kepemilikan"><Sel obj={s} k="statusKepemilikan" set={set} options={['Pemerintah Pusat', 'Pemerintah Daerah', 'Yayasan', 'Lainnya']} empty="-" /></Field>
+                    <Field label="Status operasional" span={2}><Sel obj={s} k="statusOperasional" set={set} options={['Aktif', 'Tutup sementara', 'Tutup']} empty="-" /></Field>
+                    <Field label="Waktu penyelenggaraan" span={2}><Sel obj={s} k="waktuPenyelenggaraan" set={set} options={['Pagi', 'Siang', 'Pagi/6 hari', 'Pagi/5 hari', 'Kombinasi']} empty="-" /></Field>
+                    <Field label="Manajemen Berbasis Sekolah" span={2}><Sel obj={s} k="mbs" set={set} options={['Ya', 'Tidak']} empty="-" /></Field>
+                  </div>
                 </div>
               </Card>
               <Card title="Legalitas & akreditasi" className="mb">
                 <div className="form-grid g6">
                   <Field label="No. SK pendirian" span={2}><Inp obj={s} k="skPendirian" set={set} /></Field>
-                  <Field label="Tanggal SK pendirian"><Inp obj={s} k="tglSkPendirian" set={set} type="date" /></Field>
+                  <Field label="Tgl SK pendirian"><Inp obj={s} k="tglSkPendirian" set={set} type="date" /></Field>
                   <Field label="No. SK izin operasional" span={2}><Inp obj={s} k="skIzinOperasional" set={set} /></Field>
-                  <Field label="Tanggal SK izin operasional"><Inp obj={s} k="tglSkIzinOperasional" set={set} type="date" /></Field>
+                  <Field label="Tgl SK izin"><Inp obj={s} k="tglSkIzinOperasional" set={set} type="date" /></Field>
                   <Field label="Akreditasi"><Sel obj={s} k="akreditasi" set={set} options={['A', 'B', 'C', 'Belum terakreditasi']} empty="-" /></Field>
-                  <Field label="No. SK akreditasi" span={2}><Inp obj={s} k="skAkreditasi" set={set} /></Field>
-                  <Field label="Tanggal SK akreditasi"><Inp obj={s} k="tglAkreditasi" set={set} type="date" /></Field>
+                  <Field label="No. SK akreditasi" span={3}><Inp obj={s} k="skAkreditasi" set={set} /></Field>
+                  <Field label="Tgl SK akreditasi"><Inp obj={s} k="tglAkreditasi" set={set} type="date" /></Field>
                   <Field label="Berlaku sampai"><Inp obj={s} k="akreditasiBerlaku" set={set} type="date" /></Field>
                 </div>
               </Card>
@@ -120,19 +122,19 @@ export default function Pengaturan() {
                   <Field label="Kabupaten / kota"><Inp obj={s} k="kabupaten" set={set} /></Field>
                   <Field label="Provinsi"><Inp obj={s} k="provinsi" set={set} /></Field>
                   <Field label="Kode pos"><Inp obj={s} k="kodePos" set={set} inputMode="numeric" maxLength={5} /></Field>
-                  <Field label="Lintang" hint="mis. -6.8915"><Inp obj={s} k="lintang" set={set} /></Field>
-                  <Field label="Bujur" hint="mis. 107.6107"><Inp obj={s} k="bujur" set={set} /></Field>
+                  <Field label="Lintang (mis. -6.8915)" span={2}><Inp obj={s} k="lintang" set={set} /></Field>
+                  <Field label="Bujur (mis. 107.6107)" span={2}><Inp obj={s} k="bujur" set={set} /></Field>
                   <Field label="Peta" span={2}>{s.lintang && s.bujur ? <a className="link" href={`https://www.google.com/maps?q=${s.lintang},${s.bujur}`} target="_blank" rel="noreferrer">Buka lokasi di Google Maps</a> : <span className="muted small">Isi lintang & bujur</span>}</Field>
                 </div>
                 <p className="muted small">Ditampilkan di kop: {alamatLengkap(s) || '-'}</p>
               </Card>
               <Card title="Kontak">
                 <div className="form-grid g6">
-                  <Field label="Telepon"><Inp obj={s} k="telepon" set={set} /></Field>
-                  <Field label="Faksimile"><Inp obj={s} k="fax" set={set} /></Field>
+                  <Field label="Telepon" span={2}><Inp obj={s} k="telepon" set={set} /></Field>
+                  <Field label="Faksimile" span={2}><Inp obj={s} k="fax" set={set} /></Field>
                   <Field label="Email" span={2}><Inp obj={s} k="email" set={set} type="email" /></Field>
-                  <Field label="Laman / website" span={2}><Inp obj={s} k="website" set={set} /></Field>
-                  <Field label="Media sosial" span={3}><Inp obj={s} k="mediaSosial" set={set} placeholder="@sekolah (Instagram, Facebook, YouTube)" /></Field>
+                  <Field label="Laman / website" span={3}><Inp obj={s} k="website" set={set} /></Field>
+                  <Field label="Media sosial (Instagram, Facebook, YouTube)" span={3}><Inp obj={s} k="mediaSosial" set={set} placeholder="@sekolah" /></Field>
                 </div>
               </Card>
             </>
@@ -142,8 +144,8 @@ export default function Pengaturan() {
             <>
               <Card title="Rekening sekolah & perpajakan" className="mb">
                 <div className="form-grid g6">
-                  <Field label="Nama bank"><Inp obj={s} k="bank" set={set} /></Field>
-                  <Field label="Cabang / KCP"><Inp obj={s} k="cabangBank" set={set} /></Field>
+                  <Field label="Nama bank" span={2}><Inp obj={s} k="bank" set={set} /></Field>
+                  <Field label="Cabang / KCP" span={2}><Inp obj={s} k="cabangBank" set={set} /></Field>
                   <Field label="Nomor rekening" span={2}><Inp obj={s} k="noRekening" set={set} /></Field>
                   <Field label="Rekening atas nama" span={2}><Inp obj={s} k="atasNamaRekening" set={set} /></Field>
                   <Field label="NPWP" span={2}><Inp obj={s} k="npwp" set={set} /></Field>
@@ -152,11 +154,11 @@ export default function Pengaturan() {
               </Card>
               <Card title="Sarana pendukung & kelembagaan">
                 <div className="form-grid g6">
-                  <Field label="Luas tanah milik (m²)"><Inp obj={s} k="luasTanahMilik" set={set} type="number" /></Field>
-                  <Field label="Sumber listrik"><Sel obj={s} k="sumberListrik" set={set} options={['PLN', 'PLN & Diesel', 'Diesel', 'Tenaga Surya', 'Tidak ada']} empty="-" /></Field>
-                  <Field label="Daya listrik (VA)"><Inp obj={s} k="dayaListrik" set={set} type="number" /></Field>
-                  <Field label="Akses internet" span={2}><Sel obj={s} k="aksesInternet" set={set} options={['Fiber optik', 'Kabel/ADSL', 'Seluler 4G/5G', 'Satelit', 'Tidak ada']} empty="-" /></Field>
-                  <Field label="Ketua komite sekolah" span={2}><Inp obj={s} k="ketuaKomite" set={set} /></Field>
+                  <Field label="Luas tanah milik (m²)" span={2}><Inp obj={s} k="luasTanahMilik" set={set} type="number" /></Field>
+                  <Field label="Sumber listrik" span={2}><Sel obj={s} k="sumberListrik" set={set} options={['PLN', 'PLN & Diesel', 'Diesel', 'Tenaga Surya', 'Tidak ada']} empty="-" /></Field>
+                  <Field label="Daya listrik (VA)" span={2}><Inp obj={s} k="dayaListrik" set={set} type="number" /></Field>
+                  <Field label="Akses internet" span={3}><Sel obj={s} k="aksesInternet" set={set} options={['Fiber optik', 'Kabel/ADSL', 'Seluler 4G/5G', 'Satelit', 'Tidak ada']} empty="-" /></Field>
+                  <Field label="Ketua komite sekolah" span={3}><Inp obj={s} k="ketuaKomite" set={set} /></Field>
                 </div>
               </Card>
             </>
@@ -243,10 +245,10 @@ export default function Pengaturan() {
               </Card>
               <Card title="Penomoran surat" className="mb">
                 <div className="form-grid g4">
-                  <Field label="Kode / singkatan sekolah" hint="Dipakai pada nomor surat. Kosong = NPSN"><Inp obj={s} k="kodeSurat" set={set} placeholder={s.npsn || 'SKL'} /></Field>
-                  <Field label="Contoh nomor surat keluar" span={3}><div className="contoh-no">001/421/{kodeSekolah(s)}/{ROMAWI[new Date().getMonth()]}/{new Date().getFullYear()}</div></Field>
+                  <Field label="Kode / singkatan sekolah"><Inp obj={s} k="kodeSurat" set={set} placeholder={s.npsn || 'SKL'} /></Field>
+                  <Field label="Contoh nomor surat keluar" span={2}><div className="contoh-no">001/421/{kodeSekolah(s)}/{ROMAWI[new Date().getMonth()]}/{new Date().getFullYear()}</div></Field>
                 </div>
-                <p className="muted small">Format: nomor urut / kode klasifikasi / kode sekolah / bulan (romawi) / tahun. Nomor urut otomatis per tahun di buku Surat Keluar dan Surat Keterangan.</p>
+                <p className="muted small">Kode kosong = NPSN. Format: nomor urut / kode klasifikasi / kode sekolah / bulan (romawi) / tahun. Nomor urut otomatis per tahun di buku Surat Keluar dan Surat Keterangan.</p>
               </Card>
               <Card title="Kertas cetak">
                 <div className="radio-row">

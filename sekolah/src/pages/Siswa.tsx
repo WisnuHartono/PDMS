@@ -118,7 +118,7 @@ function OrtuForm({ v, set, kandung }: { v: OrangTua; set: (p: Partial<OrangTua>
       <Field label="Pekerjaan"><Inp obj={v} k="pekerjaan" set={set} /></Field>
       <Field label="Pendidikan"><Inp obj={v} k="pendidikan" set={set} /></Field>
       <Field label="Telepon"><Inp obj={v} k="telepon" set={set} /></Field>
-      <Field label="Alamat" span={3}><Inp obj={v} k="alamat" set={set} /></Field>
+      <Field label="Alamat" span={2}><Inp obj={v} k="alamat" set={set} /></Field>
     </>
   )
 }
@@ -159,9 +159,9 @@ export function SiswaForm({ initial, onClose }: { initial: Siswa; onClose: () =>
           <Field label="Tinggi badan (cm)"><Inp obj={s} k="tinggiBadan" set={set} type="number" /></Field>
           <Field label="Berat badan (kg)"><Inp obj={s} k="beratBadan" set={set} type="number" /></Field>
           <Field label="Riwayat penyakit" span={2}><Inp obj={s} k="riwayatPenyakit" set={set} /></Field>
-          <Field label="Alamat" span={3}><Inp obj={s} k="alamat" set={set} /></Field>
-          <Field label="Telepon"><Inp obj={s} k="telepon" set={set} /></Field>
           <Field label="Tinggal dengan"><Sel obj={s} k="tinggalDengan" set={set} options={['Orang tua', 'Wali', 'Asrama', 'Lainnya']} empty="-" /></Field>
+          <Field label="Telepon"><Inp obj={s} k="telepon" set={set} /></Field>
+          <Field label="Alamat" span={4}><Inp obj={s} k="alamat" set={set} /></Field>
         </div>
       )}
       {tab === 'ortu' && (

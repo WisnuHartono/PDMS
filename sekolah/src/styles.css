@@ -546,8 +546,6 @@ table.mini td { padding: 3px 6px; }
   .stat-row { grid-template-columns: repeat(3, 1fr); }
 }
 .tbl td.clip { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.form-grid { align-items: end; }
-.form-grid > .foto-box { align-self: center; }
 .back-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
 .back-bar .crumb { margin: 0; }
 .back-bar .btn { height: 28px; padding: 0 10px 0 6px; }
@@ -596,3 +594,16 @@ table.mini td { padding: 3px 6px; }
 .radio-row label { white-space: nowrap; }
 .kop-set .radio-row { flex-wrap: wrap; row-gap: 4px; }
 .kop-prev { height: 215px; }
+
+/* Form sejajar: label satu baris (terpotong …, judul penuh saat disorot), input rata atas */
+.form-grid { align-items: start; }
+.field-l { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 16px; min-height: 16px; }
+.field > input:not([type=checkbox]):not([type=radio]), .field > select { width: 100%; }
+.field small.muted { line-height: 1.25; }
+.ident-row { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 14px; align-items: start; }
+.logo-col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.logo-col .logo-prev { width: 104px; height: 104px; }
+.logo-col .btn { height: 26px; font-size: 12.5px; }
+.form-grid.g6 .foto-box { grid-row: auto; }
+.contoh-no { height: 30px; }
+@media (max-width: 760px) { .ident-row { grid-template-columns: 1fr; } }

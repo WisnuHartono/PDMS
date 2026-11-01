@@ -121,11 +121,11 @@ function PegawaiForm({ initial, onClose }: { initial: Pegawai; onClose: () => vo
         <Field label="TMT"><Inp obj={p} k="tmt" set={set} type="date" /></Field>
         <Field label="Telepon"><Inp obj={p} k="telepon" set={set} /></Field>
         <Field label="Email" span={2}><Inp obj={p} k="email" set={set} type="email" /></Field>
-        <Field label="Alamat" span={3}><Inp obj={p} k="alamat" set={set} /></Field>
+        <Field label="Alamat" span={2}><Inp obj={p} k="alamat" set={set} /></Field>
         <Field label="Tugas tambahan" span={2}><Inp obj={p} k="tugasTambahan" set={set} placeholder="Wakasek, Kepala Perpustakaan, Operator, …" /></Field>
         <Field label="No. sertifikat pendidik"><Inp obj={p} k="noSertifikatPendidik" set={set} /></Field>
         <Field label="Tahun sertifikasi"><Inp obj={p} k="tahunSertifikasi" set={set} type="number" /></Field>
-        <Field label="Bidang sertifikasi" span={2}><Inp obj={p} k="bidangSertifikasi" set={set} /></Field>
+        <Field label="Bidang sertifikasi" span={3}><Inp obj={p} k="bidangSertifikasi" set={set} /></Field>
         <Field label="Status"><select value={p.aktif ? '1' : '0'} onChange={(e) => set({ aktif: e.target.value === '1' })}><option value="1">Aktif</option><option value="0">Nonaktif</option></select></Field>
       </div>
       {p.jenis === 'Guru' && mapel.length > 0 && (

@@ -80,7 +80,7 @@ export function Modal({ title, onClose, children, footer, wide }: { title: strin
 export function Field({ label, children, span = 1, hint }: { label: string; children: ReactNode; span?: 1 | 2 | 3 | 4 | 5 | 6; hint?: string }) {
   return (
     <label className={`field span-${span}`}>
-      <span className="field-l">{label}</span>
+      <span className="field-l" title={label}>{label}</span>
       {children}
       {hint && <small className="muted">{hint}</small>}
     </label>
