@@ -138,7 +138,7 @@ export default function App() {
           </div>
           <div className="akun-wrap">
             <button className="akun-btn" onClick={() => setMenuAkun((x) => !x)} aria-haspopup="menu" aria-expanded={menuAkun}>
-              <Avatar nama={sesi.akun.nama} size={34} />
+              <Avatar nama={sesi.akun.nama} foto={sesi.akun.foto} size={34} />
               <div className="who">
                 <b>{sesi.akun.nama}</b>
                 <span>{sesi.peran.nama}</span>
@@ -148,7 +148,7 @@ export default function App() {
             {menuAkun && (
               <div className="akun-menu" role="menu" onMouseLeave={() => setMenuAkun(false)}>
                 <div className="akun-menu-h">
-                  <Avatar nama={sesi.akun.nama} size={40} />
+                  <Avatar nama={sesi.akun.nama} foto={sesi.akun.foto} size={40} />
                   <div><b>{sesi.akun.nama}</b><span>@{sesi.akun.username} · {sesi.peran.nama}</span>
                     <span>{sesi.akun.totpEnc ? '🔒 Verifikasi 2 langkah aktif' : '⚠ Verifikasi 2 langkah belum aktif'}</span></div>
                 </div>

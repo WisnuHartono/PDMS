@@ -3,13 +3,14 @@ import { useEffect, useState } from 'react'
 import { MENU } from '../App'
 import { bidangEfektif } from '../administrasi'
 import {
-  KEBIJAKAN_DEFAULT, SEMUA_HALAMAN, aktifkan2fa, buatAkun, buatKodePemulihanBaru, daftarAkun, daftarAudit, daftarPeran, gantiSandi, hapusAkun, hapusPeran,
+  KEBIJAKAN_DEFAULT, KOLOM_PROFIL, configGoogle, hubungkanGoogle, putusGoogle, simpanConfigGoogle, sinkronProfilGoogle, ubahProfil, type ConfigGoogle, type PatchProfil, SEMUA_HALAMAN, aktifkan2fa, buatAkun, buatKodePemulihanBaru, daftarAkun, daftarAudit, daftarPeran, gantiSandi, hapusAkun, hapusPeran,
   kebijakan, nonaktifkan2fa, resetAkun, sandiAcak, simpanKebijakan, simpanPeran, ubahAkun, type Akun as TAkun, type Audit, type Kebijakan, type Peran,
 } from '../security/akun'
 import { otpauthUri, totpSecretBaru } from '../security/crypto'
-import { getSesi, useSesi } from '../security/sesi'
+import { getSesi, setSesi, useSesi } from '../security/sesi'
 import { useCol } from '../store'
-import { Btn, Card, Empty, Field, Modal, PageHead, Tabs, toast, tanya } from '../ui'
+import { Avatar, Btn, Card, Empty, Field, Modal, PageHead, Tabs, toast, tanya } from '../ui'
+import { FormProfil, TombolGoogle } from './ProfilForm'
 import { namaPegawai } from '../util'
 import { SandiInput } from './Login'
 
@@ -28,13 +29,14 @@ const coba = async (f: () => Promise<unknown>, ok?: string) => {
 }
 
 export default function AkunPage() {
-  const [tab, setTab] = useState<'akun' | 'peran' | 'kebijakan' | 'log'>('akun')
+  const [tab, setTab] = useState<'akun' | 'peran' | 'google' | 'kebijakan' | 'log'>('akun')
   return (
     <div>
       <PageHead title="Akun & Keamanan" sub="Kelola akun pengguna, jenis akun dan hak aksesnya, kebijakan keamanan, serta log aktivitas" />
-      <Tabs tabs={[['akun', 'Akun Pengguna'], ['peran', 'Jenis Akun & Hak Akses'], ['kebijakan', 'Kebijakan Keamanan'], ['log', 'Log Aktivitas']]} value={tab} onChange={setTab} />
+      <Tabs tabs={[['akun', 'Akun Pengguna'], ['peran', 'Jenis Akun & Hak Akses'], ['google', 'Google & Email'], ['kebijakan', 'Kebijakan Keamanan'], ['log', 'Log Aktivitas']]} value={tab} onChange={setTab} />
       {tab === 'akun' && <DaftarAkun />}
       {tab === 'peran' && <DaftarPeran />}
+      {tab === 'google' && <GoogleConfig />}
       {tab === 'kebijakan' && <KebijakanForm />}
       {tab === 'log' && <Log />}
     </div>
@@ -48,17 +50,18 @@ function DaftarAkun() {
   const pegawai = useCol('pegawai')
   const [baru, setBaru] = useState(false)
   const [reset, setReset] = useState<TAkun | null>(null)
+  const [profil, setProfil] = useState<TAkun | null>(null)
   const namaPeran = (id: string) => peran.find((p) => p.id === id)?.nama ?? id
   return (
     <Card title={`${akun.length} akun`} actions={<Btn icon="plus" kind="primary" onClick={() => setBaru(true)}>Tambah Akun</Btn>}>
       <div className="table-wrap"><table className="tbl">
-        <thead><tr><th>Nama</th><th>Nama pengguna</th><th>Jenis akun</th><th>Terhubung ke</th><th className="c">2 langkah</th><th>Status</th><th>Login terakhir</th><th></th></tr></thead>
+        <thead><tr><th>Nama</th><th>Nama pengguna / email</th><th>Jenis akun</th><th>Terhubung ke</th><th className="c">2 langkah</th><th>Status</th><th>Login terakhir</th><th></th></tr></thead>
         <tbody>{akun.sort((a, b) => a.nama.localeCompare(b.nama)).map((a) => {
           const terkunci = a.kunciSampai && a.kunciSampai > Date.now()
           return (
             <tr key={a.id}>
-              <td><b>{a.nama}</b>{a.id === sesi.akun.id && <span className="pill info" style={{ marginLeft: 6 }}>Anda</span>}</td>
-              <td>{a.username}</td>
+              <td><div className="akun-nama"><Avatar nama={a.nama} foto={a.foto} size={34} /><div><b>{a.nama}</b>{a.id === sesi.akun.id && <span className="pill info" style={{ marginLeft: 6 }}>Anda</span>}{a.google && <span className="pill g" style={{ marginLeft: 6 }} title={`Google: ${a.google.email}`}>Google</span>}<div className="muted small">{a.jabatan || '-'}</div></div></div></td>
+              <td>{a.username}<div className="muted small">{a.email || '-'}{a.telepon ? ` · ${a.telepon}` : ''}</div></td>
               <td>
                 <select value={a.peranId} disabled={a.id === sesi.akun.id} onChange={(e) => coba(() => ubahAkun(sesi, a, { peranId: e.target.value }), 'Jenis akun diubah').then(muat)} aria-label={`Jenis akun ${a.username}`}>
                   {peran.map((p) => <option key={p.id} value={p.id}>{p.nama}</option>)}
@@ -69,6 +72,7 @@ function DaftarAkun() {
               <td>{!a.aktif ? <span className="pill">Nonaktif</span> : terkunci ? <span className="pill bad">Terkunci</span> : a.wajibGantiSandi ? <span className="pill warn">Sandi sementara</span> : <span className="pill ok">Aktif</span>}</td>
               <td className="small">{waktu(a.loginTerakhir)}</td>
               <td className="row-actions">
+                <Btn kind="ghost" icon="edit" onClick={() => setProfil(a)}>Profil</Btn>
                 <Btn kind="ghost" onClick={() => setReset(a)}>Atur ulang</Btn>
                 {a.id !== sesi.akun.id && <Btn kind="ghost" onClick={() => coba(() => ubahAkun(sesi, a, { aktif: !a.aktif }), a.aktif ? 'Akun dinonaktifkan' : 'Akun diaktifkan').then(muat)}>{a.aktif ? 'Nonaktifkan' : 'Aktifkan'}</Btn>}
                 {a.id !== sesi.akun.id && <Btn icon="trash" kind="ghost" title="Hapus akun" onClick={async () => (await tanya(`Hapus akun ${a.username}?`)) && coba(() => hapusAkun(sesi, a), 'Akun dihapus').then(muat)} />}
@@ -80,7 +84,30 @@ function DaftarAkun() {
       <p className="muted small">Setiap akun baru memakai kata sandi sementara dan wajib menggantinya saat pertama masuk. Peran <i>{namaPeran('admin')}</i> minimal harus ada satu yang aktif.</p>
       {baru && <AkunBaru peran={peran} onClose={() => { setBaru(false); muat() }} />}
       {reset && <ResetAkun a={reset} onClose={() => { setReset(null); muat() }} />}
+      {profil && <ProfilAkun a={profil} onClose={() => { setProfil(null); muat() }} />}
     </Card>
+  )
+}
+
+/** Administrator mengubah data profil lengkap akun mana pun. */
+function ProfilAkun({ a, onClose }: { a: TAkun; onClose: () => void }) {
+  const sesi = getSesi()!
+  const pegawai = useCol('pegawai').filter((p) => p.aktif || p.id === a.pegawaiId)
+  const awal: PatchProfil = Object.fromEntries(KOLOM_PROFIL.map((k) => [k, a[k]])) as PatchProfil
+  const [v, setV] = useState<PatchProfil>(awal)
+  const [pegawaiId, setPegawaiId] = useState(a.pegawaiId ?? '')
+  const simpan = () => v.nama?.trim() ? coba(async () => { await ubahAkun(sesi, a, { ...v, pegawaiId: pegawaiId || undefined }); if (a.id === sesi.akun.id) setSesi({ ...sesi }) }, 'Profil disimpan').then((ok) => ok && onClose()) : toast('Nama wajib diisi')
+  return (
+    <Modal title={`Profil akun: ${a.username}`} onClose={onClose} wide footer={<><Btn onClick={onClose}>Batal</Btn><Btn kind="primary" onClick={simpan}>Simpan</Btn></>}>
+      <FormProfil v={v} onChange={setV} nama={a.nama} />
+      <div className="form-grid" style={{ marginTop: 6 }}>
+        <Field label="Terhubung ke data guru/pegawai" span={4}>
+          <select value={pegawaiId} onChange={(e) => setPegawaiId(e.target.value)}><option value="">-</option>{pegawai.map((p) => <option key={p.id} value={p.id}>{namaPegawai(p)} · {p.jabatan}</option>)}</select>
+        </Field>
+      </div>
+      <p className="small muted">Akun dibuat {waktu(a.dibuat)} · login terakhir {waktu(a.loginTerakhir)}{a.google ? ` · Google: ${a.google.email}${a.google.wrap ? ' (boleh masuk dengan Google di perangkat ini)' : ''}` : ''}</p>
+      {a.google && <Btn kind="ghost" onClick={async () => (await tanya(`Putuskan akun Google ${a.google!.email} dari ${a.username}?`)) && coba(() => putusGoogle(sesi, a), 'Akun Google diputuskan').then(onClose)}>Putuskan akun Google</Btn>}
+    </Modal>
   )
 }
 
@@ -180,6 +207,46 @@ function PeranForm({ initial, onClose }: { initial: Peran; onClose: () => void }
   )
 }
 
+function GoogleConfig() {
+  const sesi = useSesi()!
+  const [c, setC] = useState<ConfigGoogle>({ aktif: false, clientId: '' })
+  const [akun] = useData(daftarAkun, [] as TAkun[])
+  useEffect(() => { configGoogle().then(setC) }, [])
+  const terhubung = akun.filter((a) => a.google)
+  return (
+    <div className="grid-2">
+      <Card title="Masuk dengan Google & sinkron email">
+        <label className="chk"><input type="checkbox" checked={c.aktif} onChange={(e) => setC({ ...c, aktif: e.target.checked })} /> Aktifkan integrasi akun Google</label>
+        <div className="form-grid" style={{ marginTop: 6 }}>
+          <Field label="OAuth Client ID Google" span={4}><input value={c.clientId} onChange={(e) => setC({ ...c, clientId: e.target.value })} placeholder="1234567890-abc.apps.googleusercontent.com" /></Field>
+          <Field label="Batasi domain email (opsional)" span={4} hint="mis. sekolah.sch.id: hanya akun Google dari domain ini yang boleh dihubungkan"><input value={c.domain ?? ''} onChange={(e) => setC({ ...c, domain: e.target.value })} placeholder="sekolah.sch.id" /></Field>
+        </div>
+        <Btn kind="primary" onClick={() => coba(() => simpanConfigGoogle(sesi, c), 'Pengaturan Google disimpan')}>Simpan</Btn>
+        <details className="dc-det" open={!c.clientId}>
+          <summary>Cara mendapatkan Client ID</summary>
+          <ol className="small">
+            <li>Buka <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noreferrer">Google Cloud Console › Credentials</a> dan pilih/buat proyek.</li>
+            <li><i>OAuth consent screen</i>: pilih <b>External</b> (atau Internal untuk Google Workspace), isi nama aplikasi, tambahkan email Anda sebagai <i>Test user</i>.</li>
+            <li><i>Create credentials › OAuth client ID › Web application</i>. Pada <i>Authorized JavaScript origins</i> isi <code>{globalThis.location?.origin}</code>.</li>
+            <li>Salin Client ID ke kolom di atas dan simpan. Client ID bukan rahasia.</li>
+          </ol>
+        </details>
+      </Card>
+      <Card title="Cara kerja & keamanan">
+        <ul className="kur-list small">
+          <li><b>Hubungkan:</b> pengguna yang sudah login membuka <i>Profil & Keamanan › Akun Google</i> dan menekan tombol Google. Nama, email, dan foto profil dapat disalin dari akun Google dan disinkronkan ulang kapan saja.</li>
+          <li><b>Masuk dengan Google:</b> opsional per pengguna dan per perangkat. Token Google diperiksa di perangkat (tanda tangan, Client ID, masa berlaku, nonce, email terverifikasi), lalu kunci data dibuka dengan <i>kunci perangkat</i> yang tersimpan di browser/aplikasi ini.</li>
+          <li><b>Kompromi keamanan:</b> berbeda dengan kata sandi, kunci perangkat tidak meminta rahasia saat membuka data; siapa pun yang menguasai profil browser perangkat itu bisa mencoba membukanya. Aktifkan hanya di perangkat pribadi sekolah. Verifikasi 2 langkah tetap diminta bila aktif.</li>
+          <li>Kata sandi sementara/kedaluwarsa tetap harus diganti lewat login kata sandi. Reset oleh Administrator mencabut izin masuk Google akun itu.</li>
+          <li>Login dapat memakai <b>email</b> atau nama pengguna bersama kata sandi.</li>
+          <li>Tombol Google memerlukan internet dan alamat aplikasi yang didaftarkan di Client ID; di aplikasi Windows (alamat <code>app://</code>) Google biasanya menolak, gunakan kata sandi.</li>
+        </ul>
+        <p className="small"><b>{terhubung.length}</b> akun terhubung: {terhubung.map((a) => `${a.username} (${a.google!.email}${a.google!.wrap ? ', boleh masuk' : ''})`).join('; ') || '-'}</p>
+      </Card>
+    </div>
+  )
+}
+
 function KebijakanForm() {
   const sesi = useSesi()!
   const [k, setK] = useState<Kebijakan>(KEBIJAKAN_DEFAULT)
@@ -247,6 +314,12 @@ export function ProfilSaya({ onClose }: { onClose: () => void }) {
   const [kode, setKode] = useState('')
   const [sandi2fa, setSandi2fa] = useState('')
   const [, setN] = useState(0)
+  const [v, setV] = useState<PatchProfil>(() => Object.fromEntries(KOLOM_PROFIL.map((k) => [k, sesi.akun[k]])) as PatchProfil)
+  const [izinMasuk, setIzinMasuk] = useState(!!sesi.akun.google?.wrap)
+  const [impor, setImpor] = useState(true)
+  const [cfg, setCfg] = useState<ConfigGoogle>()
+  useEffect(() => { configGoogle().then(setCfg) }, [])
+  const segar = () => { setSesi({ ...sesi }); setN((x) => x + 1) }
   const mulai2fa = async () => {
     const s = totpSecretBaru()
     setSecret(s)
@@ -254,7 +327,30 @@ export function ProfilSaya({ onClose }: { onClose: () => void }) {
   }
   return (
     <Modal title="Profil & Keamanan Akun" onClose={onClose} wide>
-      <div className="grid-2">
+      <h4 className="sec">Data profil</h4>
+      <FormProfil v={v} onChange={setV} nama={sesi.akun.nama} />
+      <div className="filters" style={{ margin: '6px 0 4px' }}>
+        <Btn kind="primary" onClick={() => coba(() => ubahProfil(sesi, v), 'Profil disimpan').then((ok) => ok && segar())}>Simpan profil</Btn>
+        <span className="muted small">Nama pengguna <b>{sesi.akun.username}</b> · jenis akun {sesi.peran.nama}</span>
+      </div>
+      {cfg?.aktif && (
+        <>
+          <h4 className="sec">Akun Google</h4>
+          {sesi.akun.google ? (
+            <p className="small"><span className="pill g">Terhubung</span> {sesi.akun.google.email}{sesi.akun.google.wrap ? ' · boleh masuk dengan Google di perangkat ini' : ''}</p>
+          ) : <p className="small muted">Hubungkan akun Google untuk menyalin nama, email, dan foto profil, dan (opsional) masuk tanpa mengetik kata sandi di perangkat ini.</p>}
+          <label className="chk"><input type="checkbox" checked={impor} onChange={(e) => setImpor(e.target.checked)} /> Salin nama, email, dan foto dari akun Google</label>
+          <label className="chk"><input type="checkbox" checked={izinMasuk} onChange={(e) => setIzinMasuk(e.target.checked)} /> Izinkan masuk dengan Google di perangkat ini (kunci data disimpan sebagai kunci perangkat)</label>
+          <TombolGoogle cfg={cfg} onProfil={(g) => coba(async () => {
+            if (sesi.akun.google && sesi.akun.google.sub === g.sub && !izinMasuk === !sesi.akun.google.wrap) await sinkronProfilGoogle(sesi, g)
+            else await hubungkanGoogle(sesi, g, { izinMasuk, impor })
+            setV(Object.fromEntries(KOLOM_PROFIL.map((k) => [k, sesi.akun[k]])) as PatchProfil)
+            segar()
+          }, 'Akun Google terhubung dan profil disinkronkan')} />
+          {sesi.akun.google && <Btn kind="ghost" onClick={() => coba(() => putusGoogle(sesi), 'Akun Google diputuskan').then(segar)}>Putuskan akun Google</Btn>}
+        </>
+      )}
+      <div className="grid-2" style={{ marginTop: 10 }}>
         <div>
           <h4 className="sec">Akun</h4>
           <table className="mini"><tbody>

@@ -1,6 +1,8 @@
 // Akun pengguna, peran (jenis akun), kebijakan keamanan, dan log aktivitas.
 // Disimpan di database IndexedDB terpisah ("simas-akun"); rahasia (kunci data, rahasia TOTP) selalu terenkripsi.
 import type { PageId } from '../ui'
+import { ambilKunciPerangkat, buatKunciPerangkat, hapusKunciPerangkat } from './perangkat'
+import type { ProfilGoogle } from './google'
 import {
   b64, bukaDek, bungkusDek, cekTotp, dekBaru, dekripsiJson, enkripsiJson, kdfBaru, kodePemulihanBaru, normalisasiKode, randomBytes,
   samaAman, turunkan, type Bungkus, type KdfParams,
@@ -38,7 +40,25 @@ export interface Akun {
   dibuat: string
   sandiDiubah: string
   loginTerakhir?: string
+  /** Data profil lengkap */
+  jabatan?: string
+  nip?: string
+  telepon?: string
+  alamat?: string
+  tempatLahir?: string
+  tanggalLahir?: string
+  jk?: 'L' | 'P' | ''
+  keterangan?: string
+  foto?: string
+  /** Akun Google yang terhubung. `wrap` = kunci data yang dikunci dengan kunci perangkat (aktif bila masuk Google diizinkan). */
+  google?: { sub: string; email: string; nama?: string; dihubungkan: string; wrap?: Bungkus }
 }
+
+/** Kolom profil yang boleh diubah pemilik akun sendiri. */
+export const KOLOM_PROFIL = ['nama', 'email', 'jabatan', 'nip', 'telepon', 'alamat', 'tempatLahir', 'tanggalLahir', 'jk', 'keterangan', 'foto'] as const
+export type PatchProfil = Partial<Pick<Akun, (typeof KOLOM_PROFIL)[number]>>
+
+export interface ConfigGoogle { aktif: boolean; clientId: string; domain?: string }
 
 export interface Kebijakan {
   panjangMin: number
@@ -80,6 +100,7 @@ function req<T>(r: IDBRequest<T>): Promise<T> {
 }
 let dbp: Promise<IDBDatabase> | null = null
 let dbName = DB
+export const _simpanAkun = (a: Akun) => putS('akun', a) // untuk pengujian
 export function _setDbName(n: string) { dbName = n; dbp = null } // untuk pengujian
 function db() {
   return (dbp ??= new Promise((res, rej) => {
@@ -123,6 +144,14 @@ export async function hapusPeran(pid: string) {
   if ((await daftarAkun()).some((a) => a.peranId === pid)) throw new Error('Masih ada akun dengan peran ini.')
   await setMeta('peran', ((await meta<Peran[]>('peran')) ?? []).filter((x) => x.id !== pid))
 }
+export const configGoogle = async (): Promise<ConfigGoogle> => ({ aktif: false, clientId: '', ...(await meta<ConfigGoogle>('google')) })
+export async function simpanConfigGoogle(s: Sesi, c: ConfigGoogle) {
+  wajibAdmin(s)
+  const clientId = c.clientId.trim()
+  if (c.aktif && !/^[\w-]+\.apps\.googleusercontent\.com$/i.test(clientId)) throw new Error('Client ID Google tidak valid (format: xxxx.apps.googleusercontent.com).')
+  await setMeta('google', { aktif: c.aktif, clientId, domain: c.domain?.trim().toLowerCase() || undefined } satisfies ConfigGoogle)
+  await logAudit(s.akun.username, c.aktif ? 'Aktifkan masuk dengan Google' : 'Nonaktifkan masuk dengan Google', true)
+}
 export const kebijakan = async () => ({ ...KEBIJAKAN_DEFAULT, ...(await meta<Kebijakan>('kebijakan')) })
 export const simpanKebijakan = (k: Kebijakan) => setMeta('kebijakan', k)
 export const logAudit = async (username: string, aksi: string, ok: boolean, detail?: string) =>
@@ -153,6 +182,9 @@ export function sandiAcak(n = 16): string {
   return /[0-9]/.test(s) && /[!@#$%&*?]/.test(s) ? s : sandiAcak(n)
 }
 const normUser = (u: string) => u.trim().toLowerCase()
+const emailValid = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e)
+/** Cari akun menurut nama pengguna, atau menurut email bila input berbentuk email. */
+export const cariAkun = (semua: Akun[], masukan: string) => semua.find((a) => a.username === masukan) ?? (masukan.includes('@') ? semua.find((a) => a.email?.toLowerCase() === masukan) : undefined)
 export const usernameValid = (u: string) => /^[a-z0-9._-]{3,32}$/.test(normUser(u))
 
 // ---------- Sesi ----------
@@ -188,7 +220,7 @@ const GAGAL_UMUM = 'Nama pengguna atau kata sandi salah.'
 export async function masuk(usernameIn: string, password: string): Promise<HasilLogin> {
   const username = normUser(usernameIn)
   const k = await kebijakan()
-  const akun = (await daftarAkun()).find((a) => a.username === username)
+  const akun = cariAkun(await daftarAkun(), username)
   if (!akun) {
     // tetap hitung KDF agar waktu respons tidak membocorkan keberadaan akun
     await turunkan(password, { alg: 'argon2id', salt: b64(randomBytes(16)), m: 65536, t: 3, p: 1 }).catch(() => undefined)
@@ -213,17 +245,22 @@ export async function masuk(usernameIn: string, password: string): Promise<Hasil
     return { ok: false, pesan: 'Akun ini dinonaktifkan. Hubungi Administrator.' }
   }
   const dek = await bukaDek(akun.dekWrap, kek)
+  return lanjutkan(akun, dek, k, akun.username, password)
+}
+
+/** Tahap akhir login (setelah kunci data terbuka): verifikasi 2 langkah bila aktif, lalu catat dan buat sesi. */
+async function lanjutkan(akun: Akun, dek: CryptoKey, k: Kebijakan, username: string, password?: string): Promise<HasilLogin> {
   const selesai = async (): Promise<HasilLogin> => {
     akun.gagal = 0
     akun.kunciSampai = undefined
     akun.loginTerakhir = now()
     // Tingkatkan hash lama ke parameter terbaru secara otomatis.
-    if (akun.kdf.alg !== 'argon2id' || (akun.kdf.m ?? 0) < 65536) {
+    if (password && (akun.kdf.alg !== 'argon2id' || (akun.kdf.m ?? 0) < 65536)) {
       const baru = await buatKredensial(password, dek)
       if (baru.kdf.alg === 'argon2id') Object.assign(akun, baru)
     }
     await putS('akun', akun)
-    await logAudit(username, 'Login berhasil', true)
+    await logAudit(username, password ? 'Login berhasil' : 'Login berhasil (Google)', true)
     const peran = (await daftarPeran()).find((p) => p.id === akun.peranId) ?? PERAN_BAWAAN[4]
     return { ok: true, sesi: { akun, peran, dek } }
   }
@@ -246,6 +283,25 @@ export async function masuk(usernameIn: string, password: string): Promise<Hasil
     }
   }
   return selesai()
+}
+
+/** Masuk dengan akun Google yang sudah dihubungkan (dan diizinkan) di perangkat ini. `g` harus hasil verifikasi ID token. */
+export async function masukGoogle(g: ProfilGoogle): Promise<HasilLogin> {
+  const cfg = await configGoogle()
+  const GAGAL = 'Akun Google ini belum dihubungkan untuk masuk di perangkat ini. Masuk dengan kata sandi, lalu hubungkan di Profil & Keamanan.'
+  if (!cfg.aktif) return { ok: false, pesan: 'Masuk dengan Google belum diaktifkan Administrator.' }
+  if (cfg.domain && g.domain !== cfg.domain && !g.email.endsWith(`@${cfg.domain}`)) return { ok: false, pesan: `Hanya akun Google berdomain ${cfg.domain} yang diizinkan.` }
+  const k = await kebijakan()
+  const akun = (await daftarAkun()).find((a) => a.google?.sub === g.sub && a.google.wrap)
+  if (!akun || !akun.google?.wrap) { await logAudit(g.email, 'Login Google gagal', false, 'akun tidak terhubung'); return { ok: false, pesan: GAGAL } }
+  if (akun.kunciSampai && akun.kunciSampai > Date.now()) return { ok: false, pesan: 'Akun terkunci sementara. Coba lagi nanti atau hubungi Administrator.' }
+  if (!akun.aktif) { await logAudit(akun.username, 'Login Google ditolak', false, 'akun nonaktif'); return { ok: false, pesan: 'Akun ini dinonaktifkan. Hubungi Administrator.' } }
+  if (akun.wajibGantiSandi || sandiKedaluwarsa(akun, k)) return { ok: false, pesan: 'Kata sandi akun ini perlu diganti. Masuk dengan kata sandi terlebih dahulu.' }
+  const kunci = await ambilKunciPerangkat(akun.id)
+  if (!kunci) return { ok: false, pesan: GAGAL }
+  let dek: CryptoKey
+  try { dek = await bukaDek(akun.google.wrap, kunci) } catch { await logAudit(akun.username, 'Login Google gagal', false, 'kunci perangkat tidak cocok'); return { ok: false, pesan: GAGAL } }
+  return lanjutkan(akun, dek, k, akun.username)
 }
 
 /** Pulihkan akses Administrator dengan kode pemulihan, lalu tetapkan kata sandi baru. */
@@ -298,15 +354,17 @@ function wajibAdmin(s: Sesi) {
   if (s.akun.peranId !== 'admin') throw new Error('Hanya Administrator yang dapat mengelola akun.')
 }
 
-export async function buatAkun(s: Sesi, p: { username: string; nama: string; email?: string; peranId: string; pegawaiId?: string; sandiSementara: string }) {
+export async function buatAkun(s: Sesi, p: { username: string; nama: string; email?: string; peranId: string; pegawaiId?: string; sandiSementara: string } & PatchProfil) {
   wajibAdmin(s)
+  await cekEmail(p.email)
   const username = normUser(p.username)
   if (!usernameValid(username)) throw new Error('Nama pengguna 3-32 karakter: huruf kecil, angka, titik, garis bawah, atau minus.')
   if ((await daftarAkun()).some((a) => a.username === username)) throw new Error(`Nama pengguna "${username}" sudah dipakai.`)
   const err = cekSandi(p.sandiSementara, username, await kebijakan())
   if (err.length) throw new Error(`Kata sandi sementara: ${err.join(' ')}`)
   const akun: Akun = {
-    id: id(), username, nama: p.nama.trim() || username, email: p.email, peranId: p.peranId, pegawaiId: p.pegawaiId, aktif: true,
+    id: id(), username, nama: p.nama.trim() || username, email: p.email?.trim().toLowerCase() || undefined, peranId: p.peranId, pegawaiId: p.pegawaiId, aktif: true,
+    jabatan: p.jabatan, nip: p.nip, telepon: p.telepon, alamat: p.alamat, tempatLahir: p.tempatLahir, tanggalLahir: p.tanggalLahir, jk: p.jk, keterangan: p.keterangan, foto: p.foto,
     ...(await buatKredensial(p.sandiSementara, s.dek)), wajibGantiSandi: true, gagal: 0, dibuat: now(), sandiDiubah: now(),
   }
   await putS('akun', akun)
@@ -314,14 +372,83 @@ export async function buatAkun(s: Sesi, p: { username: string; nama: string; ema
   return akun
 }
 
-export async function ubahAkun(s: Sesi, a: Akun, patch: Partial<Pick<Akun, 'nama' | 'email' | 'peranId' | 'pegawaiId' | 'aktif'>>) {
+export async function ubahAkun(s: Sesi, a: Akun, patch: Partial<Pick<Akun, 'peranId' | 'pegawaiId' | 'aktif'>> & PatchProfil) {
   wajibAdmin(s)
+  if ('email' in patch) { patch = { ...patch, email: patch.email?.trim().toLowerCase() || undefined }; await cekEmail(patch.email, a.id) }
   const semua = await daftarAkun()
   const next = { ...a, ...patch }
   const adminAktif = semua.filter((x) => (x.id === a.id ? next : x)).filter((x) => x.peranId === 'admin' && x.aktif)
   if (!adminAktif.length) throw new Error('Harus tersisa minimal satu Administrator aktif.')
   await putS('akun', next)
+  if (a.id === s.akun.id) Object.assign(s.akun, next)
   await logAudit(s.akun.username, 'Ubah akun', true, `${a.username}: ${Object.keys(patch).join(', ')}`)
+}
+
+async function cekEmail(email: string | undefined, kecuali?: string) {
+  const e = email?.trim().toLowerCase()
+  if (!e) return
+  if (!emailValid(e)) throw new Error('Format email tidak valid.')
+  if ((await daftarAkun()).some((a) => a.id !== kecuali && a.email?.toLowerCase() === e)) throw new Error('Email ini sudah dipakai akun lain.')
+}
+
+/** Pengguna mengubah data profilnya sendiri (tidak termasuk jenis akun atau status). */
+export async function ubahProfil(s: Sesi, patch: PatchProfil) {
+  const bersih: PatchProfil = {}
+  for (const k of KOLOM_PROFIL) if (k in patch) (bersih as Record<string, unknown>)[k] = (patch as Record<string, unknown>)[k]
+  if ('nama' in bersih && !bersih.nama?.trim()) throw new Error('Nama tidak boleh kosong.')
+  if ('email' in bersih) { bersih.email = bersih.email?.trim().toLowerCase() || undefined; await cekEmail(bersih.email, s.akun.id) }
+  if (bersih.foto && bersih.foto.length > 600_000) throw new Error('Foto terlalu besar.')
+  Object.assign(s.akun, bersih)
+  await putS('akun', s.akun)
+  await logAudit(s.akun.username, 'Ubah profil', true, Object.keys(bersih).join(', '))
+}
+
+// ---------- Akun Google ----------
+export async function hubungkanGoogle(s: Sesi, g: ProfilGoogle, opsi: { izinMasuk: boolean; impor: boolean }) {
+  const cfg = await configGoogle()
+  if (!cfg.aktif) throw new Error('Administrator belum mengaktifkan integrasi Google.')
+  if (cfg.domain && g.domain !== cfg.domain && !g.email.endsWith(`@${cfg.domain}`)) throw new Error(`Hanya akun Google berdomain ${cfg.domain} yang diizinkan.`)
+  const lain = (await daftarAkun()).find((a) => a.id !== s.akun.id && a.google?.sub === g.sub)
+  if (lain) throw new Error('Akun Google ini sudah dihubungkan ke pengguna lain.')
+  let wrap = s.akun.google?.wrap
+  if (opsi.izinMasuk) wrap = await bungkusDek(s.dek, await buatKunciPerangkat(s.akun.id))
+  else if (!opsi.izinMasuk && s.akun.google?.wrap) { await hapusKunciPerangkat(s.akun.id); wrap = undefined }
+  s.akun.google = { sub: g.sub, email: g.email, nama: g.nama, dihubungkan: s.akun.google?.dihubungkan ?? now(), wrap }
+  if (opsi.impor) await impor(s, g)
+  else await putS('akun', s.akun)
+  await logAudit(s.akun.username, 'Hubungkan akun Google', true, `${g.email}${wrap ? ' (masuk dengan Google diizinkan di perangkat ini)' : ''}`)
+}
+async function impor(s: Sesi, g: ProfilGoogle) {
+  const patch: PatchProfil = {}
+  if (g.nama) patch.nama = g.nama
+  if (g.email) { try { await cekEmail(g.email, s.akun.id); patch.email = g.email } catch { /* email dipakai akun lain: lewati */ } }
+  if (g.foto) patch.foto = await fotoGoogle(g.foto)
+  Object.assign(s.akun, patch)
+  await putS('akun', s.akun)
+}
+/** Salin foto profil Google menjadi gambar kecil lokal (agar tampil tanpa internet). Gagal = pakai tautan asli. */
+async function fotoGoogle(url: string): Promise<string> {
+  try {
+    const res = await fetch(url.replace(/=s\d+(-c)?$/, '=s192-c'))
+    const blob = await res.blob()
+    if (blob.size > 400_000) return url
+    return await new Promise<string>((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result)); r.onerror = () => no(r.error); r.readAsDataURL(blob) })
+  } catch { return url }
+}
+/** Perbarui nama, email, dan foto dari akun Google yang sama. */
+export async function sinkronProfilGoogle(s: Sesi, g: ProfilGoogle) {
+  if (s.akun.google?.sub !== g.sub) throw new Error('Akun Google ini berbeda dengan yang terhubung.')
+  await impor(s, g)
+  s.akun.google = { ...s.akun.google, email: g.email, nama: g.nama }
+  await putS('akun', s.akun)
+  await logAudit(s.akun.username, 'Sinkron profil dari Google', true)
+}
+export async function putusGoogle(s: Sesi, a: Akun = s.akun) {
+  if (a.id !== s.akun.id) wajibAdmin(s)
+  await hapusKunciPerangkat(a.id).catch(() => undefined)
+  a.google = undefined
+  await putS('akun', a)
+  await logAudit(s.akun.username, 'Putuskan akun Google', true, a.username)
 }
 
 export async function resetAkun(s: Sesi, a: Akun, sandiSementara: string, reset2fa: boolean) {
@@ -329,6 +456,7 @@ export async function resetAkun(s: Sesi, a: Akun, sandiSementara: string, reset2
   const err = cekSandi(sandiSementara, a.username, await kebijakan())
   if (err.length) throw new Error(err.join(' '))
   const next: Akun = { ...a, ...(await buatKredensial(sandiSementara, s.dek)), wajibGantiSandi: true, gagal: 0, kunciSampai: undefined, sandiDiubah: now() }
+  if (next.google?.wrap) { next.google = { ...next.google, wrap: undefined }; await hapusKunciPerangkat(a.id).catch(() => undefined) }
   if (reset2fa) { next.totpEnc = undefined; next.totpLangkahTerakhir = undefined }
   await putS('akun', next)
   await logAudit(s.akun.username, 'Reset kata sandi akun', true, `${a.username}${reset2fa ? ' + reset 2FA' : ''}`)

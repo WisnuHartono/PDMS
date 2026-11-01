@@ -1,6 +1,7 @@
 import { useState, type FormEvent, type ReactNode } from 'react'
 import { Icon } from '../icons'
-import { cekSandi, gantiSandi, kebijakan, kekuatan, masuk, pasangAwal, pulihkan, sandiKedaluwarsa, type HasilLogin, type Sesi } from '../security/akun'
+import { TombolGoogle } from './ProfilForm'
+import { cekSandi, gantiSandi, kebijakan, kekuatan, masuk, masukGoogle, pasangAwal, pulihkan, sandiKedaluwarsa, type HasilLogin, type Sesi } from '../security/akun'
 
 export function SandiInput({ id, value, onChange, label, autoComplete = 'current-password', meter, username }: {
   id: string; value: string; onChange: (v: string) => void; label: string; autoComplete?: string; meter?: boolean; username?: string
@@ -157,13 +158,15 @@ export function Masuk({ onMasuk }: { onMasuk: (s: Sesi) => void }) {
   return (
     <Layar judul="Masuk">
       <form className="auth-form" onSubmit={jalankan(async () => proses(await masuk(username, pw)))}>
-        <label className="field"><span className="field-l">Nama pengguna</span><input value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="username" autoFocus /></label>
+        <label className="field"><span className="field-l">Nama pengguna atau email</span><input value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="username" autoFocus /></label>
         <SandiInput id="pw" label="Kata sandi" value={pw} onChange={setPw} />
         {err && <div className="errs">{err}</div>}
         <button className="btn btn-primary wide" disabled={busy || !username || !pw}>{busy ? 'Memeriksa…' : 'Masuk'}</button>
         <button type="button" className="btn btn-ghost" onClick={() => { setErr(''); setMode('pulih') }}>Lupa kata sandi Administrator?</button>
         <p className="muted small">Pengguna selain Administrator: minta Administrator mengatur ulang kata sandi Anda.</p>
       </form>
+      <div className="g-sep">atau</div>
+      <TombolGoogle teks="signin_with" onProfil={async (g) => { setErr(''); setBusy(true); try { await proses(await masukGoogle(g)) } catch (x) { setErr((x as Error).message) } finally { setBusy(false) } }} />
     </Layar>
   )
 }

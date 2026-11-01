@@ -1031,3 +1031,18 @@ body { background: var(--bg); color: var(--text); }
 
 [data-sidebar="terang"] .sidebar::-webkit-scrollbar-thumb { background: rgba(15,23,42,.16); }
 [data-sidebar="terang"] .sidebar { scrollbar-color: rgba(15,23,42,.25) transparent; }
+
+/* Profil akun & Google */
+.profil-form { display: grid; grid-template-columns: 120px 1fr; gap: 12px; align-items: start; }
+.profil-foto { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.profil-foto .avatar { border: 2px solid var(--line); }
+@media (max-width: 640px) { .profil-form { grid-template-columns: 1fr; } }
+.g-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 8px; min-height: 44px; }
+.g-sep { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12px; margin: 10px 0 0; }
+.g-sep::before, .g-sep::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+.akun-nama { display: flex; align-items: center; gap: 8px; }
+.pill.g { background: #eef2ff; color: #3730a3; border-color: #c7d2fe; }
+.profil-form { grid-template-columns: 132px minmax(0, 1fr); }
+.profil-foto { min-width: 0; width: 100%; }
+.profil-foto .row-actions { width: 100%; }
+.profil-foto .btn { width: 100%; justify-content: center; }
