@@ -161,10 +161,10 @@ export default function Dashboard() {
             <p>{sekolah.nama} · TA {sekolah.tahunAjaranAktif} Semester {sekolah.semesterAktif === 1 ? 'Ganjil' : 'Genap'} · {fmtTanggalHari(today())}</p>
           </div>
           <div className="hero-chips">
-            {belumDiabsen > 0 && boleh('absensiSiswa') && <button className="chip kuning" onClick={() => nav.open('absensiSiswa')}><b>{belumDiabsen}</b> rombel belum diabsen</button>}
-            {nilaiKurang > 0 && boleh('nilai') && <button className="chip kuning" onClick={() => nav.open('nilai')}><b>{nilaiKurang}</b> rombel nilai belum lengkap</button>}
-            {nInv > 0 ? <button className="chip merah" onClick={() => nav.open('validasi')}><b>{nInv}</b> data invalid</button> : <button className="chip hijau" onClick={() => nav.open('validasi')}>Data valid</button>}
-            {ultahHariIni > 0 && <span className="chip">🎂 <b>{ultahHariIni}</b> berulang tahun hari ini</span>}
+            {belumDiabsen > 0 && boleh('absensiSiswa') && <button className="hchip kuning" onClick={() => nav.open('absensiSiswa')}><b>{belumDiabsen}</b> rombel belum diabsen</button>}
+            {nilaiKurang > 0 && boleh('nilai') && <button className="hchip kuning" onClick={() => nav.open('nilai')}><b>{nilaiKurang}</b> rombel nilai belum lengkap</button>}
+            {nInv > 0 ? <button className="hchip merah" onClick={() => nav.open('validasi')}><b>{nInv}</b> data invalid</button> : <button className="hchip hijau" onClick={() => nav.open('validasi')}>Data valid</button>}
+            {ultahHariIni > 0 && <span className="hchip">🎂 <b>{ultahHariIni}</b> berulang tahun hari ini</span>}
           </div>
         </div>
       </section>

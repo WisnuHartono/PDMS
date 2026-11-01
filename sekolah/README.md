@@ -110,3 +110,12 @@ Menu **Asesmen Siswa** (grup Penilaian): instrumen berrubrik skala 1–4 (Sikap 
 - **Panduan**: tiap aspek menampilkan deskriptor level 1–4 yang jelas; guru memilih dan menulis bukti observasi. **Isian cepat**: matriks siswa × aspek.
 - **Dapat dipertanggungjawabkan**: skor 1 dan 4 wajib berbukti, penilai dan tanggal tercatat, riwayat perubahan tersimpan, dan asesmen yang sudah **dikunci** hanya dapat dibuka oleh Administrator/Kepala Sekolah.
 - **Rapor**: hanya asesmen terkunci yang dicetak sebagai lampiran (aspek, capaian, deskripsi, bukti, penilai, tanggal) dan ikut menjadi bahan catatan wali kelas AI.
+
+## Inventaris: QR/barcode, label, dan stok opname
+
+Administrasi → Perlengkapan/Sarpras → **Buku Inventaris Barang**:
+
+- Setiap barang mendapat **No. inventaris** otomatis (`KODE-INV-001`, urut aman terhadap data yang dihapus).
+- **Label QR / barcode**: pilih barang (semua, per ruang, atau yang belum bernomor), ukuran 50×30 sampai 100×60 mm, isi QR / Barcode Code 128 / keduanya, warna, logo, lokasi, tahun, kondisi, dan opsi satu label per unit. Cetak atau simpan PDF.
+- **Stok opname**: pindai QR dengan kamera, pemindai USB (keyboard), atau ketik nomor. Barang yang belum ditemukan, ditemukan di ruang lain, dan kondisi temuan tercatat; hasil tersimpan di Riwayat dan dapat dicetak sebagai **Berita Acara Stok Opname**; kondisi di buku inventaris dapat diperbarui otomatis.
+- Encoder Code 128 diverifikasi terhadap pustaka acuan dan QR diuji baca ulang (jsQR) pada tes otomatis.

@@ -3,6 +3,7 @@ import {
   BIDANG, DOK_REGISTER, STATUS_DOKUMEN, barisRegister, dokId, dokumenJatuhTempo, nomorOtomatis, ringkasBidang, totalKolom,
   type Bidang, type FieldDef, type ItemDef, type RegisterDef,
 } from '../administrasi'
+import { LabelInventaris, OpnameInventaris, butirInventaris } from '../inventaris'
 import { CetakDaftar, CetakItem, labelNilai } from '../cetakAdministrasi'
 import { Icon } from '../icons'
 import { put, remove, useCol } from '../store'
@@ -204,6 +205,8 @@ function RegisterView({ bidang, reg, onBack }: { bidang: Bidang; reg: RegisterDe
   const [kel, setKel] = useState('')
   const [edit, setEdit] = useState<Arsip | null>(null)
   const [hapus, setHapus] = useState('')
+  const [alat, setAlat] = useState<'' | 'label' | 'opname'>('')
+  const butirInv = useMemo(() => (reg.id === 'inventaris' ? butirInventaris(arsip) : []), [reg.id, arsip])
   useEffect(() => { if (!hapus) return; const t = setTimeout(() => setHapus(''), 4000); return () => clearTimeout(t) }, [hapus])
 
   const semua = useMemo(() => barisRegister(reg, arsip), [reg, arsip])
@@ -247,6 +250,7 @@ function RegisterView({ bidang, reg, onBack }: { bidang: Bidang; reg: RegisterDe
     <div>
       <BackBar onBack={onBack} ke={bidang.nama}><button className="link" onClick={onBack}>{bidang.nama}</button> / <b>{reg.nama}</b></BackBar>
       <PageHead title={reg.nama} sub={reg.ket}>
+        {reg.id === 'inventaris' && <><Btn icon="asesmen" onClick={() => setAlat('opname')}>Stok opname</Btn><Btn icon="print" onClick={() => setAlat('label')}>Label QR / barcode</Btn></>}
         <Btn icon="print" onClick={cetakDaftar} disabled={!baris.rows.length}>Cetak{reg.kelompokCetak ? ' KIR' : ''}</Btn>
         <Btn icon="plus" kind="primary" onClick={() => setEdit(baru())}>Tambah</Btn>
       </PageHead>
@@ -309,6 +313,8 @@ function RegisterView({ bidang, reg, onBack }: { bidang: Bidang; reg: RegisterDe
           </div>
         )}
       </Card>
+      {alat === 'label' && <LabelInventaris butir={butirInv} onClose={() => setAlat('')} />}
+      {alat === 'opname' && <OpnameInventaris butir={butirInv} onClose={() => setAlat('')} />}
       {edit && (
         <FormArsip
           judul={reg.nama} fields={reg.fields} awal={edit} lampiran={reg.lampiran} reg={reg} onClose={() => setEdit(null)}

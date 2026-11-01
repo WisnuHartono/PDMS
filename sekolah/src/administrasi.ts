@@ -43,6 +43,8 @@ export interface RegisterDef {
   /** cetak daftar dikelompokkan per nilai field ini (mis. Kartu Inventaris Ruang) */
   kelompokCetak?: { k: string; judul: string }
   lampiran?: boolean
+  /** olah data sebelum disimpan (mis. nomor inventaris otomatis) */
+  prasimpan?: (d: Record<string, NilaiArsip>, semua: Arsip[]) => Record<string, NilaiArsip>
   onSimpan?: (d: Record<string, NilaiArsip>) => Promise<void>
 }
 
@@ -498,8 +500,9 @@ const sarpras: Bidang = {
       id: 'inventaris', nama: 'Buku Inventaris Barang', ket: 'Sarana/barang milik sekolah; cetak Kartu Inventaris Ruang (KIR)', total: ['jumlah', 'nilai'],
       hitung: (d) => ({ nilai: n(d.jumlah) * n(d.harga) || undefined }), kolomHitung: [{ k: 'nilai', l: 'Nilai', rupiah: true }],
       kelompokCetak: { k: 'ruang', judul: 'KARTU INVENTARIS RUANG' }, lampiran: true,
+      prasimpan: (d, semua) => (d.noinv ? d : { ...d, noinv: formatNoInv(getSekolah(), noInvBerikut(semua)) }),
       fields: [
-        { k: 'kode', l: 'Kode barang', daftar: true }, { k: 'nama', l: 'Nama barang', span: 2, wajib: true, daftar: true }, { k: 'merk', l: 'Merek / tipe', daftar: true },
+        { k: 'noinv', l: 'No. inventaris (QR)', daftar: true, ph: 'Kosongkan = otomatis' }, { k: 'kode', l: 'Kode barang', daftar: true }, { k: 'nama', l: 'Nama barang', span: 2, wajib: true, daftar: true }, { k: 'merk', l: 'Merek / tipe', daftar: true },
         { k: 'ruang', l: 'Lokasi / ruang', t: 'ruang', daftar: true }, { k: 'tahun', l: 'Tahun perolehan', t: 'number', daftar: true },
         { k: 'sumber', l: 'Sumber dana', t: 'select', opsi: SUMBER_DANA, daftar: true }, { k: 'jumlah', l: 'Jumlah', t: 'number', wajib: true, daftar: true },
         { k: 'satuan', l: 'Satuan', ph: 'unit, buah, set' }, { k: 'harga', l: 'Harga satuan', t: 'rupiah' },
@@ -623,7 +626,16 @@ export function urutBerikut(reg: RegisterDef, semua: Arsip[], d: Record<string, 
   return sama.length + 1
 }
 
+/** Urutan nomor inventaris berikutnya: angka terbesar yang sudah dipakai + 1 (aman terhadap data yang dihapus). */
+export function noInvBerikut(semua: Arsip[]) {
+  let maks = 0
+  for (const a of semua) if (a.register === 'inventaris') maks = Math.max(maks, Number(/(\d+)$/.exec(String(a.data.noinv ?? ''))?.[1] ?? 0))
+  return maks + 1
+}
+export const formatNoInv = (s: Sekolah, urut: number) => `${kodeSekolah(s)}-INV-${pad3(urut)}`
+
 export function nomorOtomatis(reg: RegisterDef, semua: Arsip[], d: Record<string, NilaiArsip>) {
+  if (reg.prasimpan) d = reg.prasimpan(d, semua)
   if (!reg.nomor) return d
   if (d[reg.nomor.k]) return d
   return { ...d, [reg.nomor.k]: reg.nomor.buat(urutBerikut(reg, semua, d), d, getSekolah()) }
