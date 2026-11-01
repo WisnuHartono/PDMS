@@ -101,11 +101,11 @@ export default function App() {
           </div>
           <div className="topbar-fill" />
           <QuickSearch />
-          <div className="top-sekolah" title={[sekolah.npsn && `NPSN ${sekolah.npsn}`, sekolah.alamat].filter(Boolean).join(' · ')}>
+          <div className="top-sekolah" title={[`TA ${sekolah.tahunAjaranAktif} Semester ${sekolah.semesterAktif === 1 ? 'Ganjil' : 'Genap'}`, sekolah.jenjang.join(' · '), sekolah.alamat].filter(Boolean).join(' · ')}>
             {sekolah.logo ? <img src={sekolah.logo} alt="" className="top-logo" /> : <span className="top-logo"><Icon name="school" size={20} /></span>}
             <div className="who">
-              <b>{sekolah.nama}</b>
-              <span>{sekolah.jenjang.join(' · ')} · TA {sekolah.tahunAjaranAktif} · Smt {sekolah.semesterAktif === 1 ? 'Ganjil' : 'Genap'}</span>
+              <b className="sk-nama">{sekolah.nama}</b>
+              <span className="sk-legal">{[sekolah.npsn && `NPSN ${sekolah.npsn}`, sekolah.statusSekolah, sekolah.akreditasi && `Akreditasi ${sekolah.akreditasi}`, sekolah.skIzinOperasional && `SK Izin ${sekolah.skIzinOperasional}`].filter(Boolean).join(' · ') || sekolah.jenjang.join(' · ')}</span>
             </div>
           </div>
           <div className="akun-wrap">
