@@ -25,6 +25,7 @@ import Validasi, { useValidasi } from './pages/Validasi'
 import AkunPage, { ProfilSaya } from './pages/Akun'
 import { boleh, keluar, useSesi } from './security/sesi'
 import { namaPegawai } from './util'
+import { terapkanTema } from './tema'
 import { BrandApp, LogoSekolah, tampilanDari, terapkanHuruf, tinggiBrand } from './logo'
 
 interface MenuItem { id: PageId; label: string; icon: string; group: string }
@@ -105,6 +106,7 @@ export default function App() {
   cloudRef.current = sekolah.cloud
   useEffect(() => mulaiSinkron(() => cloudRef.current), [])
   useEffect(() => { void sinkronSekarang(sekolah.cloud) }, [sekolah.cloud?.sinkron, sekolah.cloud?.tujuan, sekolah.cloud?.sandiOto])
+  useEffect(() => { terapkanTema(tampilanDari({ tampilan: sekolah.tampilan })) }, [sekolah.tampilan])
   const tinggiTop = Math.max(60, tm.logoUkuran + 16, tinggiBrand(tm))
   useEffect(() => { document.title = `${tm.appNama || 'SIMAS'} - ${tm.appSub || 'Administrasi Sekolah'}` }, [tm.appNama, tm.appSub])
   const menu = MENU.filter((m) => boleh(m.id))

@@ -110,6 +110,22 @@ export interface TampilanSetting {
   appTampilSub?: boolean
   appTampilVersi?: boolean
   appTampilLampu?: boolean
+  /** Tema aplikasi dan penyesuaiannya */
+  tema?: 'modern' | 'classic' | 'simple'
+  temaAksen?: string // #rrggbb, kosong = bawaan tema
+  temaSudut?: number // px, -1 = bawaan tema
+  temaBayangan?: 'tema' | 'ada' | 'tidak'
+  temaSidebar?: 'tema' | 'gelap' | 'terang'
+  temaLatar?: string // warna latar halaman, kosong = bawaan tema
+  /** Latar header (bilah atas) */
+  headerMode?: 'tema' | 'warna' | 'gradien' | 'gambar'
+  headerWarna1?: string
+  headerWarna2?: string
+  headerSudut?: number // derajat gradien
+  headerGambar?: string // data URL
+  headerRedam?: number // % lapisan peredam gambar
+  headerTeks?: 'auto' | 'terang' | 'gelap'
+  headerGaris?: 'tema' | 'ada' | 'tidak'
 }
 
 export interface AiSetting {

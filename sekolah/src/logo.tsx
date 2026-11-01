@@ -7,8 +7,10 @@ export const TAMPILAN_DEFAULT: Required<TampilanSetting> = {
   logoZoom: 100, logoGeserX: 0, logoGeserY: 0, namaUkuran: 17, tampilLegalitas: true, tampilNama: true,
   dokFont: 'times', dokUkuran: 11.5, dokJarak: 135, appFont: 'segoe', appUkuran: 14,
   appNama: 'SIMAS', appSub: 'Administrasi Sekolah', appLogo: '', appLogoUkuran: 48, appLogoBentuk: 'sudut', appLogoLatar: 'kuning',
-  appNamaUkuran: 19, appSubUkuran: 11, appNamaFont: 'segoe', appNamaTebal: true, appNamaWarna: '#ffffff', appNamaSpasi: 2,
+  appNamaUkuran: 19, appSubUkuran: 11, appNamaFont: 'segoe', appNamaTebal: true, appNamaWarna: '', appNamaSpasi: 2,
   appTampilSub: true, appTampilVersi: true, appTampilLampu: true,
+  tema: 'modern', temaAksen: '', temaSudut: -1, temaBayangan: 'tema', temaSidebar: 'tema', temaLatar: '',
+  headerMode: 'tema', headerWarna1: '#0c2537', headerWarna2: '#1e3a8a', headerSudut: 100, headerGambar: '', headerRedam: 35, headerTeks: 'auto', headerGaris: 'tema',
 }
 export const tampilanDari = (s: Pick<Sekolah, 'tampilan'>): Required<TampilanSetting> => ({ ...TAMPILAN_DEFAULT, ...Object.fromEntries(Object.entries(s.tampilan ?? {}).filter(([, v]) => v !== undefined)) })
 
@@ -44,7 +46,7 @@ export function BrandApp({ t, bawah }: { t: Required<TampilanSetting>; bawah?: R
           {t.appLogo ? <img src={t.appLogo} alt="" draggable={false} /> : <Icon name="school" size={Math.round(t.appLogoUkuran * 0.6)} />}
         </span>
         <div className="brand-teks">
-          <b style={{ fontSize: t.appNamaUkuran, fontFamily: (FONT_APP[t.appNamaFont] ?? FONT_APP.segoe).css, fontWeight: t.appNamaTebal ? 800 : 500, color: t.appNamaWarna, letterSpacing: t.appNamaSpasi * 0.5 }}>{t.appNama || 'SIMAS'}</b>
+          <b style={{ fontSize: t.appNamaUkuran, fontFamily: (FONT_APP[t.appNamaFont] ?? FONT_APP.segoe).css, fontWeight: t.appNamaTebal ? 800 : 500, color: t.appNamaWarna || undefined, letterSpacing: t.appNamaSpasi * 0.5 }}>{t.appNama || 'SIMAS'}</b>
           {sub && <span className="brand-sub" style={{ fontSize: t.appSubUkuran, fontFamily: (FONT_APP[t.appNamaFont] ?? FONT_APP.segoe).css }}>{sub}</span>}
           {bawah}
         </div>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import DataCadangan from './DataCadangan'
+import PanelTema from './PanelTema'
 import { kodeSekolah } from '../administrasi'
 import { KURIKULUM } from '../curricula'
 import { Icon } from '../icons'
@@ -13,7 +14,7 @@ import { AI_DEFAULT, PANDUAN, PENYEDIA, aiSiap, panggilAi } from '../ai'
 import { Btn, Card, Field, Inp, Modal, PageHead, Sel, toast } from '../ui'
 import { fotoKecil, namaPegawai, today } from '../util'
 
-type Bagian = 'identitas' | 'lokasi' | 'pelengkap' | 'pejabat' | 'kop' | 'cetak' | 'kurikulum' | 'tampilan' | 'ai' | 'data'
+type Bagian = 'tema' | 'identitas' | 'lokasi' | 'pelengkap' | 'pejabat' | 'kop' | 'cetak' | 'kurikulum' | 'tampilan' | 'ai' | 'data'
 const BAGIAN: [Bagian, string, string][] = [
   ['identitas', 'Identitas & Legalitas', 'Nama, NPSN, status, SK pendirian/izin, akreditasi, jenjang'],
   ['lokasi', 'Lokasi & Kontak', 'Alamat lengkap, koordinat, telepon, email, laman'],
@@ -22,6 +23,7 @@ const BAGIAN: [Bagian, string, string][] = [
   ['kop', 'Kop Surat', 'Logo, baris kop, garis, huruf, pratinjau'],
   ['cetak', 'Administrasi & Cetak', 'Tahun ajaran, rapor, nomor surat, ukuran kertas'],
   ['kurikulum', 'Kurikulum', 'Kurikulum yang tersedia'],
+  ['tema', 'Tema & Header', 'Modern, Classic, Simple, warna aksen, latar header'],
   ['tampilan', 'Tampilan & Logo', 'Ukuran, bentuk, bingkai, zoom logo dan nama di header'],
   ['ai', 'Integrasi AI', 'Penyusun narasi rapor: penyedia, kunci API, gaya'],
   ['data', 'Data & Cadangan', 'Ekspor Excel/CSV, cloud, cadangan terenkripsi, pulihkan'],
@@ -292,6 +294,7 @@ export default function Pengaturan() {
             </Card>
           )}
 
+          {bagian === 'tema' && <PanelTema s={s} set={set} />}
           {bagian === 'tampilan' && <PanelTampilan s={s} set={set} />}
 
           {bagian === 'ai' && <PanelAi s={s} set={set} />}
@@ -424,7 +427,7 @@ function PanelTampilan({ s, set }: { s: Sekolah; set: (p: Partial<Sekolah>) => v
             {geser('appNamaUkuran', 'Ukuran nama', 14, 30, ' px')}
             {geser('appSubUkuran', 'Ukuran teks bawah', 9, 14, ' px')}
             {geser('appNamaSpasi', 'Jarak antarhuruf', 0, 8, '', 1)}
-            <Field label="Warna nama"><input type="color" value={t.appNamaWarna} onChange={(e) => ubah({ appNamaWarna: e.target.value })} style={{ width: 60, height: 30, padding: 0 }} /></Field>
+            <Field label="Warna nama"><div className="row-actions"><input type="color" value={t.appNamaWarna || '#ffffff'} onChange={(e) => ubah({ appNamaWarna: e.target.value })} style={{ width: 52, height: 30, padding: 0 }} />{t.appNamaWarna && <Btn kind="ghost" onClick={() => ubah({ appNamaWarna: '' })}>Otomatis</Btn>}</div></Field>
             <Field label="Tebal"><div className="radio-row"><input type="checkbox" checked={t.appNamaTebal} onChange={(e) => ubah({ appNamaTebal: e.target.checked })} /> Huruf tebal</div></Field>
             <Field label="Tampilkan"><div className="radio-row"><label><input type="checkbox" checked={t.appTampilSub} onChange={(e) => ubah({ appTampilSub: e.target.checked })} /> Teks bawah</label> <label><input type="checkbox" checked={t.appTampilVersi} onChange={(e) => ubah({ appTampilVersi: e.target.checked })} /> Versi</label> <label><input type="checkbox" checked={t.appTampilLampu} onChange={(e) => ubah({ appTampilLampu: e.target.checked })} /> Lampu status koneksi</label></div></Field>
           </div>
