@@ -88,7 +88,7 @@ export function varsTema(t: T): Record<string, string> {
     '--hdr-chip': terang ? 'rgba(15,23,42,.06)' : 'rgba(255,255,255,.14)', '--hdr-chip-line': terang ? 'rgba(15,23,42,.18)' : 'rgba(255,255,255,.25)', '--hdr-sep': terang ? 'rgba(15,23,42,.15)' : 'rgba(255,255,255,.2)',
     '--hdr-hover': terang ? 'rgba(15,23,42,.08)' : 'rgba(255,255,255,.15)',
     '--side-bg': sidePal.bg, '--side-fg': sidePal.fg, '--side-fg-on': sidePal.fgOn, '--side-hover': sidePal.hover, '--side-on': sidePal.on, '--side-on-line': sidePal.line, '--side-group': sidePal.grp, '--side-border': sidePal.border,
-    '--side-grp-t': gelapSide ? '#ffffff' : '#0f172a', '--side-grp-line': gelapSide ? 'rgba(255,255,255,.12)' : p.line2, '--side-label': gelapSide ? '#d3e0ea' : '#475569',
+    '--side-grp-t': gelapSide ? '#ffffff' : '#0f172a', '--side-grp-bg': gelapSide ? 'linear-gradient(90deg, rgba(255,255,255,.10), rgba(255,255,255,.04) 60%, transparent)' : '#f1f5f9', '--side-grp-line': gelapSide ? 'rgba(255,255,255,.12)' : p.line2, '--side-label': gelapSide ? '#d3e0ea' : '#475569',
   }
 }
 
