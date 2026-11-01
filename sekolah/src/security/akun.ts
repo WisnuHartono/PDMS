@@ -372,8 +372,14 @@ export async function buatAkun(s: Sesi, p: { username: string; nama: string; ema
   return akun
 }
 
-export async function ubahAkun(s: Sesi, a: Akun, patch: Partial<Pick<Akun, 'peranId' | 'pegawaiId' | 'aktif'>> & PatchProfil) {
+export async function ubahAkun(s: Sesi, a: Akun, patch: Partial<Pick<Akun, 'peranId' | 'pegawaiId' | 'aktif' | 'username'>> & PatchProfil) {
   wajibAdmin(s)
+  if (patch.username !== undefined) {
+    const u = normUser(patch.username)
+    if (!usernameValid(u)) throw new Error('Nama pengguna 3-32 karakter: huruf kecil, angka, titik, garis bawah, atau minus.')
+    if ((await daftarAkun()).some((x) => x.id !== a.id && x.username === u)) throw new Error('Nama pengguna sudah dipakai.')
+    patch = { ...patch, username: u }
+  }
   if ('email' in patch) { patch = { ...patch, email: patch.email?.trim().toLowerCase() || undefined }; await cekEmail(patch.email, a.id) }
   const semua = await daftarAkun()
   const next = { ...a, ...patch }

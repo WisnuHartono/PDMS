@@ -96,12 +96,14 @@ function ProfilAkun({ a, onClose }: { a: TAkun; onClose: () => void }) {
   const awal: PatchProfil = Object.fromEntries(KOLOM_PROFIL.map((k) => [k, a[k]])) as PatchProfil
   const [v, setV] = useState<PatchProfil>(awal)
   const [pegawaiId, setPegawaiId] = useState(a.pegawaiId ?? '')
-  const simpan = () => v.nama?.trim() ? coba(async () => { await ubahAkun(sesi, a, { ...v, pegawaiId: pegawaiId || undefined }); if (a.id === sesi.akun.id) setSesi({ ...sesi }) }, 'Profil disimpan').then((ok) => ok && onClose()) : toast('Nama wajib diisi')
+  const [uname, setUname] = useState(a.username)
+  const simpan = () => v.nama?.trim() ? coba(async () => { await ubahAkun(sesi, a, { ...v, pegawaiId: pegawaiId || undefined, username: uname }); if (a.id === sesi.akun.id) setSesi({ ...sesi }) }, 'Profil disimpan').then((ok) => ok && onClose()) : toast('Nama wajib diisi')
   return (
     <Modal title={`Profil akun: ${a.username}`} onClose={onClose} wide footer={<><Btn onClick={onClose}>Batal</Btn><Btn kind="primary" onClick={simpan}>Simpan</Btn></>}>
       <FormProfil v={v} onChange={setV} nama={a.nama} />
       <div className="form-grid" style={{ marginTop: 6 }}>
-        <Field label="Terhubung ke data guru/pegawai" span={4}>
+        <Field label="Nama pengguna (login)" span={1}><input value={uname} onChange={(e) => setUname(e.target.value)} autoComplete="off" /></Field>
+        <Field label="Terhubung ke data guru/pegawai" span={3}>
           <select value={pegawaiId} onChange={(e) => setPegawaiId(e.target.value)}><option value="">-</option>{pegawai.map((p) => <option key={p.id} value={p.id}>{namaPegawai(p)} · {p.jabatan}</option>)}</select>
         </Field>
       </div>
