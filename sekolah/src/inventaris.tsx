@@ -1,5 +1,5 @@
 // Inventaris: label QR/barcode siap cetak dan stok opname (pindai kamera, pemindai USB, atau ketik kode).
-import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import jsQR from 'jsqr'
 import { formatNoInv, noInvBerikut } from './administrasi'
 import { Barcode128, qrUrl } from './barcode'
@@ -48,6 +48,30 @@ interface ItemLabel { kode: string; b: Butir }
 const itemLabel = (butir: Butir[], perUnit: boolean): ItemLabel[] =>
   butir.flatMap((b) => (perUnit && b.jumlah > 1 ? Array.from({ length: b.jumlah }, (_, i) => ({ kode: `${b.noinv}/${String(i + 1).padStart(2, '0')}`, b })) : [{ kode: b.noinv, b }]))
 
+/** Menyusutkan isi label (tanpa melipat teks) hingga pas di kotak ukurannya, sehingga tidak ada informasi terpotong. */
+function PasLabel({ lebar, tinggi, warna, kecil, children }: { lebar: number; tinggi: number; warna: string; kecil: boolean; children: ReactNode }) {
+  const luar = useRef<HTMLDivElement>(null)
+  const dalam = useRef<HTMLDivElement>(null)
+  useLayoutEffect(() => {
+    const hitung = () => {
+      const o = luar.current, d = dalam.current
+      if (!o || !d) return
+      const w = o.clientWidth, h = o.clientHeight
+      if (!w || !h) return
+      d.style.transform = 'none'; d.style.width = `${w}px`; d.style.height = 'auto'
+      const s = Math.min(1, w / Math.max(d.scrollWidth, 1), h / Math.max(d.scrollHeight, d.offsetHeight, 1)) * 0.995
+      d.style.width = `${w / s}px`; d.style.height = `${h / s}px`; d.style.transform = `scale(${s})`
+    }
+    hitung()
+    document.fonts?.ready.then(hitung).catch(() => undefined)
+  })
+  return (
+    <div ref={luar} className={`lbl ${kecil ? 'kecil' : ''}`} style={{ width: `${lebar}mm`, height: `${tinggi}mm`, borderColor: warna }}>
+      <div ref={dalam} className="lbl-fit">{children}</div>
+    </div>
+  )
+}
+
 export function KartuLabel({ it, o, qr, s }: { it: ItemLabel; o: OpsiLabel; qr?: string; s: Sekolah }) {
   const u = UKURAN[o.ukuran]
   const w = WARNA[o.warna]
@@ -56,11 +80,13 @@ export function KartuLabel({ it, o, qr, s }: { it: ItemLabel; o: OpsiLabel; qr?:
   if (o.lokasi && it.b.ruang) baris.push(['Lokasi', it.b.ruang, false])
   const th = o.tahun && it.b.tahun ? it.b.tahun : ''
   const kd = o.kondisi ? it.b.kondisi : ''
+  const qs = Math.max(10, Math.min(u.t - (kecil ? 8 : 15), u.l * 0.42))
+  const qstyle = { width: `${qs}mm`, height: `${qs}mm` }
   return (
-    <div className={`lbl ${kecil ? 'kecil' : ''}`} style={{ width: `${u.l}mm`, height: `${u.t}mm`, borderColor: w }}>
+    <PasLabel lebar={u.l} tinggi={u.t} warna={w} kecil={kecil}>
       <div className="lbl-judul" style={{ background: w }}>{o.judul || 'KARTU INVENTARIS BARANG'}</div>
       <div className="lbl-body">
-        {o.isi !== 'barcode' && (qr ? <img className="lbl-qr" src={qr} alt={`QR ${it.kode}`} /> : <div className="lbl-qr" />)}
+        {o.isi !== 'barcode' && (qr ? <img className="lbl-qr" style={qstyle} src={qr} alt={`QR ${it.kode}`} /> : <div className="lbl-qr" style={qstyle} />)}
         <div className="lbl-info">
           {(o.sekolah || o.logo) && (
             <div className="lbl-sek" style={{ color: w }}>
@@ -73,11 +99,11 @@ export function KartuLabel({ it, o, qr, s }: { it: ItemLabel; o: OpsiLabel; qr?:
               <Fragment key={k}><span className="k">{k}</span><span className="t">:</span><b className={tebal ? 'kode' : ''} style={tebal ? { color: w } : undefined}>{v}</b></Fragment>
             ))}
           </div>
-          {o.isi !== 'qr' && <div className="lbl-bar"><Barcode128 teks={it.kode} tinggi={kecil ? 16 : 24} /></div>}
+          {o.isi !== 'qr' && <div className={`lbl-bar ${o.isi === 'barcode' ? 'solo' : ''}`}><Barcode128 teks={it.kode} tinggi={kecil ? 30 : 34} /></div>}
         </div>
       </div>
       {o.footer && !kecil && <div className="lbl-foot">{o.footer}</div>}
-    </div>
+    </PasLabel>
   )
 }
 

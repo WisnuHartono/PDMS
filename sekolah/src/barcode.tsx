@@ -18,20 +18,20 @@ export function code128Modul(teks: string): string {
   return code128Nilai(teks).map((v) => POLA[v]).join('')
 }
 
-/** Barcode Code 128 sebagai SVG vektor (tajam saat dicetak). */
-export function Barcode128({ teks, tinggi = 40, modul = 1.6, className }: { teks: string; tinggi?: number; modul?: number; className?: string }) {
+/** Barcode Code 128 sebagai SVG vektor. Proporsi dikunci (tidak melar/terlipat): tinggi dalam satuan modul. */
+export function Barcode128({ teks, tinggi = 36, className }: { teks: string; tinggi?: number; className?: string }) {
   const bits = code128Modul(teks)
-  const lebar = (bits.length + 20) * modul
+  const lebar = bits.length + 20 // zona hening 10 modul di kiri dan kanan
   const batang: JSX.Element[] = []
   for (let i = 0; i < bits.length; ) {
     if (bits[i] !== '1') { i++; continue }
     let j = i
     while (bits[j] === '1') j++
-    batang.push(<rect key={i} x={(i + 10) * modul} y={0} width={(j - i) * modul} height={tinggi} />)
+    batang.push(<rect key={i} x={i + 10} y={0} width={j - i} height={tinggi} />)
     i = j
   }
   return (
-    <svg className={className} viewBox={`0 0 ${lebar} ${tinggi}`} width="100%" height={tinggi} preserveAspectRatio="none" role="img" aria-label={`Barcode ${teks}`} fill="#000">
+    <svg className={className} viewBox={`0 0 ${lebar} ${tinggi}`} style={{ width: '100%', height: 'auto', display: 'block' }} preserveAspectRatio="xMidYMid meet" shapeRendering="crispEdges" role="img" aria-label={`Barcode ${teks}`} fill="#000">
       {batang}
     </svg>
   )
