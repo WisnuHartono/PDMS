@@ -868,7 +868,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 .doc.induk h4.sec { background: #eef1f5; border: 0; border-left: 1.2mm solid #1f4e79; padding: 1.1mm 3mm; margin: 3.5mm 0 1.2mm; font-size: calc(var(--doc-size, 11.5pt) + .5pt); text-transform: none; letter-spacing: 0; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 .doc.induk .doc-sub { color: #444; margin-bottom: 1mm; }
 .doc.induk .doc-title { text-decoration: none; letter-spacing: .02em; }
-.doc.induk .kvn { display: grid; grid-template-columns: 8mm 60mm 4mm 1fr; column-gap: 1mm; row-gap: .9mm; align-items: baseline; margin: 0 0 1mm; }
+.doc.induk .kvn { display: grid; grid-template-columns: 8mm var(--kolom-k, 52mm) 3mm 1fr; column-gap: .8mm; row-gap: .9mm; align-items: baseline; margin: 0 0 1mm; }
 .doc.induk .induk-top .kvn { flex: 1; }
 .doc.induk .kvn .n { color: #666; text-align: right; padding-right: 1mm; }
 .doc.induk .kvn .t { text-align: center; }

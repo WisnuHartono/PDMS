@@ -1,4 +1,4 @@
-import { Fragment, useState } from 'react'
+import { Fragment, useLayoutEffect, useRef, useState } from 'react'
 import { getKurikulum } from '../curricula'
 import { KopSurat, TandaTangan } from '../print'
 import { getState, useCol } from '../store'
@@ -77,13 +77,24 @@ export function LembarInduk({ s }: { s: Siswa }) {
   const kepsek = st.pegawai.find((p) => p.id === st.sekolah[0]?.kepalaSekolahId)
   const riwayat = st.rombel.filter((r) => r.siswaIds.includes(s.id)).sort((a, b) => a.tahunAjaran.localeCompare(b.tahunAjaran))
   const kelas = riwayat[riwayat.length - 1]?.nama
+  const akar = useRef<HTMLDivElement>(null)
+  // Kolom label selebar label terpanjang di seluruh dokumen, sehingga titik dua rapat dan sejajar di semua bagian
+  useLayoutEffect(() => {
+    const fit = () => {
+      const d = akar.current; if (!d) return
+      let maks = 0
+      d.querySelectorAll<HTMLElement>('.kvn .k').forEach((e) => { e.style.width = 'max-content'; maks = Math.max(maks, e.offsetWidth); e.style.width = '' })
+      if (maks) d.style.setProperty('--kolom-k', `${Math.ceil(maks) + 2}px`)
+    }
+    fit(); document.fonts?.ready.then(fit).catch(() => undefined)
+  })
   let no = 0
   const row = (l: string, v?: string | number, tebal = false) => { no += 1; return <Fragment key={l}><span className="n">{no}.</span><span className="k">{l}</span><span className="t">:</span><span className={`v ${tebal ? 'b' : ''}`}>{val(v)}</span></Fragment> }
   const ortu = (k: keyof NonNullable<Siswa['ayah']>) => [s.ayah[k], s.ibu[k]].map(String)
   const tglLahir = s.tanggalLahir ? fmtTanggal(s.tanggalLahir) : '-'
   const wali = s.wali.nama || s.wali.pekerjaan || s.wali.telepon
   return (
-    <div className="doc induk">
+    <div ref={akar} className="doc induk">
       <KopSurat judul="LEMBAR BUKU INDUK PESERTA DIDIK" sub={`${kelas ? `Kelas ${kelas} | ` : ''}Status: ${s.status}`} />
       <h4 className="sec">A. Keterangan tentang anak</h4>
       <div className="induk-top">
