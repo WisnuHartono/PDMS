@@ -78,12 +78,23 @@ export default function Pengaturan() {
               }} />
             </div>
             <div className="btn-row">
-              <Btn onClick={async () => { if (confirm('Isi dengan data contoh? Data saat ini akan dihapus.')) { await seedDemo(); toast('Data contoh dimuat') } }}>Muat data contoh</Btn>
-              <Btn kind="danger" onClick={async () => { if (confirm('Hapus SELURUH data? Tindakan ini tidak bisa dibatalkan.')) { await resetAll(); await put('sekolah', DEFAULT_SEKOLAH); toast('Semua data dihapus') } }}>Hapus semua data</Btn>
+              <KonfirmasiBtn label="Muat data contoh" tanya="Klik lagi: data saat ini diganti data contoh" onYa={async () => { await seedDemo(); toast('Data contoh dimuat') }} />
+              <KonfirmasiBtn danger label="Hapus semua data" tanya="Klik lagi untuk menghapus SELURUH data" onYa={async () => { await resetAll(); await put('sekolah', DEFAULT_SEKOLAH); toast('Semua data dihapus') }} />
             </div>
           </Card>
         </div>
       </div>
     </div>
   )
+}
+
+/** Tombol dua langkah: klik pertama meminta konfirmasi, klik kedua (dalam 5 detik) menjalankan aksi. */
+function KonfirmasiBtn({ label, tanya, onYa, danger }: { label: string; tanya: string; onYa: () => Promise<void>; danger?: boolean }) {
+  const [siap, setSiap] = useState(false)
+  useEffect(() => {
+    if (!siap) return
+    const t = setTimeout(() => setSiap(false), 5000)
+    return () => clearTimeout(t)
+  }, [siap])
+  return <Btn kind={danger || siap ? 'danger' : 'default'} onClick={async () => { if (!siap) return setSiap(true); setSiap(false); await onYa() }}>{siap ? tanya : label}</Btn>
 }
