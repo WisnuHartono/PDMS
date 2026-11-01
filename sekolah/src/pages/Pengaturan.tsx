@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { KURIKULUM } from '../curricula'
 import { seedDemo } from '../seed'
-import { DEFAULT_SEKOLAH, exportJson, importJson, put, resetAll, useCol, useSekolah } from '../store'
+import { DEFAULT_SEKOLAH, cadanganTerenkripsi, exportTerenkripsi, importJson, put, resetAll, useCol, useSekolah } from '../store'
 import { JENJANG, type Sekolah } from '../types'
 import { Btn, Card, Field, Inp, PageHead, Sel, toast } from '../ui'
 import { download, fotoKecil, namaPegawai, readFileAsText, today } from '../util'
@@ -11,6 +11,7 @@ export default function Pengaturan() {
   const pegawai = useCol('pegawai')
   const [s, setS] = useState<Sekolah>(sekolah)
   const fileRef = useRef<HTMLInputElement>(null)
+  const [sandiCad, setSandiCad] = useState('')
   useEffect(() => setS(sekolah), [sekolah])
   const set = (p: Partial<Sekolah>) => setS((o) => ({ ...o, ...p }))
   const toggle = (j: (typeof JENJANG)[number]) => set({ jenjang: s.jenjang.includes(j) ? s.jenjang.filter((x) => x !== j) : [...s.jenjang, j] })
@@ -67,14 +68,19 @@ export default function Pengaturan() {
 
           <Card title="Data & Cadangan">
             <p className="muted small">Data tersimpan di perangkat ini (browser atau aplikasi Windows). Buat cadangan secara berkala dan simpan di tempat aman.</p>
-            <div className="btn-row">
-              <Btn icon="download" onClick={() => download(`simas-cadangan-${today()}.json`, exportJson())}>Unduh cadangan</Btn>
+            <p className="muted small">Cadangan dienkripsi (Argon2id + AES-256-GCM) dengan kata sandi cadangan. Simpan kata sandi ini terpisah dari berkasnya.</p>
+            <div className="filters">
+              <input type="password" placeholder="Kata sandi cadangan (min. 12 karakter)" value={sandiCad} onChange={(e) => setSandiCad(e.target.value)} autoComplete="new-password" aria-label="Kata sandi cadangan" />
+              <Btn icon="download" disabled={sandiCad.length < 12} onClick={async () => { download(`simas-cadangan-${today()}.simas.json`, await exportTerenkripsi(sandiCad)); toast('Cadangan terenkripsi diunduh') }}>Unduh cadangan</Btn>
               <Btn icon="upload" onClick={() => fileRef.current?.click()}>Pulihkan dari cadangan</Btn>
               <input ref={fileRef} type="file" accept=".json,application/json" hidden onChange={async (e) => {
                 const f = e.target.files?.[0]
                 e.target.value = ''
-                if (!f || !confirm('Pulihkan akan MENGGANTI seluruh data saat ini. Lanjutkan?')) return
-                try { await importJson(await readFileAsText(f)); toast('Data berhasil dipulihkan') } catch (err) { toast(`Gagal: ${(err as Error).message}`) }
+                if (!f) return
+                const teks = await readFileAsText(f)
+                if (cadanganTerenkripsi(teks) && !sandiCad) return toast('Isi kata sandi cadangan terlebih dahulu.')
+                if (!confirm('Pulihkan akan MENGGANTI seluruh data saat ini. Lanjutkan?')) return
+                try { await importJson(teks, sandiCad); toast('Data berhasil dipulihkan') } catch (err) { toast(`Gagal: ${(err as Error).message}`) }
               }} />
             </div>
             <div className="btn-row">

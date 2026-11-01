@@ -1,40 +1,35 @@
-import { StrictMode, useState } from 'react'
+import { StrictMode, useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
+import { EncryptedBackend, IndexedDbBackend } from './db'
+import { Masuk, Pasang } from './pages/Login'
 import { seedDemo } from './seed'
+import { adaAkun, kebijakan, type Sesi } from './security/akun'
+import { pasangIdle, setSesi } from './security/sesi'
 import { DEFAULT_SEKOLAH, getState, initStore, put } from './store'
 import './styles.css'
 
-function Welcome({ onDone }: { onDone: () => void }) {
-  const [busy, setBusy] = useState(false)
-  const go = async (demo: boolean) => {
-    setBusy(true)
-    if (demo) await seedDemo()
-    else await put('sekolah', DEFAULT_SEKOLAH)
-    onDone()
-  }
-  return (
-    <div className="welcome">
-      <div className="welcome-card">
-        <h1>Selamat datang di SIMAS</h1>
-        <p>Sistem Informasi Manajemen Administrasi Sekolah untuk PAUD, TK, SD, SMP, dan SMA/SMK.</p>
-        <div className="btn-row">
-          <button className="btn btn-primary" disabled={busy} onClick={() => go(true)}>Coba dengan data contoh</button>
-          <button className="btn btn-default" disabled={busy} onClick={() => go(false)}>Mulai dengan data kosong</button>
-        </div>
-        <p className="muted small">Data contoh dapat dihapus kapan saja dari menu Pengaturan.</p>
-      </div>
-    </div>
-  )
+/** Buka data terenkripsi dengan kunci dari sesi login, lalu tampilkan aplikasi. */
+async function bukaData(s: Sesi, demo = false) {
+  await initStore(new EncryptedBackend(new IndexedDbBackend(), s.dek))
+  if (demo) await seedDemo()
+  else if (!getState().sekolah.length) await put('sekolah', DEFAULT_SEKOLAH)
+  setSesi(s)
+  pasangIdle((await kebijakan()).idleMenit)
 }
 
 function Root() {
-  const [ready, setReady] = useState(getState().sekolah.length > 0)
-  return ready ? <App /> : <Welcome onDone={() => setReady(true)} />
+  const [tahap, setTahap] = useState<'muat' | 'pasang' | 'masuk' | 'app'>('muat')
+  const [galat, setGalat] = useState('')
+  useEffect(() => {
+    adaAkun().then((ada) => setTahap(ada ? 'masuk' : 'pasang')).catch((e) => setGalat(String(e)))
+  }, [])
+  const lanjut = (s: Sesi, demo?: boolean) => bukaData(s, demo).then(() => setTahap('app')).catch((e) => setGalat(`Gagal membuka data: ${e}`))
+  if (galat) return <div className="welcome"><div className="welcome-card"><h1>Terjadi kesalahan</h1><p>{galat}</p></div></div>
+  if (tahap === 'muat') return <div className="welcome" />
+  if (tahap === 'pasang') return <Pasang onSelesai={(s, demo) => lanjut(s, demo)} />
+  if (tahap === 'masuk') return <Masuk onMasuk={(s) => lanjut(s)} />
+  return <App />
 }
 
-initStore().then(() => {
-  createRoot(document.getElementById('root')!).render(<StrictMode><Root /></StrictMode>)
-}).catch((e) => {
-  document.getElementById('root')!.textContent = `Gagal membuka database: ${e}`
-})
+createRoot(document.getElementById('root')!).render(<StrictMode><Root /></StrictMode>)

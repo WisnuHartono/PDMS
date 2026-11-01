@@ -1,6 +1,7 @@
 // State aplikasi di memori + sinkron ke Backend. Halaman memakai hook useCol().
 import { useSyncExternalStore } from 'react'
 import { IndexedDbBackend, type Backend } from './db'
+import { dekripsiJson, enkripsiJson, kdfBaru, turunkan } from './security/crypto'
 import { COLLECTIONS, type CollectionName, type Collections, type Sekolah } from './types'
 
 type State = { [K in CollectionName]: Collections[K][] }
@@ -82,13 +83,28 @@ export function getSekolah(): Sekolah {
   return state.sekolah[0] ?? DEFAULT_SEKOLAH
 }
 
-/** Cadangan seluruh data ke satu berkas JSON. */
+/** Cadangan seluruh data ke satu berkas JSON (teks biasa; dipakai internal & pengujian). */
 export function exportJson(): string {
   return JSON.stringify({ app: 'simas-sekolah', version: 1, exportedAt: new Date().toISOString(), data: state }, null, 1)
 }
 
-export async function importJson(text: string) {
-  const parsed = JSON.parse(text)
+/** Cadangan terenkripsi: data dikunci dengan kata sandi cadangan (Argon2id → AES-256-GCM). */
+export async function exportTerenkripsi(sandi: string): Promise<string> {
+  const kdf = await kdfBaru()
+  const { kek } = await turunkan(sandi, kdf)
+  const isi = await enkripsiJson(JSON.parse(exportJson()), kek, 'simas-cadangan')
+  return JSON.stringify({ app: 'simas-sekolah', version: 2, terenkripsi: true, exportedAt: new Date().toISOString(), kdf, isi })
+}
+
+export const cadanganTerenkripsi = (text: string) => { try { return JSON.parse(text)?.terenkripsi === true } catch { return false } }
+
+export async function importJson(text: string, sandi?: string) {
+  let parsed = JSON.parse(text)
+  if (parsed?.terenkripsi) {
+    if (!sandi) throw new Error('Cadangan ini terenkripsi. Masukkan kata sandi cadangan.')
+    const { kek } = await turunkan(sandi, parsed.kdf)
+    try { parsed = await dekripsiJson(parsed.isi, kek, 'simas-cadangan') } catch { throw new Error('Kata sandi cadangan salah.') }
+  }
   if (parsed?.app !== 'simas-sekolah' || !parsed.data) throw new Error('Berkas bukan cadangan SIMAS')
   await backend?.clear()
   state = empty()

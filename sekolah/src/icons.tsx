@@ -30,6 +30,7 @@ const P: Record<string, ReactNode> = {
   chevL: <path d="m15 6-6 6 6 6" />,
   chevR: <path d="m9 6 6 6-6 6" />,
   prasarana: <><path d="M3 21h18" /><path d="M5 21V8l7-4 7 4v13" /><path d="M9 21v-5h6v5" /><path d="M9 10h.01M15 10h.01M9 13h.01M15 13h.01" /></>,
+  kunci: <><rect x="4" y="10.5" width="16" height="10.5" rx="2" /><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5" /><path d="M12 15v2.5" /></>,
   school: <><path d="M3 10 12 5l9 5-9 5z" /><path d="M7 12.5V17c1.5 1.3 3.2 2 5 2s3.5-.7 5-2v-4.5" /><path d="M21 10v5" /></>,
 }
 

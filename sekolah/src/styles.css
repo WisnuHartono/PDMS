@@ -44,8 +44,8 @@ code { background: var(--line-2); padding: 1px 4px; border-radius: 3px; }
 .shell {
   display: grid;
   grid-template-columns: 60px 1fr;
-  grid-template-rows: 56px 38px 1fr;
-  grid-template-areas: 'top top' 'side tabs' 'side main';
+  grid-template-rows: 60px 1fr;
+  grid-template-areas: 'top top' 'side main';
   height: 100vh;
 }
 .shell.expanded { grid-template-columns: 220px 1fr; }
@@ -66,7 +66,7 @@ code { background: var(--line-2); padding: 1px 4px; border-radius: 3px; }
 .brand b { display: block; font-size: 19px; letter-spacing: 1px; line-height: 1; }
 .brand-sub { font-size: 11px; opacity: 0.8; }
 .topbar-fill { flex: 1; }
-.who { text-align: right; line-height: 1.2; }
+.who { text-align: left; line-height: 1.2; min-width: 0; }
 .who b { display: block; font-size: 15px; }
 .who span { font-size: 12px; opacity: 0.85; }
 
@@ -90,18 +90,47 @@ code { background: var(--line-2); padding: 1px 4px; border-radius: 3px; }
 .expanded .side-label { display: inline; }
 .side-group { color: #7f9bb3; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; padding: 12px 20px 4px; }
 
-.tabbar { grid-area: tabs; display: flex; align-items: flex-end; gap: 2px; padding: 0 10px; background: #e3e9ef; border-bottom: 2px solid var(--tab-on); overflow-x: auto; }
-.tab {
-  display: flex; align-items: center; gap: 8px; height: 32px; padding: 0 12px;
-  background: #c9d3dd; color: #3b4b5a; border-radius: 5px 5px 0 0; cursor: pointer; white-space: nowrap; font-size: 13.5px;
-}
-.tab:hover { background: #bcc8d3; }
-.tab.on { background: var(--tab-on); color: #1c1300; font-weight: 600; }
-.tab-x { display: grid; place-items: center; border: 0; background: transparent; padding: 2px; border-radius: 3px; cursor: pointer; color: inherit; }
-.tab-x:hover { background: rgba(0, 0, 0, 0.12); }
-.tab-count { margin-left: auto; align-self: center; font-size: 12px; color: var(--muted); padding: 0 4px; }
 
 .content { grid-area: main; overflow: auto; padding: 12px 14px 24px; }
+
+/* Pojok kanan atas: info sekolah + akun */
+.top-sekolah { display: flex; align-items: center; gap: 10px; padding: 0 14px; border-left: 1px solid rgba(255, 255, 255, 0.2); max-width: 340px; }
+.top-sekolah .who b, .akun-btn .who b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 240px; }
+.top-logo { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 8px; background: rgba(255, 255, 255, 0.92); color: var(--accent-2); object-fit: contain; flex: none; }
+.akun-wrap { position: relative; }
+.akun-btn { display: flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.22); color: #fff; border-radius: 24px; padding: 3px 12px 3px 3px; cursor: pointer; }
+.akun-btn:hover { background: rgba(255, 255, 255, 0.18); }
+.akun-btn .who span { font-size: 11.5px; opacity: 0.85; }
+.caret { font-size: 11px; opacity: 0.8; }
+.akun-menu { position: absolute; right: 0; top: 48px; width: 290px; background: #fff; color: var(--text); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18); overflow: hidden; z-index: 20; }
+.akun-menu-h { display: flex; gap: 10px; padding: 12px; background: var(--accent-soft); }
+.akun-menu-h div span { display: block; font-size: 12px; color: var(--muted); }
+.akun-menu button { display: block; width: 100%; text-align: left; padding: 10px 14px; border: 0; border-top: 1px solid var(--line-2); background: #fff; cursor: pointer; }
+.akun-menu button:hover { background: #f4f8fa; }
+.akun-menu .keluar { color: var(--bad); font-weight: 600; }
+
+/* Layar login & pemasangan */
+.welcome-card.auth { width: min(440px, 100%); }
+.auth-brand { color: var(--text); margin-bottom: 14px; }
+.auth-brand .brand-sub { color: var(--muted); }
+.auth-form { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+.btn.wide { width: 100%; justify-content: center; height: 38px; }
+.pw { display: flex; gap: 4px; align-items: center; }
+.pw input { flex: 1; }
+.pw-meter { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 4px; }
+.pw-meter i { height: 5px; border-radius: 3px; background: var(--track); }
+.pw-meter[data-k="1"] i:nth-child(-n+1) { background: var(--bad); }
+.pw-meter[data-k="2"] i:nth-child(-n+2) { background: var(--orange); }
+.pw-meter[data-k="3"] i:nth-child(-n+3) { background: var(--warn); }
+.pw-meter[data-k="4"] i { background: var(--ok); }
+.kode-pemulihan { font-family: ui-monospace, Consolas, monospace; font-size: 19px; letter-spacing: 1px; text-align: center; padding: 14px; background: #fffbeb; border: 1px dashed #f59e0b; border-radius: 8px; margin: 10px 0; user-select: all; word-break: break-all; }
+input.otp { font-family: ui-monospace, Consolas, monospace; font-size: 26px; letter-spacing: 10px; text-align: center; height: 52px !important; }
+input.otp.small-otp { font-size: 18px; letter-spacing: 4px; height: 34px !important; width: 140px; }
+.chk { display: flex; gap: 8px; align-items: flex-start; font-size: 13.5px; }
+.tiny { font-size: 11.5px; margin: 14px 0 0; }
+.qr { width: 180px; height: 180px; border: 1px solid var(--line); border-radius: 6px; }
+ol.steps { padding-left: 18px; margin: 0 0 8px; }
+code.sel { user-select: all; }
 
 /* ---------- Komponen umum ---------- */
 .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); display: flex; flex-direction: column; min-width: 0; }
@@ -350,9 +379,10 @@ select.mini-sel { height: 28px; font-size: 12.5px; color: var(--accent-2); }
 /* ---------- Responsif ---------- */
 @media (max-width: 1100px) {
   .grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .who { display: none; }
+  .top-sekolah .who { display: none; }
 }
 @media (max-width: 760px) {
+  .akun-btn .who, .qsearch { display: none; }
   .grid-3, .grid-2 { grid-template-columns: 1fr; }
   .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .span-3, .span-4 { grid-column: span 2; }

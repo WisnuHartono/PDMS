@@ -15,6 +15,8 @@ import Penilaian from './pages/Penilaian'
 import Rapor from './pages/Rapor'
 import Pengaturan from './pages/Pengaturan'
 import Prasarana from './pages/Prasarana'
+import AkunPage, { ProfilSaya } from './pages/Akun'
+import { boleh, keluar, useSesi } from './security/sesi'
 import { namaPegawai } from './util'
 
 interface MenuItem { id: PageId; label: string; icon: string; group: string }
@@ -33,6 +35,7 @@ export const MENU: MenuItem[] = [
   { id: 'rapor', label: 'Cetak Rapor', icon: 'rapor', group: 'Penilaian' },
   { id: 'prasarana', label: 'Prasarana (Sarpras)', icon: 'prasarana', group: 'Sarana Prasarana' },
   { id: 'pengaturan', label: 'Pengaturan', icon: 'pengaturan', group: 'Sistem' },
+  { id: 'akun', label: 'Akun & Keamanan', icon: 'kunci', group: 'Sistem' },
 ]
 
 const PAGES: Record<PageId, () => ReactNode> = {
@@ -49,33 +52,24 @@ const PAGES: Record<PageId, () => ReactNode> = {
   rapor: () => <Rapor />,
   prasarana: () => <Prasarana />,
   pengaturan: () => <Pengaturan />,
+  akun: () => <AkunPage />,
 }
 
 export default function App() {
-  const [tabs, setTabs] = useState<PageId[]>(['dashboard'])
   const [active, setActive] = useState<PageId>('dashboard')
   const [expanded, setExpanded] = useState(false)
+  const [menuAkun, setMenuAkun] = useState(false)
+  const sesi = useSesi()!
+  const [profil, setProfil] = useState(!!sesi.peran.wajib2fa && !sesi.akun.totpEnc)
   const sekolah = useSekolah()
-  const pegawai = useCol('pegawai')
-  const kepsek = pegawai.find((p) => p.id === sekolah.kepalaSekolahId)
+  const menu = MENU.filter((m) => boleh(m.id))
 
   const nav = useMemo(() => ({
-    open: (p: PageId) => {
-      setTabs((t) => (t.includes(p) ? t : [...t, p]))
-      setActive(p)
-    },
+    open: (p: PageId) => { if (boleh(p)) setActive(p) },
   }), [])
 
-  const close = (p: PageId) => {
-    setTabs((t) => {
-      const next = t.filter((x) => x !== p)
-      if (active === p) setActive(next[Math.max(0, t.indexOf(p) - 1)] ?? 'dashboard')
-      return next
-    })
-  }
-
-  const label = (p: PageId) => MENU.find((m) => m.id === p)?.label ?? p
   let lastGroup = ''
+  const halaman = boleh(active) ? active : 'dashboard'
 
   return (
     <Nav.Provider value={nav}>
@@ -85,27 +79,51 @@ export default function App() {
           <div className="brand">
             <span className="brand-mark"><Icon name="school" size={22} /></span>
             <div>
-              <b>SIMAS</b><span className="brand-sub">Administrasi Sekolah · v0.1</span>
+              <b>SIMAS</b><span className="brand-sub">Administrasi Sekolah · v0.2</span>
             </div>
           </div>
           <div className="topbar-fill" />
           <QuickSearch />
-          <button className="icon-btn light" title="Bantuan" onClick={() => nav.open('pengaturan')}><Icon name="help" /></button>
-          <div className="who">
-            <b>{sekolah.nama}</b>
-            <span>TA {sekolah.tahunAjaranAktif} · Semester {sekolah.semesterAktif === 1 ? 'Ganjil' : 'Genap'}</span>
+          <div className="top-sekolah" title={[sekolah.npsn && `NPSN ${sekolah.npsn}`, sekolah.alamat].filter(Boolean).join(' · ')}>
+            {sekolah.logo ? <img src={sekolah.logo} alt="" className="top-logo" /> : <span className="top-logo"><Icon name="school" size={20} /></span>}
+            <div className="who">
+              <b>{sekolah.nama}</b>
+              <span>{sekolah.jenjang.join(' · ')} · TA {sekolah.tahunAjaranAktif} · Smt {sekolah.semesterAktif === 1 ? 'Ganjil' : 'Genap'}</span>
+            </div>
           </div>
-          {sekolah.logo ? <img className="avatar" src={sekolah.logo} alt="" style={{ width: 38, height: 38 }} /> : <Avatar nama={kepsek ? namaPegawai(kepsek) : sekolah.nama} size={38} />}
+          <div className="akun-wrap">
+            <button className="akun-btn" onClick={() => setMenuAkun((x) => !x)} aria-haspopup="menu" aria-expanded={menuAkun}>
+              <Avatar nama={sesi.akun.nama} size={34} />
+              <div className="who">
+                <b>{sesi.akun.nama}</b>
+                <span>{sesi.peran.nama}</span>
+              </div>
+              <span className="caret">▾</span>
+            </button>
+            {menuAkun && (
+              <div className="akun-menu" role="menu" onMouseLeave={() => setMenuAkun(false)}>
+                <div className="akun-menu-h">
+                  <Avatar nama={sesi.akun.nama} size={40} />
+                  <div><b>{sesi.akun.nama}</b><span>@{sesi.akun.username} · {sesi.peran.nama}</span>
+                    <span>{sesi.akun.totpEnc ? '🔒 Verifikasi 2 langkah aktif' : '⚠ Verifikasi 2 langkah belum aktif'}</span></div>
+                </div>
+                <button role="menuitem" onClick={() => { setProfil(true); setMenuAkun(false) }}>Profil & keamanan akun</button>
+                {boleh('akun') && <button role="menuitem" onClick={() => { nav.open('akun'); setMenuAkun(false) }}>Kelola akun pengguna</button>}
+                {boleh('pengaturan') && <button role="menuitem" onClick={() => { nav.open('pengaturan'); setMenuAkun(false) }}>Pengaturan sekolah</button>}
+                <button role="menuitem" className="keluar" onClick={() => keluar()}>Keluar</button>
+              </div>
+            )}
+          </div>
         </header>
 
         <nav className="sidebar" aria-label="Menu utama">
-          {MENU.map((m) => {
+          {menu.map((m) => {
             const showGroup = expanded && m.group !== lastGroup
             lastGroup = m.group
             return (
               <div key={m.id}>
                 {showGroup && <div className="side-group">{m.group}</div>}
-                <button className={`side-item ${active === m.id ? 'on' : ''}`} onClick={() => nav.open(m.id)} title={m.label}>
+                <button className={`side-item ${halaman === m.id ? 'on' : ''}`} onClick={() => nav.open(m.id)} title={m.label} aria-current={halaman === m.id ? 'page' : undefined}>
                   <Icon name={m.icon} size={22} />
                   <span className="side-label">{m.label}</span>
                 </button>
@@ -114,24 +132,11 @@ export default function App() {
           })}
         </nav>
 
-        <div className="tabbar" role="tablist">
-          {tabs.map((t) => (
-            <div key={t} className={`tab ${active === t ? 'on' : ''}`} role="tab" aria-selected={active === t} onClick={() => setActive(t)}>
-              <span>{label(t)}</span>
-              {t !== 'dashboard' && (
-                <button className="tab-x" aria-label={`Tutup ${label(t)}`} onClick={(e) => { e.stopPropagation(); close(t) }}><Icon name="close" size={13} /></button>
-              )}
-            </div>
-          ))}
-          <div className="tab-count">{tabs.length}</div>
-        </div>
-
         <main className="content">
-          {tabs.map((t) => (
-            <div key={t} className="page" hidden={t !== active}>{PAGES[t]()}</div>
-          ))}
+          <div key={halaman} className="page">{PAGES[halaman]()}</div>
         </main>
       </div>
+      {profil && <ProfilSaya onClose={() => setProfil(false)} />}
       <ToastHost />
       <PrintHost />
     </Nav.Provider>

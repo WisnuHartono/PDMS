@@ -19,6 +19,19 @@ Aplikasi administrasi sekolah untuk **PAUD, TK, SD, SMP, SMA/SMK** yang berjalan
 | Prasarana (Sarpras) | Data tanah, bangunan, ruang sesuai isian Dapodik; validasi ketentuan pengisian; klasifikasi kerusakan otomatis; pengajuan penambahan/perbaikan/penghapusan dengan matriks dokumen wajib (PDF ≤ 2 MB), daftar periksa, status verifikasi, pembatasan pengajuan aktif, Tarik Data, dan lembar pemeriksaan cetak. Mengacu *Panduan Pengajuan Data Prasarana pada Dapodik versi 2027* |
 | Pengaturan | Profil sekolah/yayasan & logo (kop surat), tahun ajaran & semester aktif, cadangan/pulihkan data (JSON), data contoh |
 
+## Keamanan akun (v0.2)
+
+| Lapisan | Implementasi |
+| --- | --- |
+| Kata sandi | Argon2id (m=64 MiB, t=3, p=1), cadangan PBKDF2-SHA-256 600.000 iterasi; kebijakan min. 12 karakter, 3 dari 4 jenis karakter |
+| Data di perangkat | AES-256-GCM per dokumen (AAD `koleksi|id`), kunci data (DEK) acak dibungkus per akun dengan kunci turunan kata sandi |
+| Verifikasi 2 langkah | TOTP RFC 6238 (Google/Microsoft Authenticator), anti-replay, dapat diwajibkan per jenis akun |
+| Proteksi login | Kunci akun setelah 5 gagal (15 menit), logout otomatis saat idle, log aktivitas |
+| Pemulihan | Kode pemulihan 25 karakter yang juga membungkus DEK |
+| Cadangan | Berkas cadangan terenkripsi dengan kata sandi cadangan (Argon2id + AES-GCM) |
+
+Jenis akun bawaan: Administrator, Kepala Sekolah, Operator, Wali Kelas, Guru, Sarpras. Jenis akun baru bisa dibuat dengan hak akses per menu.
+
 ## Arsitektur
 
 ```

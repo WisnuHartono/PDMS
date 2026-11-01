@@ -5,7 +5,7 @@ import { Icon } from './icons'
 // ---------- Navigasi tab ----------
 export type PageId =
   | 'dashboard' | 'siswa' | 'pegawai' | 'induk' | 'rombel' | 'mapel' | 'ekskul'
-  | 'absensiSiswa' | 'absensiPegawai' | 'nilai' | 'rapor' | 'prasarana' | 'pengaturan'
+  | 'absensiSiswa' | 'absensiPegawai' | 'nilai' | 'rapor' | 'prasarana' | 'pengaturan' | 'akun'
 
 export interface NavCtx {
   open: (p: PageId) => void
