@@ -1,6 +1,6 @@
 // Dokumen cetak untuk buku/register administrasi.
 import { predikatSupervisi, type FieldDef, type RegisterDef } from './administrasi'
-import { KopSurat, TandaTangan } from './print'
+import { KopSurat, TandaTangan, pejabat } from './print'
 import { getSekolah, getState } from './store'
 import type { Arsip, NilaiArsip } from './types'
 import { fmtTanggal, namaPegawai, today } from './util'
@@ -23,11 +23,7 @@ export function labelNilai(f: FieldDef, v: NilaiArsip): string {
   }
 }
 
-function kepsek() {
-  const s = getSekolah()
-  const k = getState().pegawai.find((p) => p.id === s.kepalaSekolahId)
-  return { jabatan: 'Kepala Sekolah', nama: k ? namaPegawai(k) : undefined, nip: k?.nip ?? '' }
-}
+const kepsek = () => ({ ...pejabat('kepsek'), nip: pejabat('kepsek').nip ?? '' })
 
 const SATUAN = ['', 'satu', 'dua', 'tiga', 'empat', 'lima', 'enam', 'tujuh', 'delapan', 'sembilan', 'sepuluh', 'sebelas']
 export function terbilang(x: number): string {
@@ -81,7 +77,7 @@ function TabelDaftar({ reg, rows, saldoAwal }: { reg: RegisterDef; rows: Baris[]
 
 export function CetakDaftar({ reg, rows, saldoAwal, periode, kelompok }: { reg: RegisterDef; rows: Baris[]; saldoAwal?: number; periode?: string; kelompok?: string }) {
   const sub = [periode && `Periode: ${periode}`, kelompok].filter(Boolean).join(' · ')
-  const bendahara = reg.kas ? { jabatan: 'Bendahara', nama: undefined } : undefined
+  const bendahara = reg.kas ? pejabat('bendahara') : undefined
   // Kartu Inventaris Ruang: satu halaman per ruang.
   if (reg.kelompokCetak) {
     const k = reg.kelompokCetak.k
@@ -146,7 +142,7 @@ export function CetakItem({ reg, a, d }: { reg: RegisterDef; a: Arsip; d: Record
             </tbody>
           </table>
           <div className="kw-jml">{rp(jml)}</div>
-          <TandaTangan kanan={{ jabatan: 'Bendahara / Petugas' }} tanggal={String(d.tanggal ?? today())} />
+          <TandaTangan kanan={pejabat('bendahara', 'Bendahara / Petugas')} tanggal={String(d.tanggal ?? today())} />
         </div>
       )
     }

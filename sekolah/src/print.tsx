@@ -1,25 +1,51 @@
 // Komponen bersama untuk dokumen cetak (kop surat, tanda tangan, rekap absensi).
 import type { ReactNode } from 'react'
-import { getSekolah } from './store'
-import { STATUS_HADIR_LABEL, type Absensi, type StatusHadir } from './types'
-import { BULAN, daysInMonth, fmtTanggal, isoDate, rekapAbsensi } from './util'
+import { getSekolah, getState } from './store'
+import { STATUS_HADIR_LABEL, type Absensi, type Sekolah, type StatusHadir } from './types'
+import { BULAN, daysInMonth, fmtTanggal, isoDate, namaPegawai, rekapAbsensi } from './util'
 
-export function KopSurat({ judul, sub }: { judul?: string; sub?: ReactNode }) {
-  const s = getSekolah()
+const HURUF: Record<string, string> = {
+  Times: "'Times New Roman', Times, serif",
+  Arial: 'Arial, Helvetica, sans-serif',
+  Bookman: "'Bookman Old Style', 'URW Bookman', Georgia, serif",
+  Cambria: 'Cambria, Georgia, serif',
+}
+
+export function alamatLengkap(s: Sekolah) {
+  const rtrw = s.rt || s.rw ? `RT ${s.rt || '-'}/RW ${s.rw || '-'}` : ''
+  return [s.alamat, rtrw, s.dusun, s.kelurahan && `Kel. ${s.kelurahan}`, s.kecamatan && `Kec. ${s.kecamatan}`, s.kabupaten, s.provinsi, s.kodePos].filter(Boolean).join(', ')
+}
+
+export function kontakLengkap(s: Sekolah) {
+  return [s.telepon && `Telp. ${s.telepon}`, s.fax && `Faks. ${s.fax}`, s.email && `Email: ${s.email}`, s.website && `Laman: ${s.website}`].filter(Boolean).join(' · ')
+}
+
+/** Kop surat sesuai pengaturan (Pengaturan → Kop Surat). `sekolah` dipakai untuk pratinjau sebelum disimpan. */
+export function KopSurat({ judul, sub, sekolah }: { judul?: string; sub?: ReactNode; sekolah?: Sekolah }) {
+  const s = sekolah ?? getSekolah()
+  const k = s.kop ?? {}
+  const kiri = k.logoKiri || s.logo
+  const kanan = k.logoKanan === 'sekolah' ? s.logo : k.logoKanan
+  const ukLogo = k.ukuranLogo ?? 70
+  const id = [
+    (k.tampilNpsn ?? true) && s.npsn && `NPSN: ${s.npsn}`,
+    k.tampilNss && s.nss && `NSS: ${s.nss}`,
+    k.tampilAkreditasi && s.akreditasi && `Terakreditasi ${s.akreditasi}`,
+  ].filter(Boolean).join(' · ')
+  const logo = (src?: string) => src ? <img src={src} alt="" className="kop-logo" style={{ width: ukLogo, height: ukLogo }} /> : <div className="kop-logo" style={{ width: ukLogo, height: ukLogo }} />
   return (
-    <div className="kop">
+    <div className={`kop garis-${k.garis ?? 'ganda'}`} style={k.huruf ? { fontFamily: HURUF[k.huruf] } : undefined}>
       <div className="kop-row">
-        {s.logo ? <img src={s.logo} alt="" className="kop-logo" /> : <div className="kop-logo" />}
+        {logo(kiri)}
         <div className="kop-text">
-          {s.yayasan && <div className="kop-yay">{s.yayasan}</div>}
-          <div className="kop-nama">{s.nama}</div>
-          <div className="kop-alamat">
-            {[s.alamat, s.kelurahan, s.kecamatan, s.kabupaten, s.provinsi, s.kodePos].filter(Boolean).join(', ')}
-            {s.telepon ? ` · Telp. ${s.telepon}` : ''}{s.email ? ` · ${s.email}` : ''}
-          </div>
-          {s.npsn && <div className="kop-alamat">NPSN: {s.npsn}</div>}
+          {k.baris1 ? <div className="kop-yay">{k.baris1}</div> : !k.baris2 && s.yayasan ? <div className="kop-yay">{s.yayasan}</div> : null}
+          {k.baris2 && <div className="kop-yay b">{k.baris2}</div>}
+          <div className="kop-nama" style={{ fontSize: k.ukuranNama ? `${k.ukuranNama}pt` : undefined, color: k.warnaNama || undefined }}>{k.namaTampil || s.nama}</div>
+          <div className="kop-alamat">{k.alamatTampil || alamatLengkap(s)}</div>
+          {(k.kontakTampil || kontakLengkap(s)) && <div className="kop-alamat">{k.kontakTampil || kontakLengkap(s)}</div>}
+          {id && <div className="kop-alamat">{id}</div>}
         </div>
-        <div className="kop-logo" />
+        {logo(kanan)}
       </div>
       {judul && <h1 className="doc-title">{judul}</h1>}
       {sub && <div className="doc-sub">{sub}</div>}
@@ -27,23 +53,41 @@ export function KopSurat({ judul, sub }: { judul?: string; sub?: ReactNode }) {
   )
 }
 
-export function TandaTangan({ kiri, kanan, tanggal }: { kiri?: { jabatan: string; nama?: string; nip?: string }; kanan?: { jabatan: string; nama?: string; nip?: string }; tanggal?: string }) {
+type Ttd = { jabatan: string; nama?: string; nip?: string }
+
+export function TandaTangan({ kiri, kanan, tanggal }: { kiri?: Ttd; kanan?: Ttd; tanggal?: string }) {
   const s = getSekolah()
-  const ttd = (x?: { jabatan: string; nama?: string; nip?: string }, top?: ReactNode) => !x ? <div className="ttd" /> : (
-    <div className="ttd">
-      <div>{top ?? ' '}</div>
-      <div>{x?.jabatan ?? ' '}</div>
-      <div className="ttd-space" />
-      <div className="ttd-nama">{x?.nama ?? (x ? '..............................' : ' ')}</div>
-      {x?.nip !== undefined && <div>NIP. {x.nip || '-'}</div>}
-    </div>
-  )
+  const ttd = (x?: Ttd, top?: ReactNode) => {
+    if (!x) return <div className="ttd" />
+    const digital = s.pakaiTtdDigital && /kepala sekolah/i.test(x.jabatan) && (s.ttdKepsek || s.stempel)
+    return (
+      <div className="ttd">
+        <div>{top ?? ' '}</div>
+        <div>{x.jabatan}</div>
+        <div className="ttd-space">
+          {digital && s.stempel && <img className="ttd-stempel" src={s.stempel} alt="" />}
+          {digital && s.ttdKepsek && <img className="ttd-img" src={s.ttdKepsek} alt="" />}
+        </div>
+        <div className="ttd-nama">{x.nama ?? '..............................'}</div>
+        {x.nip !== undefined && <div>NIP. {x.nip || '-'}</div>}
+      </div>
+    )
+  }
   return (
     <div className="ttd-row">
       {ttd(kiri, kiri ? 'Mengetahui,' : undefined)}
       {ttd(kanan, `${s.kotaTtdRapor || s.kabupaten || ''}, ${fmtTanggal(tanggal ?? isoDate(new Date()))}`)}
     </div>
   )
+}
+
+/** Pejabat dari Pengaturan → Pejabat penandatangan. */
+export function pejabat(peran: 'kepsek' | 'waka' | 'bendahara' | 'tu' | 'operator', jabatanDefault?: string): Ttd {
+  const s = getSekolah()
+  const id = { kepsek: s.kepalaSekolahId, waka: s.wakaKurikulumId, bendahara: s.bendaharaId, tu: s.kaTuId, operator: s.operatorId }[peran]
+  const p = getState().pegawai.find((x) => x.id === id)
+  const jab = jabatanDefault ?? { kepsek: 'Kepala Sekolah', waka: 'Wakil Kepala Sekolah Bidang Kurikulum', bendahara: 'Bendahara', tu: 'Kepala Tata Usaha', operator: 'Operator Sekolah' }[peran]
+  return { jabatan: jab, nama: p ? namaPegawai(p) : undefined, nip: p ? p.nip ?? '' : undefined }
 }
 
 export interface Orang { id: string; nama: string; sub?: string }

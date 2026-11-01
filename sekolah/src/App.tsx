@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Icon } from './icons'
 import { useCol, useSekolah } from './store'
 import { Avatar, Btn, KonfirmasiHost, Nav, ToastHost, useNav, type AsalNav, type PageId } from './ui'
@@ -69,6 +69,14 @@ export default function App() {
   const sesi = useSesi()!
   const [profil, setProfil] = useState(!!sesi.peran.wajib2fa && !sesi.akun.totpEnc)
   const sekolah = useSekolah()
+  // Ukuran kertas cetak (Pengaturan → Administrasi & Cetak): A4 atau F4 (215 × 330 mm)
+  useEffect(() => {
+    const f4 = sekolah.ukuranKertas === 'F4'
+    document.documentElement.dataset.kertas = f4 ? 'F4' : 'A4'
+    let st = document.getElementById('simas-kertas')
+    if (!st) { st = document.createElement('style'); st.id = 'simas-kertas'; document.head.appendChild(st) }
+    st.textContent = f4 ? '@page { size: 215mm 330mm; } @page landscape { size: 330mm 215mm; }' : '@page { size: A4; } @page landscape { size: A4 landscape; }'
+  }, [sekolah.ukuranKertas])
   const jmlInvalid = useValidasi().filter((t) => t.level === 'invalid').length
   const menu = MENU.filter((m) => boleh(m.id))
 

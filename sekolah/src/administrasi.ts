@@ -59,7 +59,7 @@ export const ROMAWI = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', '
 const pad3 = (x: number) => String(x).padStart(3, '0')
 const blnRomawi = (tgl: NilaiArsip) => ROMAWI[(tgl ? new Date(String(tgl)).getMonth() : new Date().getMonth())] ?? 'I'
 const thn = (tgl: NilaiArsip) => (tgl ? String(tgl).slice(0, 4) : String(new Date().getFullYear()))
-const kodeSekolah = (s: Sekolah) => s.npsn || 'SKL'
+export const kodeSekolah = (s: Sekolah) => s.kodeSurat || s.npsn || 'SKL'
 
 export const SUMBER_DANA = ['BOSP Reguler', 'BOP PAUD', 'BOS Daerah', 'Komite/Orang Tua', 'Yayasan', 'Lainnya']
 const KONDISI = ['Baik', 'Rusak Ringan', 'Rusak Berat']

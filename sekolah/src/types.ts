@@ -46,6 +46,46 @@ export interface Sekolah {
   /** Penetapan dari Dinas/Ditjen (flag) yang membuka jenis rombel khusus. */
   flag?: { kelasRangkap?: string; pjj?: string; kln?: string } // isi = nomor SK penetapan
   validasiTerakhir?: string
+
+  // ---- Identitas & legalitas (rincian profil Dapodik) ----
+  statusKepemilikan?: 'Pemerintah Pusat' | 'Pemerintah Daerah' | 'Yayasan' | 'Lainnya'
+  skPendirian?: string; tglSkPendirian?: string
+  skIzinOperasional?: string; tglSkIzinOperasional?: string
+  skAkreditasi?: string; tglAkreditasi?: string; akreditasiBerlaku?: string
+  // ---- Lokasi & kontak ----
+  rt?: string; rw?: string; dusun?: string; lintang?: string; bujur?: string; fax?: string; mediaSosial?: string
+  // ---- Data pelengkap ----
+  npwp?: string; namaWajibPajak?: string
+  bank?: string; cabangBank?: string; noRekening?: string; atasNamaRekening?: string
+  luasTanahMilik?: number; sumberListrik?: string; dayaListrik?: number; aksesInternet?: string
+  waktuPenyelenggaraan?: string; mbs?: 'Ya' | 'Tidak'; ketuaKomite?: string
+  // ---- Pejabat penandatangan ----
+  wakaKurikulumId?: string; bendaharaId?: string; kaTuId?: string; operatorId?: string
+  /** Tanda tangan kepala sekolah & stempel (gambar PNG transparan) untuk dicetak pada dokumen. */
+  ttdKepsek?: string; stempel?: string; pakaiTtdDigital?: boolean
+  // ---- Kop surat & cetak ----
+  kop?: KopSetting
+  /** Singkatan sekolah untuk nomor surat, mis. "SHB". Default: NPSN. */
+  kodeSurat?: string
+  ukuranKertas?: 'A4' | 'F4'
+}
+
+export interface KopSetting {
+  /** Logo kiri (mis. logo Pemda/yayasan). Kosong = logo sekolah. */
+  logoKiri?: string
+  /** Logo kanan: data URL, 'sekolah' = logo sekolah, kosong = tanpa logo. */
+  logoKanan?: string
+  baris1?: string // mis. PEMERINTAH KABUPATEN BANDUNG / YAYASAN ...
+  baris2?: string // mis. DINAS PENDIDIKAN
+  namaTampil?: string // default: nama sekolah
+  alamatTampil?: string // default: alamat lengkap otomatis
+  kontakTampil?: string // default: telepon, email, website otomatis
+  tampilNpsn?: boolean; tampilNss?: boolean; tampilAkreditasi?: boolean
+  garis?: 'ganda' | 'tebal-tipis' | 'tunggal' | 'tanpa'
+  huruf?: 'Times' | 'Arial' | 'Bookman' | 'Cambria'
+  ukuranNama?: number // pt
+  warnaNama?: string
+  ukuranLogo?: number // px
 }
 
 export type StatusSiswa = 'Aktif' | 'Lulus' | 'Mutasi Keluar' | 'Keluar' | 'Meninggal'

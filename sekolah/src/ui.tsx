@@ -77,7 +77,7 @@ export function Modal({ title, onClose, children, footer, wide }: { title: strin
 }
 
 // ---------- Form ----------
-export function Field({ label, children, span = 1, hint }: { label: string; children: ReactNode; span?: 1 | 2 | 3 | 4; hint?: string }) {
+export function Field({ label, children, span = 1, hint }: { label: string; children: ReactNode; span?: 1 | 2 | 3 | 4 | 5 | 6; hint?: string }) {
   return (
     <label className={`field span-${span}`}>
       <span className="field-l">{label}</span>
