@@ -884,3 +884,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 .doc.induk table.nilai:not(.ortu) th, .doc.induk table.nilai:not(.ortu) td { border: .3mm solid #9aa5b1; padding: .8mm 2mm; font-weight: 400; }
 .doc.induk table.nilai:not(.ortu) th { background: #eef1f5; font-weight: 700; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 .doc.induk table.nilai:not(.ortu) td.c, .doc.induk table.nilai:not(.ortu) th.c { text-align: center; }
+.doc.induk table.ortu { width: calc(100% - 9mm); margin-left: 9mm; table-layout: auto; }
+.doc.induk table.ortu th:first-child, .doc.induk table.ortu td:first-child { width: 1%; white-space: nowrap; padding-right: 8mm; }
+.doc.induk table.ortu th:not(:first-child), .doc.induk table.ortu td:not(:first-child) { width: 50%; }
+.doc.induk .ket { margin-left: 9mm; }
