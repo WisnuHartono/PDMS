@@ -230,7 +230,8 @@ export default function Pengaturan() {
                   <Field label=" "><Btn onClick={() => set({ kop: undefined })}>Kembalikan bawaan</Btn></Field>
                 </div>
                 <h4 className="sec">Ukuran logo per dokumen</h4>
-                <div className="form-grid g4">
+                <label className="chk"><input type="checkbox" checked={!s.kop?.logoManual} onChange={(e) => setKop({ logoManual: !e.target.checked })} /> Logo otomatis proporsional mengikuti tinggi tulisan kop (disarankan)</label>
+                <div className="form-grid g4" style={s.kop?.logoManual ? undefined : { opacity: 0.5, pointerEvents: 'none' }}>
                   {(['rapor', 'surat', 'adm'] as const).map((j) => {
                     const key = j === 'rapor' ? 'ukuranLogoRapor' : j === 'surat' ? 'ukuranLogoSurat' : 'ukuranLogo'
                     const val = (s.kop?.[key] as number | undefined) ?? (j === 'adm' ? 70 : s.kop?.ukuranLogo ?? 70)

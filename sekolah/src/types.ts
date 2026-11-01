@@ -127,6 +127,7 @@ export interface KopSetting {
   ukuranLogoSurat?: number // px, kosong = ukuranLogo
   /** Skala logo kanan terhadap logo kiri, persen (50-150). */
   skalaLogoKanan?: number
+  logoManual?: boolean // true = pakai ukuran px; default logo mengikuti tinggi teks kop
 }
 
 export type StatusSiswa = 'Aktif' | 'Lulus' | 'Mutasi Keluar' | 'Keluar' | 'Meninggal'

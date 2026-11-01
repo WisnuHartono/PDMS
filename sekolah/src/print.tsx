@@ -1,5 +1,5 @@
 // Komponen bersama untuk dokumen cetak (kop surat, tanda tangan, rekap absensi).
-import type { ReactNode } from 'react'
+import { useLayoutEffect, useRef, type ReactNode } from 'react'
 import { getSekolah, getState } from './store'
 import { STATUS_HADIR_LABEL, type Absensi, type Sekolah, type StatusHadir } from './types'
 import { BULAN, daysInMonth, fmtTanggal, isoDate, namaPegawai, rekapAbsensi } from './util'
@@ -25,6 +25,17 @@ export type JenisKop = 'rapor' | 'surat' | 'adm'
 export function KopSurat({ judul, sub, sekolah, jenis = 'adm' }: { judul?: string; sub?: ReactNode; sekolah?: Sekolah; jenis?: JenisKop }) {
   const s = sekolah ?? getSekolah()
   const k = s.kop ?? {}
+  const baris = useRef<HTMLDivElement>(null)
+  // Logo otomatis: tinggi & lebar logo = tinggi blok tulisan di sebelahnya
+  useLayoutEffect(() => {
+    const fit = () => {
+      const r = baris.current; if (!r) return
+      const h = r.querySelector<HTMLElement>('.kop-text')?.offsetHeight ?? 0
+      if (!h) return
+      r.querySelectorAll<HTMLElement>('.kop-logo.oto').forEach((e, i) => { const uk = Math.round(h * (i === 1 ? (k.skalaLogoKanan ?? 100) / 100 : 1)); e.style.width = `${uk}px`; e.style.height = `${uk}px` })
+    }
+    fit(); document.fonts?.ready.then(fit).catch(() => undefined)
+  })
   const kiri = k.logoKiri || s.logo
   const kanan = k.logoKanan === 'sekolah' ? s.logo : k.logoKanan
   const dasar = k.ukuranLogo ?? 70
@@ -35,10 +46,12 @@ export function KopSurat({ judul, sub, sekolah, jenis = 'adm' }: { judul?: strin
     k.tampilNss && s.nss && `NSS: ${s.nss}`,
     k.tampilAkreditasi && s.akreditasi && `Terakreditasi ${s.akreditasi}`,
   ].filter(Boolean).join(' · ')
-  const logo = (src: string | undefined, uk: number) => src ? <img src={src} alt="" className="kop-logo" style={{ width: uk, height: uk }} /> : <div className="kop-logo" style={{ width: uk, height: uk }} />
+  const oto = !k.logoManual
+  const gaya = (uk: number) => (oto ? undefined : { width: uk, height: uk })
+  const logo = (src: string | undefined, uk: number) => src ? <img src={src} alt="" className={`kop-logo ${oto ? 'oto' : ''}`} style={gaya(uk)} /> : <div className={`kop-logo ${oto ? 'oto' : ''}`} style={gaya(uk)} />
   return (
-    <div className={`kop garis-${k.garis ?? 'ganda'}`} style={k.huruf ? { fontFamily: HURUF[k.huruf] } : undefined}>
-      <div className="kop-row">
+    <div className="kop" style={k.huruf ? { fontFamily: HURUF[k.huruf] } : undefined}>
+      <div ref={baris} className={`kop-row garis-${k.garis ?? 'ganda'}`}>
         {logo(kiri, ukLogo)}
         <div className="kop-text">
           {k.baris1 ? <div className="kop-yay">{k.baris1}</div> : !k.baris2 && s.yayasan ? <div className="kop-yay">{s.yayasan}</div> : null}
