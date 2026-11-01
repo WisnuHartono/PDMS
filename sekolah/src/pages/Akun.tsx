@@ -1,7 +1,7 @@
 import QRCode from 'qrcode'
 import { useEffect, useState } from 'react'
 import { MENU } from '../App'
-import { BIDANG } from '../administrasi'
+import { bidangEfektif } from '../administrasi'
 import {
   KEBIJAKAN_DEFAULT, SEMUA_HALAMAN, aktifkan2fa, buatAkun, buatKodePemulihanBaru, daftarAkun, daftarAudit, daftarPeran, gantiSandi, hapusAkun, hapusPeran,
   kebijakan, nonaktifkan2fa, resetAkun, sandiAcak, simpanKebijakan, simpanPeran, ubahAkun, type Akun as TAkun, type Audit, type Kebijakan, type Peran,
@@ -150,6 +150,7 @@ function DaftarPeran() {
 }
 
 function PeranForm({ initial, onClose }: { initial: Peran; onClose: () => void }) {
+  const arsipAll = useCol('arsip')
   const [p, setP] = useState(initial)
   const toggle = (h: (typeof SEMUA_HALAMAN)[number]) => setP((o) => ({ ...o, halaman: o.halaman.includes(h) ? o.halaman.filter((x) => x !== h) : [...o.halaman, h] }))
   return (
@@ -166,7 +167,7 @@ function PeranForm({ initial, onClose }: { initial: Peran; onClose: () => void }
         <>
           <h4 className="sec">Bidang administrasi (tidak ada yang dicentang = semua bidang)</h4>
           <div className="chips">
-            {BIDANG.map((b) => {
+            {bidangEfektif(arsipAll, true).map((b) => {
               const on = !!p.bidang?.includes(b.id)
               return <label key={b.id} className={`chip ${on ? 'on' : ''}`}><input type="checkbox" checked={on} onChange={() => setP((o) => ({ ...o, bidang: on ? o.bidang?.filter((x) => x !== b.id) : [...(o.bidang ?? []), b.id] }))} />{b.no} {b.nama.replace('Administrasi ', '')}</label>
             })}

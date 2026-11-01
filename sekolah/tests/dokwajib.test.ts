@@ -18,3 +18,22 @@ describe('dokumen wajib kustom', () => {
     expect(dokumenBidang(b, [A(dokDefId(id), { sembunyi: 'Ya' })]).length).toBe(asli.length - 1)
   })
 })
+
+import { BIDANG_REGISTER, bidangDefId, bidangEfektif, dokumenJatuhTempo } from '../src/administrasi'
+describe('bidang kustom', () => {
+  const B = (id: string, data: Arsip['data'], dibuat = ''): Arsip => ({ id: bidangDefId(id), register: BIDANG_REGISTER, data, dibuat })
+  it('menambah, menyembunyikan, dan menomori bidang', () => {
+    const dasar = bidangEfektif([]).length
+    const l = bidangEfektif([B('x-1', { nama: 'Humas Khusus', tema: 'cyan' })])
+    expect(l.length).toBe(dasar + 1)
+    expect(l.at(-1)).toMatchObject({ kustom: true, nama: 'Humas Khusus', no: String(dasar + 1).padStart(2, '0') })
+    expect(bidangEfektif([B('anak', { sembunyi: 'Ya' })]).length).toBe(dasar - 1)
+    expect(bidangEfektif([B('anak', { sembunyi: 'Ya' })], true).find((b) => b.id === 'anak')?.tersembunyi).toBe(true)
+  })
+  it('dokumen wajib pada bidang kustom ikut peringatan', () => {
+    const arsip: Arsip[] = [B('x-1', { nama: 'X' }),
+      { id: dokDefId('x-9'), register: DOKDEF_REGISTER, data: { bidang: 'x-1', nama: 'Izin X', berlaku: 'Ya' }, dibuat: '' },
+      { id: 'dok|x-9', register: '_dok', data: { status: 'Ada', berlaku: '2000-01-01' }, dibuat: '' }]
+    expect(dokumenJatuhTempo(arsip, 0).map((x) => x.nama)).toContain('Izin X')
+  })
+})

@@ -53,7 +53,7 @@ export type ItemDef =
   | { jenis: 'halaman'; page: PageId; nama: string; ket: string }
   | { jenis: 'dokumen'; id: string; nama: string; ket: string; berlaku?: boolean; kustom?: boolean }
 
-export interface Bidang { id: string; no: string; nama: string; ket: string; tema: string; ikon: string; items: ItemDef[] }
+export interface Bidang { id: string; no: string; nama: string; ket: string; tema: string; ikon: string; items: ItemDef[]; kustom?: boolean; tersembunyi?: boolean }
 
 // ---------- utilitas ----------
 const n = (v: NilaiArsip) => (v === undefined || v === '' ? 0 : Number(v) || 0)
@@ -663,6 +663,30 @@ const tu: Bidang = {
 
 export const BIDANG: Bidang[] = [anak, guru, sdm, umum, kepsek, keuangan, sarpras, tu]
 
+/** Bidang administrasi buatan pengguna / bidang bawaan yang disembunyikan disimpan sebagai arsip register '_bidang'. */
+export const BIDANG_REGISTER = '_bidang'
+export const bidangDefId = (id: string) => `bidang|${id}`
+export const TEMA_BIDANG = ['hijau', 'merah', 'ungu', 'biru', 'jingga', 'cyan', 'kuning', 'lavender']
+export const IKON_BIDANG = ['anak', 'guru', 'kepsek', 'mapel', 'prasarana', 'surat', 'uang', 'umum']
+
+/** Daftar bidang efektif: bawaan (kecuali yang disembunyikan) + tambahan pengguna, diberi nomor urut. */
+export function bidangEfektif(arsip: Arsip[], termasukTersembunyi = false): Bidang[] {
+  const defs = arsip.filter((a) => a.register === BIDANG_REGISTER)
+  const out: Bidang[] = []
+  for (const b of BIDANG) {
+    const o = defs.find((a) => a.id === bidangDefId(b.id))
+    if (o?.data.sembunyi && !termasukTersembunyi) continue
+    out.push(o?.data.sembunyi ? { ...b, tersembunyi: true } : b)
+  }
+  for (const a of defs.filter((x) => x.id.startsWith('bidang|x-')).sort((x, y) => x.dibuat.localeCompare(y.dibuat))) {
+    out.push({
+      id: a.id.slice(7), no: '', nama: String(a.data.nama || 'Bidang baru'), ket: String(a.data.ket ?? ''),
+      tema: String(a.data.tema || 'biru'), ikon: String(a.data.ikon || 'umum'), items: [], kustom: true,
+    })
+  }
+  return out.map((b, i) => ({ ...b, no: String(i + 1).padStart(2, '0') }))
+}
+
 export const SEMUA_REGISTER: RegisterDef[] = BIDANG.flatMap((b) => b.items.flatMap((i) => (i.jenis === 'register' ? [i.reg] : [])))
 export const registerById = (id: string) => SEMUA_REGISTER.find((r) => r.id === id)
 export const DOK_REGISTER = '_dok'
@@ -741,7 +765,7 @@ export function ringkasBidang(b: Bidang, arsip: Arsip[]) {
 export function dokumenJatuhTempo(arsip: Arsip[], hari = 90, ref = new Date()) {
   const batas = new Date(ref.getTime() + hari * 864e5).toISOString().slice(0, 10)
   const out: { bidang: Bidang; nama: string; berlaku: string; lewat: boolean }[] = []
-  for (const b of BIDANG) for (const i of dokumenBidang(b, arsip)) {
+  for (const b of bidangEfektif(arsip)) for (const i of dokumenBidang(b, arsip)) {
     const a = arsip.find((x) => x.id === dokId(i.id))
     const tgl = a?.data.berlaku ? String(a.data.berlaku) : ''
     if (tgl && tgl <= batas) out.push({ bidang: b, nama: i.nama, berlaku: tgl, lewat: tgl < ref.toISOString().slice(0, 10) })

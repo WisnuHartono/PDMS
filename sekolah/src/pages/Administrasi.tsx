@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import {
-  BIDANG, DOKDEF_REGISTER, DOK_REGISTER, STATUS_DOKUMEN, barisRegister, dokDefId, dokId, dokumenBidang, dokumenJatuhTempo, nomorOtomatis, ringkasBidang, totalKolom,
+  BIDANG_REGISTER, IKON_BIDANG, TEMA_BIDANG, bidangDefId, bidangEfektif, DOKDEF_REGISTER, DOK_REGISTER, STATUS_DOKUMEN, barisRegister, dokDefId, dokId, dokumenBidang, dokumenJatuhTempo, nomorOtomatis, ringkasBidang, totalKolom,
   type Bidang, type FieldDef, type ItemDef, type RegisterDef,
 } from '../administrasi'
 import { LabelInventaris, OpnameInventaris, butirInventaris } from '../inventaris'
@@ -9,7 +9,7 @@ import { Icon } from '../icons'
 import { put, remove, useCol } from '../store'
 import { bolehBidang, getSesi } from '../security/sesi'
 import type { Arsip, Lampiran, NilaiArsip } from '../types'
-import { Btn, Card, Empty, Field, Modal, PageHead, printDoc, toast, useNav } from '../ui'
+import { Btn, Card, Empty, Field, Modal, PageHead, printDoc, tanya, toast, useNav } from '../ui'
 import { BULAN, fmtTanggal, readFileAsDataUrl, today, uid } from '../util'
 
 export const rupiah = (v: NilaiArsip) => (v === undefined || v === '' ? '' : `Rp ${Number(v).toLocaleString('id-ID')}`)
@@ -51,21 +51,26 @@ function BackBar({ onBack, ke, children }: { onBack: () => void; ke: string; chi
 export default function Administrasi() {
   const [lok, setLokState] = useState<Lokasi>(() => { const l = lokKembali ?? {}; lokKembali = null; return l })
   const setLok = (l: Lokasi) => { setLokState(l); document.querySelector('.content')?.scrollTo(0, 0) }
-  const bidang = BIDANG.filter((b) => bolehBidang(b.id))
+  const arsip = useCol('arsip')
+  const semua = bidangEfektif(arsip, true)
+  const bidang = semua.filter((b) => !b.tersembunyi && bolehBidang(b.id))
   const b = bidang.find((x) => x.id === lok.bidang)
   const r = b?.items.find((i): i is Extract<ItemDef, { jenis: 'register' }> => i.jenis === 'register' && i.reg.id === lok.reg)?.reg
   if (b && r) return <RegisterView bidang={b} reg={r} onBack={() => setLok({ bidang: b.id })} />
-  if (b) return <BidangView bidang={b} onBack={() => setLok({})} onReg={(id) => setLok({ bidang: b.id, reg: id })} />
-  return <Beranda bidang={bidang} onOpen={(id) => setLok({ bidang: id })} />
+  if (b) return <BidangView bidang={b} onBack={() => setLok({})} onHapus={() => setLok({})} onReg={(id) => setLok({ bidang: b.id, reg: id })} />
+  return <Beranda bidang={bidang} tersembunyi={semua.filter((b) => b.tersembunyi)} onOpen={(id) => setLok({ bidang: id })} />
 }
 
 // ---------- Beranda: 8 kartu bidang ----------
-function Beranda({ bidang, onOpen }: { bidang: Bidang[]; onOpen: (id: string) => void }) {
+function Beranda({ bidang, tersembunyi, onOpen }: { bidang: Bidang[]; tersembunyi: Bidang[]; onOpen: (id: string) => void }) {
   const arsip = useCol('arsip')
+  const [formB, setFormB] = useState<Arsip | null>(null)
   const tempo = dokumenJatuhTempo(arsip)
   return (
     <div>
-      <PageHead title="Administrasi Sekolah" sub="Delapan bidang administrasi: buku/register, dokumen wajib, dan modul terkait" />
+      <PageHead title="Administrasi Sekolah" sub={`${bidang.length} bidang administrasi: buku/register, dokumen wajib, dan modul terkait`}>
+        <Btn icon="plus" kind="primary" onClick={() => setFormB(baruBidang())}>Tambah bidang</Btn>
+      </PageHead>
       {tempo.length > 0 && (
         <div className="notice warn mb">
           <b>Dokumen perlu diperbarui:</b>{' '}
@@ -96,13 +101,51 @@ function Beranda({ bidang, onOpen }: { bidang: Bidang[]; onOpen: (id: string) =>
           )
         })}
       </div>
+      {tersembunyi.length > 0 && (
+        <p className="muted small mt">Bidang disembunyikan: {tersembunyi.map((b, i) => (
+          <span key={b.id}>{i ? ', ' : ''}{b.nama} <button className="link" onClick={() => remove('arsip', bidangDefId(b.id))}>tampilkan</button></span>
+        ))}</p>
+      )}
+      {formB && <FormBidang awal={formB} onClose={() => setFormB(null)} />}
     </div>
   )
 }
 
+const baruBidang = (): Arsip => ({ id: bidangDefId('x-' + uid()), register: BIDANG_REGISTER, data: { tema: 'biru', ikon: 'umum' }, dibuat: new Date().toISOString() })
+
+function FormBidang({ awal, onClose }: { awal: Arsip; onClose: () => void }) {
+  return (
+    <FormArsip
+      judul={awal.data.nama ? 'Ubah bidang administrasi' : 'Tambah bidang administrasi'}
+      fields={[
+        { k: 'nama', l: 'Nama bidang', wajib: true, span: 4 },
+        { k: 'ket', l: 'Keterangan', span: 4 },
+        { k: 'tema', l: 'Warna', t: 'select', opsi: TEMA_BIDANG, wajib: true, span: 2 },
+        { k: 'ikon', l: 'Ikon', t: 'select', opsi: IKON_BIDANG, wajib: true, span: 2 },
+      ]}
+      awal={awal} onClose={onClose}
+      onSimpan={async (a) => { await put('arsip', a); toast('Bidang disimpan. Tambahkan dokumen wajib di dalamnya.') }}
+    />
+  )
+}
+
 // ---------- Isi satu bidang ----------
-function BidangView({ bidang, onBack, onReg }: { bidang: Bidang; onBack: () => void; onReg: (id: string) => void }) {
+function BidangView({ bidang, onBack, onReg, onHapus }: { bidang: Bidang; onBack: () => void; onReg: (id: string) => void; onHapus: () => void }) {
   const arsip = useCol('arsip')
+  const [formB, setFormB] = useState<Arsip | null>(null)
+  const hapusBidang = async () => {
+    if (bidang.kustom) {
+      if (!(await tanya('Hapus bidang "' + bidang.nama + '" beserta daftar dokumen wajibnya? Status dan lampiran dokumen ikut terhapus.', 'Hapus'))) return
+      const defs = arsip.filter((a) => a.register === DOKDEF_REGISTER && a.data.bidang === bidang.id)
+      for (const d of defs) { await remove('arsip', d.id); await remove('arsip', dokId(d.id.slice(7))) }
+      await remove('arsip', bidangDefId(bidang.id))
+      toast('Bidang dihapus')
+    } else {
+      if (!(await tanya('Sembunyikan bidang bawaan "' + bidang.nama + '"? Data tidak dihapus dan bidang dapat ditampilkan kembali.', 'Sembunyikan'))) return
+      await put('arsip', { id: bidangDefId(bidang.id), register: BIDANG_REGISTER, data: { sembunyi: 'Ya' }, dibuat: new Date().toISOString() })
+    }
+    onHapus()
+  }
   const nav = useNav()
   const halaman = bidang.items.filter((i): i is Extract<ItemDef, { jenis: 'halaman' }> => i.jenis === 'halaman')
   const regs = bidang.items.filter((i): i is Extract<ItemDef, { jenis: 'register' }> => i.jenis === 'register')
@@ -115,6 +158,11 @@ function BidangView({ bidang, onBack, onReg }: { bidang: Bidang; onBack: () => v
         <div><h2>{bidang.nama}</h2><p className="muted">{bidang.ket}</p></div>
         <span className="adm-no">{bidang.no}</span>
       </div>
+      <div className="row-actions mb">
+        {bidang.kustom && <Btn icon="edit" onClick={() => setFormB(arsip.find((a) => a.id === bidangDefId(bidang.id)) ?? null)}>Ubah bidang</Btn>}
+        <Btn kind="danger" onClick={hapusBidang}>{bidang.kustom ? 'Hapus bidang' : 'Sembunyikan bidang'}</Btn>
+      </div>
+      {formB && <FormBidang awal={formB} onClose={() => setFormB(null)} />}
 
       {halaman.length > 0 && (
         <>
