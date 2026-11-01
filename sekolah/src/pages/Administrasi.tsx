@@ -73,18 +73,24 @@ function Beranda({ bidang, onOpen }: { bidang: Bidang[]; onOpen: (id: string) =>
         </div>
       )}
       {!bidang.length && <Empty>Jenis akun Anda belum diberi akses ke bidang administrasi mana pun.</Empty>}
-      <div className="adm-grid">
+      <div className="adm-list" role="list">
+        <div className="adm-list-h" aria-hidden>
+          <span>No</span><span>Bidang administrasi</span><span className="r">Buku</span><span className="r">Catatan</span><span className="r">Dokumen wajib</span><span />
+        </div>
         {bidang.map((b) => {
           const s = ringkasBidang(b, arsip)
+          const lengkap = s.dokumen > 0 && s.dokAda === s.dokumen
           return (
-            <button key={b.id} className={`adm-card t-${b.tema}`} onClick={() => onOpen(b.id)}>
-              <span className="adm-ikon"><Icon name={b.ikon} size={28} /></span>
-              <span className="adm-teks">
-                <b>{b.nama}</b>
-                <span>{b.ket}</span>
-                <small>{s.register} buku · {s.catatan} catatan{s.dokumen ? ` · dokumen ${s.dokAda}/${s.dokumen}` : ''}</small>
+            <button key={b.id} role="listitem" className={`adm-row t-${b.tema}`} onClick={() => onOpen(b.id)}>
+              <span className="adm-no2">{b.no}</span>
+              <span className="adm-nama">
+                <span className="adm-ikon2"><Icon name={b.ikon} size={20} /></span>
+                <span><b>{b.nama}</b><small>{b.ket}</small></span>
               </span>
-              <span className="adm-no">{b.no}</span>
+              <span className="r">{s.register}</span>
+              <span className="r">{s.catatan}</span>
+              <span className="r">{s.dokumen ? <em className={`pill ${lengkap ? 'ok' : s.dokAda ? 'warn' : ''}`}>{s.dokAda}/{s.dokumen}</em> : <span className="muted">-</span>}</span>
+              <span className="adm-go"><Icon name="chevR" size={16} /></span>
             </button>
           )
         })}
