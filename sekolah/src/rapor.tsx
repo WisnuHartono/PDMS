@@ -55,7 +55,7 @@ export function RaporDoc({ siswa, rombel, semester }: { siswa: Siswa; rombel: Ro
 
   return (
     <div className="doc rapor">
-      <KopSurat />
+      <KopSurat jenis="rapor" />
       <h1 className="doc-title">{kur.judulRapor}</h1>
       <table className="ident">
         <tbody>

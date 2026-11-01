@@ -112,7 +112,7 @@ export function CetakItem({ reg, a, d }: { reg: RegisterDef; a: Arsip; d: Record
     case 'disposisi':
       return (
         <div className="doc">
-          <KopSurat judul="LEMBAR DISPOSISI" />
+          <KopSurat jenis="surat" judul="LEMBAR DISPOSISI" />
           <table className="nilai form-cetak">
             <tbody>
               <tr><td style={{ width: '25%' }}>Surat dari</td><td colSpan={3}>{f('pengirim')}</td></tr>
@@ -158,7 +158,7 @@ export function CetakItem({ reg, a, d }: { reg: RegisterDef; a: Arsip; d: Record
           : `benar-benar tercatat sebagai peserta didik aktif di ${s.nama} pada Tahun Pelajaran ${s.tahunAjaranAktif}${rb ? `, kelas ${rb.nama}` : ''}.`
       return (
         <div className="doc surat">
-          <KopSurat judul={`SURAT ${jenis.toUpperCase()}`} sub={`Nomor: ${f('nomor')}`} />
+          <KopSurat jenis="surat" judul={`SURAT ${jenis.toUpperCase()}`} sub={`Nomor: ${f('nomor')}`} />
           <p>Yang bertanda tangan di bawah ini Kepala {s.nama} menerangkan bahwa:</p>
           <table className="ident">
             <tbody>

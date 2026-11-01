@@ -33,6 +33,7 @@ export default function Pengaturan() {
   const [s, setS] = useState<Sekolah>(sekolah)
   const [bagian, setBagian] = useState<Bagian>('identitas')
   const [ubah, setUbah] = useState(false)
+  const [jenisPrev, setJenisPrev] = useState<'rapor' | 'surat' | 'adm'>('rapor')
   useEffect(() => { setS(sekolah); setUbah(false) }, [sekolah])
   const set = (p: Partial<Sekolah>) => { setS((o) => ({ ...o, ...p })); setUbah(true) }
   const setKop = (p: Partial<KopSetting>) => set({ kop: { ...s.kop, ...p } })
@@ -225,13 +226,26 @@ export default function Pengaturan() {
                   <Field label="Huruf"><select value={s.kop?.huruf ?? 'Times'} onChange={(e) => setKop({ huruf: e.target.value as KopSetting['huruf'] })}>{['Times', 'Arial', 'Bookman', 'Cambria'].map((h) => <option key={h}>{h}</option>)}</select></Field>
                   <Field label="Garis bawah kop"><select value={s.kop?.garis ?? 'ganda'} onChange={(e) => setKop({ garis: e.target.value as KopSetting['garis'] })}><option value="ganda">Garis ganda</option><option value="tebal-tipis">Tebal + tipis</option><option value="tunggal">Tunggal</option><option value="tanpa">Tanpa garis</option></select></Field>
                   <Field label="Ukuran nama (pt)"><input type="number" min={12} max={26} value={s.kop?.ukuranNama ?? 17} onChange={(e) => setKop({ ukuranNama: Number(e.target.value) || undefined })} /></Field>
-                  <Field label="Ukuran logo (px)"><input type="number" min={40} max={110} value={s.kop?.ukuranLogo ?? 70} onChange={(e) => setKop({ ukuranLogo: Number(e.target.value) || undefined })} /></Field>
                   <Field label="Warna nama"><input type="color" value={s.kop?.warnaNama ?? '#000000'} onChange={(e) => setKop({ warnaNama: e.target.value === '#000000' ? undefined : e.target.value })} /></Field>
                   <Field label=" "><Btn onClick={() => set({ kop: undefined })}>Kembalikan bawaan</Btn></Field>
                 </div>
+                <h4 className="sec">Ukuran logo per dokumen</h4>
+                <div className="form-grid g4">
+                  {(['rapor', 'surat', 'adm'] as const).map((j) => {
+                    const key = j === 'rapor' ? 'ukuranLogoRapor' : j === 'surat' ? 'ukuranLogoSurat' : 'ukuranLogo'
+                    const val = (s.kop?.[key] as number | undefined) ?? (j === 'adm' ? 70 : s.kop?.ukuranLogo ?? 70)
+                    const nama = j === 'rapor' ? 'Rapor' : j === 'surat' ? 'Surat' : 'Administrasi'
+                    return (
+                      <Field key={j} label={`${nama}: ${val} px`} hint={j === 'adm' ? 'Register, buku induk, rekap, kuitansi, laporan' : j === 'surat' ? 'Surat dan disposisi' : undefined}>
+                        <input type="range" min={30} max={160} value={val} onChange={(e) => { setJenisPrev(j); setKop({ [key]: Number(e.target.value) } as Partial<KopSetting>) }} />
+                      </Field>
+                    )
+                  })}
+                  <Field label={`Logo kanan: ${s.kop?.skalaLogoKanan ?? 100}%`} hint="Skala terhadap logo kiri"><input type="range" min={50} max={150} value={s.kop?.skalaLogoKanan ?? 100} onChange={(e) => setKop({ skalaLogoKanan: Number(e.target.value) })} /></Field>
+                </div>
               </Card>
-              <Card title="Pratinjau kop" className="kop-prev-card">
-                <div className="kop-prev"><div className="doc"><KopSurat sekolah={s} judul="CONTOH JUDUL DOKUMEN" sub="Nomor: 001/421/SHB/XI/2026" /></div></div>
+              <Card title="Pratinjau kop" className="kop-prev-card" actions={<select value={jenisPrev} onChange={(e) => setJenisPrev(e.target.value as typeof jenisPrev)} aria-label="Pratinjau sebagai"><option value="rapor">Rapor</option><option value="surat">Surat</option><option value="adm">Administrasi lain</option></select>}>
+                <div className="kop-prev"><div className="doc"><KopSurat sekolah={s} jenis={jenisPrev} judul="CONTOH JUDUL DOKUMEN" sub="Nomor: 001/421/SHB/XI/2026" /></div></div>
                 <p className="muted small">Kop ini dipakai di semua cetakan: rapor, buku induk, surat, register administrasi, kuitansi, dan laporan.</p>
               </Card>
             </div>

@@ -21,22 +21,25 @@ export function kontakLengkap(s: Sekolah) {
 }
 
 /** Kop surat sesuai pengaturan (Pengaturan → Kop Surat). `sekolah` dipakai untuk pratinjau sebelum disimpan. */
-export function KopSurat({ judul, sub, sekolah }: { judul?: string; sub?: ReactNode; sekolah?: Sekolah }) {
+export type JenisKop = 'rapor' | 'surat' | 'adm'
+export function KopSurat({ judul, sub, sekolah, jenis = 'adm' }: { judul?: string; sub?: ReactNode; sekolah?: Sekolah; jenis?: JenisKop }) {
   const s = sekolah ?? getSekolah()
   const k = s.kop ?? {}
   const kiri = k.logoKiri || s.logo
   const kanan = k.logoKanan === 'sekolah' ? s.logo : k.logoKanan
-  const ukLogo = k.ukuranLogo ?? 70
+  const dasar = k.ukuranLogo ?? 70
+  const ukLogo = (jenis === 'rapor' ? k.ukuranLogoRapor : jenis === 'surat' ? k.ukuranLogoSurat : undefined) ?? dasar
+  const ukKanan = Math.round(ukLogo * (k.skalaLogoKanan ?? 100) / 100)
   const id = [
     (k.tampilNpsn ?? true) && s.npsn && `NPSN: ${s.npsn}`,
     k.tampilNss && s.nss && `NSS: ${s.nss}`,
     k.tampilAkreditasi && s.akreditasi && `Terakreditasi ${s.akreditasi}`,
   ].filter(Boolean).join(' · ')
-  const logo = (src?: string) => src ? <img src={src} alt="" className="kop-logo" style={{ width: ukLogo, height: ukLogo }} /> : <div className="kop-logo" style={{ width: ukLogo, height: ukLogo }} />
+  const logo = (src: string | undefined, uk: number) => src ? <img src={src} alt="" className="kop-logo" style={{ width: uk, height: uk }} /> : <div className="kop-logo" style={{ width: uk, height: uk }} />
   return (
     <div className={`kop garis-${k.garis ?? 'ganda'}`} style={k.huruf ? { fontFamily: HURUF[k.huruf] } : undefined}>
       <div className="kop-row">
-        {logo(kiri)}
+        {logo(kiri, ukLogo)}
         <div className="kop-text">
           {k.baris1 ? <div className="kop-yay">{k.baris1}</div> : !k.baris2 && s.yayasan ? <div className="kop-yay">{s.yayasan}</div> : null}
           {k.baris2 && <div className="kop-yay b">{k.baris2}</div>}
@@ -45,7 +48,7 @@ export function KopSurat({ judul, sub, sekolah }: { judul?: string; sub?: ReactN
           {(k.kontakTampil || kontakLengkap(s)) && <div className="kop-alamat">{k.kontakTampil || kontakLengkap(s)}</div>}
           {id && <div className="kop-alamat">{id}</div>}
         </div>
-        {logo(kanan)}
+        {logo(kanan, ukKanan)}
       </div>
       {judul && <h1 className="doc-title">{judul}</h1>}
       {sub && <div className="doc-sub">{sub}</div>}

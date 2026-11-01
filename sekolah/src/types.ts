@@ -117,7 +117,11 @@ export interface KopSetting {
   huruf?: 'Times' | 'Arial' | 'Bookman' | 'Cambria'
   ukuranNama?: number // pt
   warnaNama?: string
-  ukuranLogo?: number // px
+  ukuranLogo?: number // px — administrasi umum
+  ukuranLogoRapor?: number // px, kosong = ukuranLogo
+  ukuranLogoSurat?: number // px, kosong = ukuranLogo
+  /** Skala logo kanan terhadap logo kiri, persen (50-150). */
+  skalaLogoKanan?: number
 }
 
 export type StatusSiswa = 'Aktif' | 'Lulus' | 'Mutasi Keluar' | 'Keluar' | 'Meninggal'
