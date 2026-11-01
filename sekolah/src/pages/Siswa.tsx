@@ -118,7 +118,6 @@ function OrtuForm({ v, set, kandung }: { v: OrangTua; set: (p: Partial<OrangTua>
       <Field label="Pekerjaan"><Inp obj={v} k="pekerjaan" set={set} /></Field>
       <Field label="Pendidikan"><Inp obj={v} k="pendidikan" set={set} /></Field>
       <Field label="Tahun lahir"><Inp obj={v} k="tahunLahir" set={set} inputMode="numeric" maxLength={4} /></Field>
-      <Field label="Penghasilan per bulan"><Inp obj={v} k="penghasilan" set={set} /></Field>
       <Field label="Telepon"><Inp obj={v} k="telepon" set={set} /></Field>
       <Field label="Alamat" span={2}><Inp obj={v} k="alamat" set={set} /></Field>
     </>

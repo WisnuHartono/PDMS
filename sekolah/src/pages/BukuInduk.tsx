@@ -124,7 +124,7 @@ export function LembarInduk({ s }: { s: Siswa }) {
       </div>
       <h4 className="sec">D. Keterangan orang tua kandung</h4>
       <table className="nilai ortu"><thead><tr><th>Keterangan</th><th>Ayah</th><th>Ibu</th></tr></thead><tbody>
-        {([['Nama', 'nama'], ['NIK', 'nik'], ['Tahun lahir', 'tahunLahir'], ['Pendidikan terakhir', 'pendidikan'], ['Pekerjaan', 'pekerjaan'], ['Penghasilan per bulan', 'penghasilan'], ['No. HP', 'telepon']] as const).map(([l, k]) => (
+        {([['Nama', 'nama'], ['NIK', 'nik'], ['Tahun lahir', 'tahunLahir'], ['Pendidikan terakhir', 'pendidikan'], ['Pekerjaan', 'pekerjaan'], ['No. HP', 'telepon']] as const).map(([l, k]) => (
           <tr key={k}><td>{l}</td><td>{val(ortu(k)[0] === 'undefined' ? undefined : ortu(k)[0])}</td><td>{val(ortu(k)[1] === 'undefined' ? undefined : ortu(k)[1])}</td></tr>
         ))}
       </tbody></table>
