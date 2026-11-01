@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Icon } from './icons'
 import { exportTerenkripsi, put, useCol, useSekolah } from './store'
-import { jatuhTempo, unggah } from './cloud'
+import { awalanBerkas, jatuhTempo, unggah } from './cloud'
 import { mulaiSinkron, sinkronSekarang } from './sinkron'
+import { LampuKoneksi } from './koneksi'
 import { Avatar, Btn, KonfirmasiHost, Nav, ToastHost, useNav, type AsalNav, type PageId } from './ui'
 import { PrintHost } from './PratinjauCetak'
 import Dashboard from './pages/Dashboard'
@@ -94,7 +95,7 @@ export default function App() {
     setOtoJalan(true)
     void (async () => {
       let hasil: string
-      try { await unggah(c, `simas-cadangan-${new Date().toISOString().slice(0, 10)}.simas.json`, await exportTerenkripsi(c.sandiOto!), 'application/json'); hasil = 'Otomatis: berhasil' }
+      try { await unggah(c, `${awalanBerkas(c)}-cadangan-${new Date().toISOString().slice(0, 10)}.simas.json`, await exportTerenkripsi(c.sandiOto!), 'application/json'); hasil = 'Otomatis: berhasil' }
       catch (e) { hasil = `Otomatis: gagal (${(e as Error).message})` }
       await put('sekolah', { ...sekolah, cloud: { ...c, terakhir: hasil.includes('berhasil') ? new Date().toISOString() : c.terakhir, hasilTerakhir: hasil } })
     })()
@@ -128,6 +129,7 @@ export default function App() {
           </div>
           <div className="topbar-fill" />
           <QuickSearch />
+          <LampuKoneksi />
           <div className="top-sekolah" title={[`TA ${sekolah.tahunAjaranAktif} Semester ${sekolah.semesterAktif === 1 ? 'Ganjil' : 'Genap'}`, sekolah.jenjang.join(' · '), sekolah.alamat].filter(Boolean).join(' · ')}>
             <LogoSekolah logo={sekolah.logo} t={tm} />
             {tm.tampilNama && (

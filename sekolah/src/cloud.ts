@@ -7,12 +7,69 @@ type Res = { status: number; text: string }
 interface Desktop {
   dav?: (r: { method: string; url: string; headers: Record<string, string>; body?: string; bodyB64?: string }) => Promise<Res>
   pilihFolder?: () => Promise<string | null>
-  folderTulis?: (r: { dir: string; nama: string; b64: string; simpan?: number }) => Promise<{ ok: boolean; pesan?: string }>
-  folderDaftar?: (dir: string) => Promise<{ ok: boolean; berkas?: { nama: string; ukuran: number; waktu: string }[]; pesan?: string }>
-  folderBaca?: (r: { dir: string; nama: string }) => Promise<{ ok: boolean; teks?: string; pesan?: string }>
+  folderTulis?: (r: { dir: string; sub?: string; nama: string; b64: string; simpan?: number; awalan?: string }) => Promise<{ ok: boolean; pesan?: string }>
+  folderDaftar?: (r: { dir: string; sub?: string }) => Promise<{ ok: boolean; berkas?: { nama: string; ukuran: number; waktu: string }[]; pesan?: string }>
+  folderBaca?: (r: { dir: string; sub?: string; nama: string }) => Promise<{ ok: boolean; teks?: string; pesan?: string }>
 }
 const desktop = () => (globalThis as unknown as { simas?: Desktop }).simas
 export const adaDesktop = () => !!desktop()?.pilihFolder
+
+// ---------- Folder di perangkat: aplikasi Windows (jalur folder) atau browser (File System Access API) ----------
+type FsHandle = { name: string; kind: string; queryPermission?: (o: { mode: string }) => Promise<string>; requestPermission?: (o: { mode: string }) => Promise<string>; getDirectoryHandle: (n: string, o?: { create: boolean }) => Promise<FsHandle>; getFileHandle: (n: string, o?: { create: boolean }) => Promise<{ getFile: () => Promise<File>; createWritable: () => Promise<{ write: (d: BlobPart) => Promise<void>; close: () => Promise<void> }> }>; entries: () => AsyncIterable<[string, { kind: string; getFile?: () => Promise<File> }]>; removeEntry: (n: string) => Promise<void> }
+export const adaFolderWeb = () => typeof (globalThis as unknown as { showDirectoryPicker?: unknown }).showDirectoryPicker === 'function'
+/** Pemilihan folder tersedia di aplikasi Windows dan di browser berbasis Chromium (Chrome, Edge). */
+export const adaPilihFolder = () => adaDesktop() || adaFolderWeb()
+
+const idb = (): Promise<IDBDatabase> => new Promise((ok, no) => { const r = indexedDB.open('simas-folder', 1); r.onupgradeneeded = () => r.result.createObjectStore('h'); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error) })
+async function simpanHandle(h: FsHandle) { const d = await idb(); await new Promise<void>((ok, no) => { const t = d.transaction('h', 'readwrite'); t.objectStore('h').put(h, 'utama'); t.oncomplete = () => ok(); t.onerror = () => no(t.error) }) }
+async function ambilHandle(): Promise<FsHandle | undefined> { const d = await idb(); return new Promise((ok, no) => { const r = d.transaction('h').objectStore('h').get('utama'); r.onsuccess = () => ok(r.result as FsHandle | undefined); r.onerror = () => no(r.error) }) }
+const segAman = (x?: string) => (x ?? '').replace(/[\\/:*?"<>|]+/g, ' ').trim().slice(0, 80)
+async function dirWeb(c: CloudSetting, buat: boolean): Promise<FsHandle | undefined> {
+  const h = await ambilHandle()
+  if (!h) throw new Error('Folder belum dipilih. Tekan "Pilih folder…".')
+  if ((await h.queryPermission?.({ mode: 'readwrite' })) !== 'granted') throw new Error('IZIN_FOLDER')
+  const sub = segAman(c.subfolder)
+  if (!sub || sub === '.' || sub === '..') return h
+  try { return await h.getDirectoryHandle(sub, { create: buat }) } catch { if (buat) throw new Error('Subfolder tidak dapat dibuat.'); return undefined }
+}
+/** Apakah folder siap dipakai tanpa interaksi pengguna (izin browser masih berlaku). */
+export async function folderSiap(c: CloudSetting): Promise<boolean> {
+  if (desktop()?.folderTulis) return !!c.folder
+  try { return (await (await ambilHandle())?.queryPermission?.({ mode: 'readwrite' })) === 'granted' } catch { return false }
+}
+/** Minta izin akses folder lagi (harus dari klik pengguna). */
+export async function izinkanFolder(): Promise<boolean> {
+  try { const h = await ambilHandle(); return !!h && (await h.requestPermission?.({ mode: 'readwrite' })) === 'granted' } catch { return false }
+}
+async function webTulis(c: CloudSetting, nama: string, u8: Uint8Array, simpan?: number) {
+  const d = (await dirWeb(c, true))!
+  const w = await (await d.getFileHandle(nama, { create: true })).createWritable()
+  await w.write(u8 as BlobPart); await w.close()
+  if (simpan && simpan >= 1 && nama.endsWith('.simas.json')) {
+    const awal = `${(c.awalan || 'simas').replace(/[^\w-]+/g, '') || 'simas'}-cadangan-`
+    const info: { n: string; t: number }[] = []
+    for await (const [n, e] of d.entries()) if (e.kind === 'file' && n.startsWith(awal) && n.endsWith('.simas.json')) info.push({ n, t: (await e.getFile!()).lastModified })
+    info.sort((a, b) => b.t - a.t)
+    for (const x of info.slice(simpan)) await d.removeEntry(x.n).catch(() => undefined)
+  }
+}
+async function webDaftar(c: CloudSetting): Promise<BerkasCloud[]> {
+  const d = await dirWeb(c, false)
+  if (!d) return []
+  const out: BerkasCloud[] = []
+  for await (const [n, e] of d.entries()) {
+    if (e.kind !== 'file' || !/\.(simas\.json|xlsx|zip|csv)$/i.test(n)) continue
+    const f = await e.getFile!()
+    out.push({ id: n, nama: n, ukuran: f.size, waktu: new Date(f.lastModified).toISOString() })
+  }
+  return out.sort((a, b) => (b.waktu ?? '').localeCompare(a.waktu ?? '')).slice(0, 100)
+}
+async function webBaca(c: CloudSetting, nama: string) {
+  const d = await dirWeb(c, false)
+  if (!d) throw new Error('Subfolder tidak ditemukan.')
+  return (await (await (await d.getFileHandle(nama)).getFile()).text())
+}
+const pesanFolder = (e: unknown) => { const m = (e as Error)?.message; return m === 'IZIN_FOLDER' ? new Error('Izin akses folder perlu disetujui ulang (tekan "Izinkan akses folder").') : (e as Error) }
 
 export const KOSONG: CloudSetting = { tujuan: 'lokal', otomatis: 'mati', simpanTerbaru: 10 }
 
@@ -156,10 +213,17 @@ export async function unggah(c: CloudSetting, nama: string, isi: string | Uint8A
   if (c.tujuan === 'webdav') { await davSiapkan(c); cekDav(await davKirim(c, 'PUT', davPath(c, nama), { 'Content-Type': mime }, u8), 'Mengunggah'); return `Tersimpan di server WebDAV › ${FOLDER_DAV}` }
   if (c.tujuan === 'folder') {
     const d = desktop()
-    if (!d?.folderTulis || !c.folder) throw new Error('Pilih folder tujuan lebih dulu (khusus aplikasi Windows).')
-    const r = await d.folderTulis({ dir: c.folder, nama, b64: b64(u8), simpan: nama.endsWith('.simas.json') ? c.simpanTerbaru : undefined })
-    if (!r.ok) throw new Error(r.pesan || 'Gagal menulis ke folder.')
-    return `Tersimpan di ${c.folder}`
+    const simpan = /^[\w-]+-cadangan-/.test(nama) ? c.simpanTerbaru : undefined
+    const lokasi = `${c.folder || 'folder pilihan'}${c.subfolder ? ' › ' + c.subfolder : ''}`
+    if (d?.folderTulis) {
+      if (!c.folder) throw new Error('Pilih folder tujuan lebih dulu.')
+      const r = await d.folderTulis({ dir: c.folder, sub: c.subfolder, nama, b64: b64(u8), simpan, awalan: c.awalan })
+      if (!r.ok) throw new Error(r.pesan || 'Gagal menulis ke folder.')
+    } else {
+      if (!adaFolderWeb()) throw new Error('Browser ini tidak mendukung pemilihan folder. Gunakan Chrome/Edge atau aplikasi Windows.')
+      try { await webTulis(c, nama, u8, simpan) } catch (e) { throw pesanFolder(e) }
+    }
+    return `Tersimpan di ${lokasi}`
   }
   throw new Error('Tujuan penyimpanan belum dipilih.')
 }
@@ -173,7 +237,8 @@ export async function cariBerkas(c: CloudSetting, nama: string): Promise<BerkasC
   if (c.tujuan === 'gdrive') return gCari(nama)
   if (c.tujuan === 'webdav') return (await davDaftar(c)).find((b) => b.nama === nama)
   if (c.tujuan === 'folder') {
-    const r = await desktop()?.folderDaftar?.(c.folder ?? '')
+    if (!desktop()?.folderDaftar) { try { return (await webDaftar(c)).find((x) => x.nama === nama) } catch (e) { throw pesanFolder(e) } }
+    const r = await desktop()?.folderDaftar?.({ dir: c.folder ?? '', sub: c.subfolder })
     if (!r?.ok) throw new Error(r?.pesan || 'Folder tidak dapat dibaca.')
     const b = r.berkas?.find((x) => x.nama === nama)
     return b ? { id: b.nama, ...b } : undefined
@@ -184,7 +249,8 @@ export async function daftar(c: CloudSetting): Promise<BerkasCloud[]> {
   if (c.tujuan === 'gdrive') return (await gDaftar()).filter((b) => b.nama.endsWith('.simas.json'))
   if (c.tujuan === 'webdav') return (await davDaftar(c)).filter((b) => b.nama.endsWith('.simas.json'))
   if (c.tujuan === 'folder') {
-    const r = await desktop()?.folderDaftar?.(c.folder ?? '')
+    if (!desktop()?.folderDaftar) { try { return (await webDaftar(c)).filter((b) => b.nama.endsWith('.simas.json')) } catch (e) { throw pesanFolder(e) } }
+    const r = await desktop()?.folderDaftar?.({ dir: c.folder ?? '', sub: c.subfolder })
     if (!r?.ok) throw new Error(r?.pesan || 'Folder tidak dapat dibaca.')
     return (r.berkas ?? []).filter((b) => b.nama.endsWith('.simas.json')).map((b) => ({ id: b.nama, ...b }))
   }
@@ -193,10 +259,20 @@ export async function daftar(c: CloudSetting): Promise<BerkasCloud[]> {
 export async function unduh(c: CloudSetting, b: BerkasCloud): Promise<string> {
   if (c.tujuan === 'gdrive') return (await gFetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(b.id)}?alt=media`)).text()
   if (c.tujuan === 'webdav') { const r = await davKirim(c, 'GET', davPath(c, b.nama)); cekDav(r, 'Mengunduh'); return r.text }
-  if (c.tujuan === 'folder') { const r = await desktop()?.folderBaca?.({ dir: c.folder ?? '', nama: b.nama }); if (!r?.ok) throw new Error(r?.pesan || 'Gagal membaca berkas.'); return r.teks ?? '' }
+  if (c.tujuan === 'folder' && !desktop()?.folderBaca) { try { return await webBaca(c, b.nama) } catch (e) { throw pesanFolder(e) } }
+  if (c.tujuan === 'folder') { const r = await desktop()?.folderBaca?.({ dir: c.folder ?? '', sub: c.subfolder, nama: b.nama }); if (!r?.ok) throw new Error(r?.pesan || 'Gagal membaca berkas.'); return r.teks ?? '' }
   throw new Error('Tujuan penyimpanan belum dipilih.')
 }
-export async function pilihFolder() { return (await desktop()?.pilihFolder?.()) ?? null }
+export async function pilihFolder(): Promise<string | null> {
+  if (desktop()?.pilihFolder) return (await desktop()!.pilihFolder!()) ?? null
+  try {
+    const h = (await (globalThis as unknown as { showDirectoryPicker: (o: object) => Promise<FsHandle> }).showDirectoryPicker({ mode: 'readwrite', id: 'simas-cadangan' }))
+    await simpanHandle(h)
+    return h.name
+  } catch (e) { if ((e as Error).name === 'AbortError') return null; throw e }
+}
+/** Awalan nama berkas cadangan yang bisa diubah pengguna. */
+export const awalanBerkas = (c?: CloudSetting) => (c?.awalan || 'simas').replace(/[^\w-]+/g, '') || 'simas'
 
 /** Uji koneksi: membaca daftar cadangan di tujuan. */
 export async function uji(c: CloudSetting): Promise<string> {

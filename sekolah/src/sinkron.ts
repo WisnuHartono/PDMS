@@ -2,7 +2,7 @@
 // (termasuk dokumen/lampiran dan foto) diunggah terenkripsi ke tujuan cloud. Saat offline, perubahan menunggu dan
 // diunggah otomatis begitu koneksi kembali. Bentrok antarperangkat tidak ditimpa diam-diam.
 import { useSyncExternalStore } from 'react'
-import { cariBerkas, googleTerhubung, timpa, unduh } from './cloud'
+import { cariBerkas, folderSiap, googleTerhubung, timpa, unduh } from './cloud'
 import { exportTerenkripsi, getState, importJson, subscribe } from './store'
 import type { CloudSetting } from './types'
 
@@ -68,6 +68,7 @@ export async function sinkronSekarang(cfg: CloudSetting | undefined, opsi: { pak
   if (sibuk) return
   if (!online()) return setStatus({ fase: 'offline', pesan: status.kotor ? 'Offline: perubahan tersimpan lokal, diunggah saat online' : 'Offline: data tersimpan lokal' })
   if (c.tujuan === 'gdrive' && !googleTerhubung()) return setStatus({ fase: 'tunda', pesan: 'Sambungkan ulang Google Drive (izin berakhir)' })
+  if (c.tujuan === 'folder' && !(await folderSiap(c))) return setStatus({ fase: 'tunda', pesan: 'Izinkan akses ke folder tujuan (izin browser berakhir)' })
   sibuk = true
   setStatus({ fase: 'jalan', pesan: 'Menyinkronkan…' })
   try {

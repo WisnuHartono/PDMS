@@ -84,6 +84,14 @@ if (!app.requestSingleInstanceLock()) {
     if (typeof dir !== 'string' || !path.isAbsolute(dir)) return false
     try { return (await fs.stat(dir)).isDirectory() } catch { return false }
   }
+  const urai = async (dir, sub, buat) => {
+    if (!(await folderOk(dir))) return null
+    const seg = String(sub || '').replace(/[\\/:*?"<>|]+/g, ' ').trim().slice(0, 80)
+    if (!seg || seg === '.' || seg === '..') return dir
+    const d = path.join(dir, seg)
+    if (buat) await fs.mkdir(d, { recursive: true })
+    return (await folderOk(d)) ? d : buat ? null : undefined
+  }
   const namaOk = (n) => typeof n === 'string' && n === path.basename(n) && /^[\w.\- ()]+$/.test(n) && n.length < 160 && /\.(simas\.json|xlsx|zip|csv)$/i.test(n)
   ipcMain.handle('simas:pilih-folder', async (e) => {
     const win = BrowserWindow.fromWebContents(e.sender)
@@ -92,24 +100,30 @@ if (!app.requestSingleInstanceLock()) {
   })
   ipcMain.handle('simas:folder-tulis', async (_e, r) => {
     try {
-      if (!(await folderOk(r?.dir))) return { ok: false, pesan: 'Folder tujuan tidak ditemukan.' }
+      const dir = await urai(r?.dir, r?.sub, true)
+      if (!dir) return { ok: false, pesan: 'Folder tujuan tidak ditemukan.' }
       if (!namaOk(r.nama)) return { ok: false, pesan: 'Nama berkas tidak valid.' }
       const buf = Buffer.from(String(r.b64 ?? ''), 'base64')
       if (buf.length > 400 * 1024 * 1024) return { ok: false, pesan: 'Berkas terlalu besar.' }
-      await fs.writeFile(path.join(r.dir, r.nama), buf)
+      await fs.writeFile(path.join(dir, r.nama), buf)
       const keep = Number(r.simpan)
       if (keep >= 1 && /\.simas\.json$/i.test(r.nama)) {
-        const lama = (await fs.readdir(r.dir)).filter((f) => /^simas-.*\.simas\.json$/i.test(f))
-        const info = await Promise.all(lama.map(async (f) => ({ f, t: (await fs.stat(path.join(r.dir, f))).mtimeMs })))
+        const awal = String(r.awalan || 'simas').replace(/[^\w-]+/g, '').slice(0, 40) || 'simas'
+        const lama = (await fs.readdir(dir)).filter((f) => f.startsWith(`${awal}-cadangan-`) && /\.simas\.json$/i.test(f))
+        const info = await Promise.all(lama.map(async (f) => ({ f, t: (await fs.stat(path.join(dir, f))).mtimeMs })))
         info.sort((a, b) => b.t - a.t)
-        for (const x of info.slice(keep)) await fs.unlink(path.join(r.dir, x.f)).catch(() => {})
+        for (const x of info.slice(keep)) await fs.unlink(path.join(dir, x.f)).catch(() => {})
       }
       return { ok: true }
     } catch (err) { return { ok: false, pesan: `Gagal menulis: ${err.message}` } }
   })
-  ipcMain.handle('simas:folder-daftar', async (_e, dir) => {
+  ipcMain.handle('simas:folder-daftar', async (_e, req) => {
     try {
-      if (!(await folderOk(dir))) return { ok: false, pesan: 'Folder tidak ditemukan.' }
+      const induk = typeof req === 'string' ? req : req?.dir
+      if (!(await folderOk(induk))) return { ok: false, pesan: 'Folder tidak ditemukan.' }
+      const dir = await urai(induk, typeof req === 'string' ? '' : req?.sub, false)
+      if (dir === undefined) return { ok: true, berkas: [] }
+      if (!dir) return { ok: false, pesan: 'Folder tidak ditemukan.' }
       const out = []
       for (const f of await fs.readdir(dir)) {
         if (!namaOk(f)) continue
@@ -122,8 +136,9 @@ if (!app.requestSingleInstanceLock()) {
   })
   ipcMain.handle('simas:folder-baca', async (_e, r) => {
     try {
-      if (!(await folderOk(r?.dir)) || !namaOk(r.nama)) return { ok: false, pesan: 'Berkas tidak valid.' }
-      const file = path.join(r.dir, r.nama)
+      const dir = await urai(r?.dir, r?.sub, false)
+      if (!dir || !namaOk(r.nama)) return { ok: false, pesan: 'Berkas tidak valid.' }
+      const file = path.join(dir, r.nama)
       if ((await fs.stat(file)).size > 400 * 1024 * 1024) return { ok: false, pesan: 'Berkas terlalu besar.' }
       return { ok: true, teks: await fs.readFile(file, 'utf8') }
     } catch (err) { return { ok: false, pesan: err.message } }

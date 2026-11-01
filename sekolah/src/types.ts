@@ -348,6 +348,9 @@ export interface CloudSetting {
   davUrl?: string; davUser?: string; davSandi?: string
   /** Folder di perangkat (aplikasi Windows). */
   folder?: string
+  /** Subfolder di dalam folder tujuan (opsional) dan awalan nama berkas cadangan. */
+  subfolder?: string
+  awalan?: string
   otomatis?: 'mati' | 'harian' | 'mingguan'
   /** Sinkronisasi otomatis: data terbaru diunggah saat online, perubahan saat offline menunggu. */
   sinkron?: boolean

@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { adaDesktop, daftar, googleTerhubung, hubungkanGoogle, jatuhTempo, KOSONG, pilihFolder, putusGoogle, unduh, unggah, uji, type BerkasCloud } from '../cloud'
+import { adaDesktop, adaPilihFolder, awalanBerkas, daftar, folderSiap, izinkanFolder, googleTerhubung, hubungkanGoogle, jatuhTempo, KOSONG, pilihFolder, putusGoogle, unduh, unggah, uji, type BerkasCloud } from '../cloud'
 import { MIME_XLSX, buatXlsx, buatZip, csvDari, susunLembar } from '../ekspor'
 import { ambilDariCloud, sinkronSekarang, timpaCloud, useStatusSinkron } from '../sinkron'
+import { LampuKoneksi } from '../koneksi'
 import { seedDemo } from '../seed'
 import { DEFAULT_SEKOLAH, cadanganTerenkripsi, exportTerenkripsi, getState, importJson, put, resetAll, useSekolah } from '../store'
 import type { CloudSetting, TujuanCadangan } from '../types'
@@ -9,8 +10,8 @@ import { Btn, Card, Field, toast, tanya } from '../ui'
 import { download, fmtTanggal, readFileAsText, today } from '../util'
 
 const TUJUAN: [TujuanCadangan, string, string][] = [
-  ['lokal', 'Lokal saja (tanpa cloud)', 'Berkas diunduh ke perangkat ini'],
-  ['folder', 'Folder sinkron desktop (Windows)', 'Folder Google Drive, OneDrive, Dropbox di Windows'],
+  ['lokal', 'Unduhan browser (tanpa cloud)', 'Berkas diunduh ke perangkat ini'],
+  ['folder', 'Folder di perangkat (pilih lokasi)', 'Folder lokal, flashdisk, atau folder sinkron Google Drive/OneDrive/Dropbox'],
   ['gdrive', 'Google Drive (versi web)', 'Izin langsung ke akun Google (versi web)'],
   ['webdav', 'WebDAV (Nextcloud, dll.)', 'Nextcloud, ownCloud, Synology, Box, dll.'],
 ]
@@ -21,13 +22,17 @@ function KonfirmasiBtn({ label, tanya: q, onYa, danger }: { label: ReactNode; ta
   return <Btn kind={danger || siap ? 'danger' : 'default'} onClick={async () => { if (!siap) return setSiap(true); setSiap(false); await onYa() }}>{siap ? q : label}</Btn>
 }
 
+const adaFolderWebOk = !adaDesktop()
 const ukuran = (n?: number) => (n === undefined ? '' : n > 1048576 ? `${(n / 1048576).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1024))} KB`)
 
 export default function DataCadangan() {
   const sekolah = useSekolah()
+  const st = useStatusSinkron()
   const tersimpan: CloudSetting = { ...KOSONG, ...sekolah.cloud }
   const [c, setC] = useState<CloudSetting>(tersimpan)
   const [gOk, setGOk] = useState(googleTerhubung())
+  const [izinFolder, setIzinFolder] = useState(true)
+  useEffect(() => { if (tersimpan.tujuan === 'folder') void folderSiap(tersimpan).then(setIzinFolder) }, [tersimpan.tujuan, tersimpan.folder, st.fase])
   const [sibuk, setSibuk] = useState('')
   const [sandi, setSandi] = useState('')
   const [pilihan, setPilihan] = useState<BerkasCloud[] | null>(null)
@@ -51,7 +56,6 @@ export default function DataCadangan() {
     return unggah(c, nama, isi, mime)
   }
 
-  const st = useStatusSinkron()
   const kunci = sandi || c.sandiOto || ''
   const tampilFase = { mati: '', siap: 'ok', jalan: 'warn', offline: 'warn', tunda: 'warn', konflik: 'bad', gagal: 'bad' }[st.fase]
   const lokasiLengkap = c.tujuan === 'webdav' ? !!(c.davUrl && c.davUser) : c.tujuan === 'folder' ? !!c.folder : c.tujuan === 'gdrive' ? !!c.gClientId : false
@@ -60,10 +64,12 @@ export default function DataCadangan() {
     <div className="dc">
       <Card title="Sinkronisasi otomatis & lokasi cloud" className="mb">
         <div className="dc-status">
+          <LampuKoneksi />
           <em className={`pill ${tampilFase}`}>{{ mati: 'Mati', siap: 'Tersinkron', jalan: 'Menyinkronkan', offline: 'Offline', tunda: 'Menunggu izin', konflik: 'Bentrok data', gagal: 'Gagal' }[st.fase]}</em>
           <span className="small">{st.pesan}{st.kotor ? ' · ada perubahan belum terunggah' : ''}{st.terakhir ? ` · terakhir ${new Date(st.terakhir).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}` : ''}</span>
           <span className="dc-sp" />
           {c.sinkron && <Btn disabled={!!sibuk || st.fase === 'jalan'} onClick={() => sinkronSekarang(tersimpan)}>Sinkronkan sekarang</Btn>}
+          {c.tujuan === 'folder' && !izinFolder && adaFolderWebOk && <Btn kind="primary" onClick={async () => { if (await izinkanFolder()) { setIzinFolder(true); void sinkronSekarang(tersimpan) } else toast('Izin folder ditolak') }}>Izinkan akses folder</Btn>}
           {c.tujuan === 'gdrive' && gOk === false && c.gClientId && <Btn kind="primary" onClick={() => jalan('g', async () => { await simpanC(); await hubungkanGoogle(c.gClientId!); setGOk(true); void sinkronSekarang(tersimpan) })}>Hubungkan Google Drive</Btn>}
         </div>
         {st.fase === 'konflik' && (
@@ -85,13 +91,15 @@ export default function DataCadangan() {
             <Field label="Kata sandi aplikasi" span={1}><input type="password" value={c.davSandi ?? ''} onChange={(e) => ubah({ davSandi: e.target.value })} autoComplete="new-password" /></Field>
           </>}
           {c.tujuan === 'gdrive' && <Field label="OAuth Client ID Google" span={3}><input value={c.gClientId ?? ''} onChange={(e) => ubah({ gClientId: e.target.value })} placeholder="1234567890-abc.apps.googleusercontent.com" /></Field>}
-          {c.tujuan === 'folder' && (
-            <Field label="Folder tujuan" span={3}>
-              {adaDesktop()
-                ? <div className="filters"><Btn onClick={async () => { const p = await pilihFolder(); if (p) ubah({ folder: p }) }}>Pilih folder…</Btn><code className="small">{c.folder || 'belum dipilih'}</code></div>
-                : <span className="small bad-t">Hanya di aplikasi Windows. Di versi web pakai Google Drive atau WebDAV.</span>}
+          {c.tujuan === 'folder' && <>
+            <Field label="Folder penyimpanan lokal" span={2}>
+              {adaPilihFolder()
+                ? <div className="filters"><Btn onClick={() => jalan('pf', async () => { const p = await pilihFolder(); if (p) { ubah({ folder: p }); setIzinFolder(true) } })}>Pilih folder…</Btn><code className="small dc-path" title={c.folder}>{c.folder || 'belum dipilih'}</code></div>
+                : <span className="small bad-t">Browser ini belum mendukung pilih folder (pakai Chrome/Edge atau aplikasi Windows).</span>}
             </Field>
-          )}
+            <Field label="Subfolder (opsional)" span={1}><input value={c.subfolder ?? ''} onChange={(e) => ubah({ subfolder: e.target.value })} placeholder="mis. SIMAS 2026" /></Field>
+            <Field label="Awalan nama berkas" span={1}><input value={c.awalan ?? ''} onChange={(e) => ubah({ awalan: e.target.value.replace(/[^\w-]+/g, '') })} placeholder="simas" /></Field>
+          </>}
           {c.tujuan !== 'lokal' && <>
             <Field label="Kata sandi enkripsi (min. 12 karakter)" span={2}><input type="password" value={c.sandiOto ?? ''} onChange={(e) => ubah({ sandiOto: e.target.value })} autoComplete="new-password" placeholder="Dipakai mengunci data sebelum dikirim" /></Field>
             <Field label="Sinkronisasi otomatis" span={1}><label className="dc-cek"><input type="checkbox" checked={!!c.sinkron} disabled={(c.sandiOto?.length ?? 0) < 12 || !lokasiLengkap} onChange={(e) => ubah({ sinkron: e.target.checked })} /> Aktif saat online</label></Field>
@@ -107,7 +115,7 @@ export default function DataCadangan() {
           <summary>Cara kerja &amp; panduan penyambungan</summary>
           <p className="small"><b>Cara kerja.</b> Data selalu tersimpan lebih dulu di perangkat ini, sehingga aplikasi tetap bisa dipakai tanpa internet. Saat online, setiap perubahan (data, dokumen/lampiran, foto) diunggah otomatis ±15 detik kemudian, terenkripsi dengan kata sandi di atas, sehingga penyedia cloud tidak dapat membacanya. Perubahan saat offline menunggu dan diunggah otomatis begitu koneksi kembali. SIMAS memeriksa cloud tiap 5 menit dan saat dibuka: bila perangkat ini tidak punya perubahan tertunda, data terbaru dari cloud diambil; bila keduanya berubah, SIMAS tidak menimpa diam-diam dan meminta Anda memilih. Akun login tidak ikut disinkronkan.</p>
           {c.tujuan === 'lokal' && <p className="small">Pilih tujuan cloud di atas untuk mengaktifkan sinkronisasi. Dengan “Lokal”, cadangan hanya diunduh sebagai berkas.</p>}
-          {c.tujuan === 'folder' && <ol className="small"><li>Pasang aplikasi desktop (mis. <i>Google Drive untuk desktop</i>, OneDrive, atau Dropbox) dan masuk dengan akun sekolah.</li><li>Pilih folder di dalam folder sinkronnya lewat “Pilih folder…”.</li><li>SIMAS menulis ke folder itu, lalu aplikasi sinkronisasi menaikkannya ke cloud tanpa SIMAS mengetahui sandi akun Anda.</li></ol>}
+          {c.tujuan === 'folder' && <ol className="small"><li>Tekan “Pilih folder…” dan tentukan lokasi bebas: folder biasa, flashdisk/hard disk eksternal, atau folder jaringan. Subfolder dan awalan nama berkas bisa disesuaikan.</li><li>Ingin otomatis naik ke cloud? Pilih folder di dalam <i>Google Drive untuk desktop</i>, OneDrive, atau Dropbox; aplikasi sinkronisasinya yang mengunggah, tanpa SIMAS mengetahui sandi akun Anda.</li><li>Di browser (Chrome/Edge) izin akses folder berlaku per sesi dan perlu disetujui lagi saat dibuka ulang (tombol “Izinkan akses folder”). Aplikasi Windows tidak memerlukannya.</li></ol>}
           {c.tujuan === 'gdrive' && <>
             <ol className="small">
               <li>Buka <a href="https://console.cloud.google.com/projectcreate" target="_blank" rel="noreferrer">Google Cloud Console</a>, buat proyek (mis. “SIMAS Sekolah”).</li>
@@ -130,9 +138,9 @@ export default function DataCadangan() {
         <Card title="Ekspor ke Excel / CSV">
           <p className="muted small">{lembar.length} lembar · {jmlBaris.toLocaleString('id-ID')} baris, satu lembar per jenis data/buku administrasi. Foto, logo, kunci API tidak ikut. <b>Tidak terenkripsi</b> — simpan di tempat aman.</p>
           <div className="filters">
-            <Btn icon="download" kind="primary" onClick={() => { download(`simas-database-${today()}.xlsx`, new Blob([buatXlsx(lembar) as BlobPart], { type: MIME_XLSX }), MIME_XLSX); toast('Berkas Excel diunduh') }}>Excel (.xlsx)</Btn>
-            <Btn icon="download" onClick={() => { download(`simas-csv-${today()}.zip`, new Blob([buatZip(lembar.map((l) => ({ nama: `${l.nama}.csv`, isi: csvDari(l, pemisah) }))) as BlobPart], { type: 'application/zip' }), 'application/zip'); toast('ZIP berisi CSV diunduh') }}>Semua CSV (.zip)</Btn>
-            {adaCloud && <Btn icon="upload" disabled={!!sibuk} onClick={() => jalan('xlsx', async () => toast(await kirim(`simas-database-${today()}.xlsx`, buatXlsx(lembar), MIME_XLSX)))}>{sibuk === 'xlsx' ? 'Mengirim…' : 'Kirim Excel ke cloud'}</Btn>}
+            <Btn icon="download" kind="primary" onClick={() => { download(`${awalanBerkas(c)}-database-${today()}.xlsx`, new Blob([buatXlsx(lembar) as BlobPart], { type: MIME_XLSX }), MIME_XLSX); toast('Berkas Excel diunduh') }}>Excel (.xlsx)</Btn>
+            <Btn icon="download" onClick={() => { download(`${awalanBerkas(c)}-csv-${today()}.zip`, new Blob([buatZip(lembar.map((l) => ({ nama: `${l.nama}.csv`, isi: csvDari(l, pemisah) }))) as BlobPart], { type: 'application/zip' }), 'application/zip'); toast('ZIP berisi CSV diunduh') }}>Semua CSV (.zip)</Btn>
+            {adaCloud && <Btn icon="upload" disabled={!!sibuk} onClick={() => jalan('xlsx', async () => toast(await kirim(`${awalanBerkas(c)}-database-${today()}.xlsx`, buatXlsx(lembar), MIME_XLSX)))}>{sibuk === 'xlsx' ? 'Mengirim…' : 'Kirim Excel ke cloud'}</Btn>}
           </div>
           <div className="filters dc-gap">
             <select value={lembarDipilih} onChange={(e) => setLembarDipilih(e.target.value)} aria-label="Lembar untuk CSV tunggal">
@@ -149,7 +157,7 @@ export default function DataCadangan() {
           <div className="filters">
             <input type="password" placeholder={c.sandiOto ? 'Kata sandi (kosong = sandi di atas)' : 'Kata sandi cadangan (min. 12)'} value={sandi} onChange={(e) => setSandi(e.target.value)} autoComplete="new-password" aria-label="Kata sandi cadangan" style={{ width: 230 }} />
             <Btn icon="download" kind="primary" disabled={kunci.length < 12 || !!sibuk} onClick={() => jalan('cad', async () => {
-              const hasil = await kirim(`simas-cadangan-${today()}.simas.json`, await exportTerenkripsi(kunci), 'application/json')
+              const hasil = await kirim(`${awalanBerkas(c)}-cadangan-${today()}.simas.json`, await exportTerenkripsi(kunci), 'application/json')
               if (c.tujuan !== 'lokal') await put('sekolah', { ...sekolah, cloud: { ...c, terakhir: new Date().toISOString(), hasilTerakhir: 'Manual: berhasil' } })
               toast(`Cadangan dibuat. ${hasil}`)
             })}>{sibuk === 'cad' ? 'Menyimpan…' : c.tujuan === 'lokal' ? 'Unduh cadangan' : 'Simpan ke cloud'}</Btn>
