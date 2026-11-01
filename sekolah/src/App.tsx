@@ -22,7 +22,7 @@ import Validasi, { useValidasi } from './pages/Validasi'
 import AkunPage, { ProfilSaya } from './pages/Akun'
 import { boleh, keluar, useSesi } from './security/sesi'
 import { namaPegawai } from './util'
-import { LogoSekolah, tampilanDari } from './logo'
+import { LogoSekolah, tampilanDari, terapkanHuruf } from './logo'
 
 interface MenuItem { id: PageId; label: string; icon: string; group: string }
 
@@ -83,6 +83,7 @@ export default function App() {
   }, [sekolah.ukuranKertas])
   const jmlInvalid = useValidasi().filter((t) => t.level === 'invalid').length
   const tm = tampilanDari(sekolah)
+  useEffect(() => { terapkanHuruf(tampilanDari({ tampilan: sekolah.tampilan })) }, [sekolah.tampilan])
   const tinggiTop = Math.max(60, tm.logoUkuran + 16)
   const menu = MENU.filter((m) => boleh(m.id))
 

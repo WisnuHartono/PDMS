@@ -87,6 +87,11 @@ export interface TampilanSetting {
   namaUkuran?: number // px, 13-26
   tampilLegalitas?: boolean
   tampilNama?: boolean
+  dokFont?: string // kunci FONT_DOK
+  dokUkuran?: number // pt, 9-14
+  dokJarak?: number // tinggi baris x100, 110-180
+  appFont?: string // kunci FONT_APP
+  appUkuran?: number // px, 12-17
 }
 
 export interface AiSetting {

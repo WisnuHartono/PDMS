@@ -6,7 +6,7 @@ import { KopSurat, alamatLengkap, kontakLengkap } from '../print'
 import { seedDemo } from '../seed'
 import { DEFAULT_SEKOLAH, cadanganTerenkripsi, exportTerenkripsi, importJson, put, resetAll, useCol, useSekolah } from '../store'
 import { JENJANG, type KopSetting, type Sekolah } from '../types'
-import { LogoSekolah, tampilanDari } from '../logo'
+import { FONT_APP, FONT_DOK, LogoSekolah, tampilanDari } from '../logo'
 import { AI_DEFAULT, PANDUAN, PENYEDIA, aiSiap, panggilAi } from '../ai'
 import { Btn, Card, Field, Inp, Modal, PageHead, Sel, toast, tanya } from '../ui'
 import { download, fotoKecil, namaPegawai, readFileAsText, today } from '../util'
@@ -431,9 +431,9 @@ function PanelAi({ s, set }: { s: Sekolah; set: (p: Partial<Sekolah>) => void })
 function PanelTampilan({ s, set }: { s: Sekolah; set: (p: Partial<Sekolah>) => void }) {
   const t = tampilanDari(s)
   const ubah = (p: Partial<typeof t>) => set({ tampilan: { ...s.tampilan, ...p } })
-  const geser = (k: keyof typeof t, label: string, min: number, max: number, sat = '') => (
+  const geser = (k: keyof typeof t, label: string, min: number, max: number, sat = '', step = 1) => (
     <Field label={`${label}: ${t[k]}${sat}`}>
-      <input type="range" min={min} max={max} value={Number(t[k])} onChange={(e) => ubah({ [k]: Number(e.target.value) } as Partial<typeof t>)} />
+      <input type="range" min={min} max={max} step={step} value={Number(t[k])} onChange={(e) => ubah({ [k]: Number(e.target.value) } as Partial<typeof t>)} />
     </Field>
   )
   const legal = [s.npsn && `NPSN ${s.npsn}`, s.statusSekolah, s.akreditasi && `Akreditasi ${s.akreditasi}`].filter(Boolean).join(' · ')
@@ -477,6 +477,35 @@ function PanelTampilan({ s, set }: { s: Sekolah; set: (p: Partial<Sekolah>) => v
           <Field label="Bingkai putih"><div className="radio-row"><input type="checkbox" checked={t.logoBingkai} onChange={(e) => ubah({ logoBingkai: e.target.checked })} /> Tampilkan</div></Field>
           <Field label="Bayangan"><div className="radio-row"><input type="checkbox" checked={t.logoBayangan} onChange={(e) => ubah({ logoBayangan: e.target.checked })} /> Tampilkan</div></Field>
         </div>
+      </Card>
+      <Card title="Huruf dokumen cetak" className="mb">
+        <div className="form-grid g4">
+          <Field label="Jenis huruf dokumen" span={2}>
+            <select value={t.dokFont} onChange={(e) => ubah({ dokFont: e.target.value })}>
+              {Object.entries(FONT_DOK).map(([k, v]) => <option key={k} value={k}>{v.nama}</option>)}
+            </select>
+          </Field>
+          {geser('dokUkuran', 'Ukuran huruf dasar', 9, 14, ' pt', 0.5)}
+          {geser('dokJarak', 'Jarak baris (x0,01)', 110, 180, '', 5)}
+        </div>
+        <div className="huruf-prev" style={{ fontFamily: FONT_DOK[t.dokFont]?.css, fontSize: `${t.dokUkuran}pt`, lineHeight: t.dokJarak / 100 }}>
+          <b style={{ fontSize: `${t.dokUkuran + 1.5}pt` }}>LEMBAR BUKU INDUK PESERTA DIDIK</b>
+          <div className="huruf-baris"><span>Nama lengkap</span><span>:</span><b>Raka Nugroho</b></div>
+          <div className="huruf-baris"><span>Tempat, tanggal lahir</span><span>:</span><b>Bandung, 1 Juni 2021</b></div>
+          <div>Ananda menunjukkan perkembangan yang baik dalam kegiatan belajar sehari-hari.</div>
+        </div>
+        <p className="muted small">Berlaku seragam di rapor, buku induk, surat, dan semua administrasi. Kop surat tetap memakai pilihan hurufnya sendiri di bagian Kop Surat; label inventaris selalu Arial agar mudah dipindai.</p>
+      </Card>
+      <Card title="Huruf aplikasi" className="mb">
+        <div className="form-grid g4">
+          <Field label="Jenis huruf aplikasi" span={2}>
+            <select value={t.appFont} onChange={(e) => ubah({ appFont: e.target.value })}>
+              {Object.entries(FONT_APP).map(([k, v]) => <option key={k} value={k}>{v.nama}</option>)}
+            </select>
+          </Field>
+          {geser('appUkuran', 'Ukuran huruf aplikasi', 12, 17, ' px')}
+        </div>
+        <p className="muted small">Perubahan huruf berlaku setelah menekan “Simpan pengaturan”. Font yang tidak terpasang di komputer akan diganti font cadangan terdekat.</p>
       </Card>
       <Card title="Nama & legalitas di header">
         <div className="form-grid g4">

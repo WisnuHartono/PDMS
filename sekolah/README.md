@@ -119,3 +119,5 @@ Administrasi → Perlengkapan/Sarpras → **Buku Inventaris Barang**:
 - **Label QR / barcode**: pilih barang (semua, per ruang, atau yang belum bernomor), ukuran 50×30 sampai 100×60 mm, isi QR / Barcode Code 128 / keduanya, warna, logo, lokasi, tahun, kondisi, dan opsi satu label per unit. Cetak atau simpan PDF.
 - **Stok opname**: pindai QR dengan kamera, pemindai USB (keyboard), atau ketik nomor. Barang yang belum ditemukan, ditemukan di ruang lain, dan kondisi temuan tercatat; hasil tersimpan di Riwayat dan dapat dicetak sebagai **Berita Acara Stok Opname**; kondisi di buku inventaris dapat diperbarui otomatis.
 - Encoder Code 128 diverifikasi terhadap pustaka acuan dan QR diuji baca ulang (jsQR) pada tes otomatis.
+
+- **Huruf**: Pengaturan → Tampilan & Logo memuat jenis, ukuran dasar, dan jarak baris huruf dokumen cetak (seragam di rapor, buku induk, surat, administrasi) serta jenis dan ukuran huruf aplikasi.
