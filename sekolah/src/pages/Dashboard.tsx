@@ -5,7 +5,9 @@ import { Icon } from '../icons'
 import { getState, useCol, useSekolah } from '../store'
 import { Avatar, Btn, Card, useNav, type PageId } from '../ui'
 import { KET_STATUS, klasifikasiKerusakan, pengajuanAktif, pillKerusakan } from '../prasarana'
-import { BULAN, fmtTanggalHari, isoDate, namaPegawai, parseIso, today, umur } from '../util'
+import { alamatLengkap } from '../print'
+import { LogoSekolah, tampilanDari } from '../logo'
+import { BULAN, fmtTanggal, fmtTanggalHari, isoDate, namaPegawai, parseIso, today, umur } from '../util'
 import { getKurikulum } from '../curricula'
 import { implementasiKurikulum } from '../validasi'
 import { useValidasi } from './Validasi'
@@ -38,6 +40,7 @@ const AKSI: { id: PageId; label: string; ket: string; icon: string; warna: strin
 const sapaan = () => { const j = new Date().getHours(); return j < 11 ? 'Selamat pagi' : j < 15 ? 'Selamat siang' : j < 18 ? 'Selamat sore' : 'Selamat malam' }
 
 const WIDGETS: [string, string][] = [
+  ['profil', 'Profil & Informasi Sekolah'],
   ['ringkasan', 'Ringkasan Sekolah'],
   ['hadirSiswa', 'Kehadiran Siswa'],
   ['tren', 'Tren Kehadiran Siswa'],
@@ -194,6 +197,59 @@ export default function Dashboard() {
           <span className="muted">{fmtTanggalHari(tgl)}</span>
         </div>
       </div>
+
+      {show('profil') && (() => {
+        const p = (id?: string) => namaPegawai(pegawai.find((x) => x.id === id)) || undefined
+        const tgl = (t?: string) => (t ? fmtTanggal(t) : undefined)
+        const gabung = (...a: (string | undefined | false)[]) => a.filter(Boolean).join(' · ') || undefined
+        const kelompok: [string, string, [string, string | undefined][]][] = [
+          ['Identitas', 'school', [
+            ['NPSN', sekolah.npsn], ['NSS', sekolah.nss], ['Jenjang', sekolah.jenjang.join(', ')], ['Status', gabung(sekolah.statusSekolah, sekolah.statusOperasional)],
+            ['Kepemilikan', sekolah.statusKepemilikan], ['Yayasan', sekolah.yayasan], ['Penyelenggaraan', sekolah.waktuPenyelenggaraan],
+          ]],
+          ['Legalitas & Akreditasi', 'validasi', [
+            ['Akreditasi', gabung(sekolah.akreditasi, sekolah.akreditasiBerlaku && `berlaku s.d. ${sekolah.akreditasiBerlaku}`)], ['SK akreditasi', gabung(sekolah.skAkreditasi, tgl(sekolah.tglAkreditasi))],
+            ['SK pendirian', gabung(sekolah.skPendirian, tgl(sekolah.tglSkPendirian))], ['Izin operasional', gabung(sekolah.skIzinOperasional, tgl(sekolah.tglSkIzinOperasional))],
+          ]],
+          ['Alamat & Kontak', 'map', [
+            ['Alamat', alamatLengkap(sekolah) || undefined], ['Telepon / faks', gabung(sekolah.telepon, sekolah.fax)], ['Email', sekolah.email], ['Laman', sekolah.website],
+            ['Koordinat', gabung(sekolah.lintang, sekolah.bujur)],
+          ]],
+          ['Pejabat Sekolah', 'pegawai', [
+            ['Kepala sekolah', p(sekolah.kepalaSekolahId)], ['Wakil kurikulum', p(sekolah.wakaKurikulumId)], ['Bendahara', p(sekolah.bendaharaId)],
+            ['Kepala TU', p(sekolah.kaTuId)], ['Operator', p(sekolah.operatorId)], ['Ketua komite', sekolah.ketuaKomite],
+          ]],
+          ['Tahun Ajaran & Data', 'rombel', [
+            ['Tahun ajaran', `${sekolah.tahunAjaranAktif} · Semester ${sekolah.semesterAktif}`], ['Peserta didik aktif', String(aktif.length)], ['Guru / tendik', `${guru.length} / ${tendik.length}`],
+            ['Rombel', String(rombelAktif.length)], ['Luas tanah', sekolah.luasTanahMilik ? `${sekolah.luasTanahMilik} m²` : undefined],
+            ['Listrik / internet', gabung(sekolah.sumberListrik && `${sekolah.sumberListrik}${sekolah.dayaListrik ? ` ${sekolah.dayaListrik} VA` : ''}`, sekolah.aksesInternet)],
+          ]],
+        ]
+        return (
+          <Card title="Profil & Informasi Sekolah" className="mb" actions={boleh('pengaturan') ? <button className="icon-btn" title="Ubah di Pengaturan" onClick={() => nav.open('pengaturan')}><Icon name="edit" size={16} /></button> : undefined}>
+            <div className="profil-sk">
+              <div className="profil-id">
+                <LogoSekolah logo={sekolah.logo} t={{ ...tampilanDari(sekolah), logoUkuran: 72, logoLatar: 'putih', logoBingkai: true }} />
+                <div>
+                  <b>{sekolah.nama}</b>
+                  <span>{gabung(sekolah.npsn && `NPSN ${sekolah.npsn}`, sekolah.statusSekolah, sekolah.akreditasi && `Akreditasi ${sekolah.akreditasi}`) ?? ' '}</span>
+                  {sekolah.statusOperasional && <span className={`pill ${sekolah.statusOperasional === 'Aktif' ? 'ok' : 'warn'}`}>{sekolah.statusOperasional}</span>}
+                </div>
+              </div>
+              <div className="profil-grup">
+                {kelompok.map(([judul, , baris]) => (
+                  <section key={judul}>
+                    <h5>{judul}</h5>
+                    <dl>
+                      {baris.map(([k, v]) => <div key={k}><dt>{k}</dt><dd className={v ? '' : 'kosong'}>{v ?? 'belum diisi'}</dd></div>)}
+                    </dl>
+                  </section>
+                ))}
+              </div>
+            </div>
+          </Card>
+        )
+      })()}
 
       <div className="grid-3">
         {show('ringkasan') && (
