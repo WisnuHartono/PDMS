@@ -79,7 +79,6 @@ export function LembarInduk({ s }: { s: Siswa }) {
   const kelas = riwayat[riwayat.length - 1]?.nama
   let no = 0
   const row = (l: string, v?: string | number, tebal = false) => { no += 1; return <Fragment key={l}><span className="n">{no}.</span><span className="k">{l}</span><span className="t">:</span><span className={`v ${tebal ? 'b' : ''}`}>{val(v)}</span></Fragment> }
-  const plain = (l: string, v?: string | number) => <Fragment key={l}><span className="n" /><span className="k">{l}</span><span className="t">:</span><span className="v">{val(v)}</span></Fragment>
   const ortu = (k: keyof NonNullable<Siswa['ayah']>) => [s.ayah[k], s.ibu[k]].map(String)
   const tglLahir = s.tanggalLahir ? fmtTanggal(s.tanggalLahir) : '-'
   const wali = s.wali.nama || s.wali.pekerjaan || s.wali.telepon
@@ -117,14 +116,14 @@ export function LembarInduk({ s }: { s: Siswa }) {
       <h4 className="sec">E. Keterangan wali</h4>
       {wali ? (
         <div className="kvn">
-          {plain('Nama', s.wali.nama)}{plain('NIK', s.wali.nik)}{plain('Pendidikan terakhir', s.wali.pendidikan)}{plain('Pekerjaan', s.wali.pekerjaan)}{plain('No. HP', s.wali.telepon)}{plain('Alamat', s.wali.alamat)}
+          {row('Nama', s.wali.nama)}{row('NIK', s.wali.nik)}{row('Pendidikan terakhir', s.wali.pendidikan)}{row('Pekerjaan', s.wali.pekerjaan)}{row('No. HP', s.wali.telepon)}{row('Alamat', s.wali.alamat)}
         </div>
       ) : <p className="ket">Tidak ada wali (diasuh orang tua kandung).</p>}
       <h4 className="sec">F. Riwayat pendidikan</h4>
       <div className="kvn">
-        {plain('Diterima di sekolah ini', `${s.tanggalMasuk ? fmtTanggal(s.tanggalMasuk) : '-'}${s.diterimaDiKelas ? `, kelas ${s.diterimaDiKelas}` : ''}`)}
-        {plain('Asal sekolah / no. ijazah', `${s.asalSekolah ?? '-'} / ${s.noIjazahAsal ?? '-'}`)}
-        {s.pindahanDari && plain('Pindahan dari / alasan', `${s.pindahanDari} / ${s.alasanPindah ?? '-'}`)}
+        {row('Diterima di sekolah ini', `${s.tanggalMasuk ? fmtTanggal(s.tanggalMasuk) : '-'}${s.diterimaDiKelas ? `, kelas ${s.diterimaDiKelas}` : ''}`)}
+        {row('Asal sekolah / no. ijazah', `${s.asalSekolah ?? '-'} / ${s.noIjazahAsal ?? '-'}`)}
+        {s.pindahanDari && row('Pindahan dari / alasan', `${s.pindahanDari} / ${s.alasanPindah ?? '-'}`)}
       </div>
       <h4 className="sec">G. Perkembangan belajar</h4>
       <table className="nilai">
@@ -146,8 +145,8 @@ export function LembarInduk({ s }: { s: Siswa }) {
       </table>
       <h4 className="sec">H. Meninggalkan sekolah</h4>
       <div className="kvn">
-        {plain('Status', s.status)}{plain('Tanggal', s.tanggalKeluar ? fmtTanggal(s.tanggalKeluar) : '-')}{plain('Alasan / pindah ke', s.alasanKeluar)}
-        {plain('No. ijazah', s.noIjazah)}{plain('Melanjutkan ke', s.melanjutkanKe)}
+        {row('Status', s.status)}{row('Tanggal', s.tanggalKeluar ? fmtTanggal(s.tanggalKeluar) : '-')}{row('Alasan / pindah ke', s.alasanKeluar)}
+        {row('No. ijazah', s.noIjazah)}{row('Melanjutkan ke', s.melanjutkanKe)}
       </div>
       {s.catatan && <><h4 className="sec">I. Catatan</h4><p>{s.catatan}</p></>}
       <TandaTangan kanan={{ jabatan: 'Kepala Sekolah', nama: kepsek ? namaPegawai(kepsek) : undefined, nip: kepsek?.nip ?? '' }} />
