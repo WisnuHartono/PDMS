@@ -366,10 +366,10 @@ function PanelAi({ s, set }: { s: Sekolah; set: (p: Partial<Sekolah>) => void })
               {(Object.keys(PENYEDIA) as (keyof typeof PENYEDIA)[]).map((k) => <option key={k} value={k}>{PENYEDIA[k].nama}</option>)}
             </select>
           </Field>
-          <Field label="Model" span={2} hint="Contoh: claude-sonnet-5-5, gpt-4o-mini"><input value={a.model} onChange={(e) => ubah({ model: e.target.value })} /></Field>
+          <Field label="Model" span={2} hint="Contoh: claude-sonnet-5-5, gemini-2.5-flash, gpt-4o-mini"><input value={a.model} onChange={(e) => ubah({ model: e.target.value })} /></Field>
           <Field label="Alamat API" span={4}><input value={a.endpoint} onChange={(e) => ubah({ endpoint: e.target.value })} /></Field>
           <Field label="Kunci API" span={3} hint={a.penyedia === 'kompatibel' ? 'Boleh kosong untuk model lokal (Ollama).' : undefined}>
-            <input type={lihat ? 'text' : 'password'} autoComplete="off" spellCheck={false} value={a.apiKey} placeholder="sk-..." onChange={(e) => ubah({ apiKey: e.target.value.trim() })} />
+            <input type={lihat ? 'text' : 'password'} autoComplete="off" spellCheck={false} value={a.apiKey} placeholder={a.penyedia === 'gemini' ? 'AIza...' : 'sk-...'} onChange={(e) => ubah({ apiKey: e.target.value.trim() })} />
           </Field>
           <Field label=" "><Btn onClick={() => setLihat(!lihat)}>{lihat ? 'Sembunyikan' : 'Tampilkan'}</Btn></Field>
           <Field label="Gaya narasi" span={2}>
@@ -377,6 +377,7 @@ function PanelAi({ s, set }: { s: Sekolah; set: (p: Partial<Sekolah>) => void })
               <option value="ringkas">Ringkas (2 kalimat)</option><option value="standar">Standar (3-4 kalimat)</option><option value="rinci">Rinci (5-6 kalimat)</option>
             </select>
           </Field>
+          <Field label="Humanize" span={2} hint="Gaya tulisan alami seperti guru, variasi kalimat, tanpa frasa klise."><label className="cek"><input type="checkbox" checked={a.humanize !== false} onChange={(e) => ubah({ humanize: e.target.checked })} /> Aktif (disarankan)</label></Field>
           <Field label="Instruksi tambahan (opsional)" span={4} hint="Mis. “gunakan sapaan Ananda”, “hindari kata menguasai”."><input value={a.instruksi ?? ''} maxLength={400} onChange={(e) => ubah({ instruksi: e.target.value })} /></Field>
         </div>
         <div className="row-actions">

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { AI_DEFAULT, ambilTeks, bersihkan, isiNama, jalankanBatch, kategori, panggilAi, pesanGalat, promptCatatan, promptMapel, systemPrompt } from '../src/ai'
+import { AI_DEFAULT, humanisasi, variasiHint, ambilTeks, bersihkan, isiNama, jalankanBatch, kategori, panggilAi, pesanGalat, promptCatatan, promptMapel, systemPrompt } from '../src/ai'
 
 const a = { ...AI_DEFAULT, apiKey: 'kunci', aktif: true }
 afterEach(() => vi.unstubAllGlobals())
@@ -62,5 +62,20 @@ describe('AI narasi rapor', () => {
     const r = await jalankanBatch([1, 2, 3, 4], async (x) => { if (x === 2) throw new Error('gagal'); hasil.push(x) }, 2)
     expect(r.gagal).toBe(1)
     expect(hasil.sort()).toEqual([1, 3, 4])
+  })
+  it('Gemini: URL berisi model, header kunci, jawaban dibaca', async () => {
+    const f = vi.fn().mockResolvedValue({ status: 200, text: async () => JSON.stringify({ candidates: [{ content: { parts: [{ text: 'Anak rajin.' }] } }] }) })
+    vi.stubGlobal('fetch', f)
+    const g = { ...a, penyedia: 'gemini' as const, model: 'gemini-2.5-flash', endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent' }
+    expect(await panggilAi(g, 's', 'u')).toBe('Anak rajin.')
+    expect(f.mock.calls[0][0]).toContain('/models/gemini-2.5-flash:generateContent')
+    expect(f.mock.calls[0][1].headers['x-goog-api-key']).toBe('kunci')
+    expect(JSON.parse(f.mock.calls[0][1].body).systemInstruction.parts[0].text).toBe('s')
+  })
+  it('humanize: bersihkan tanda pisah & klise, prompt memuat gaya manusia', () => {
+    expect(humanisasi('Ia senantiasa rajin — dan luar biasa.')).toBe('Ia selalu rajin, dan sangat baik.')
+    expect(systemPrompt(a, 'mapel')).toContain('GAYA MANUSIA')
+    expect(systemPrompt({ ...a, humanize: false }, 'mapel')).not.toContain('GAYA MANUSIA')
+    expect(variasiHint('a')).not.toBe(variasiHint('b') + 'x')
   })
 })

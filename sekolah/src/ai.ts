@@ -3,10 +3,11 @@
 import type { AiSetting } from './types'
 
 export const AI_DEFAULT: AiSetting = {
-  aktif: false, penyedia: 'anthropic', endpoint: 'https://api.anthropic.com/v1/messages', model: 'claude-sonnet-5-5', apiKey: '', gaya: 'standar',
+  aktif: false, penyedia: 'anthropic', endpoint: 'https://api.anthropic.com/v1/messages', model: 'claude-sonnet-5-5', apiKey: '', gaya: 'standar', humanize: true,
 }
 export const PENYEDIA: Record<AiSetting['penyedia'], { nama: string; endpoint: string; model: string }> = {
   anthropic: { nama: 'Anthropic (Claude)', endpoint: 'https://api.anthropic.com/v1/messages', model: 'claude-sonnet-5-5' },
+  gemini: { nama: 'Google Gemini', endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent', model: 'gemini-2.5-flash' },
   openai: { nama: 'OpenAI', endpoint: 'https://api.openai.com/v1/chat/completions', model: 'gpt-4o-mini' },
   kompatibel: { nama: 'Kompatibel OpenAI (OpenRouter, Ollama, dll.)', endpoint: 'http://localhost:11434/v1/chat/completions', model: '' },
 }
@@ -46,31 +47,64 @@ export function bersihkan(t: string) {
 }
 
 export function ambilTeks(penyedia: AiSetting['penyedia'], json: unknown): string {
-  const j = json as { content?: { type: string; text?: string }[]; choices?: { message?: { content?: string } }[] }
+  const j = json as { content?: { type: string; text?: string }[]; choices?: { message?: { content?: string } }[]; candidates?: { content?: { parts?: { text?: string }[] } }[] }
   const t = penyedia === 'anthropic'
     ? (j.content ?? []).filter((c) => c.type === 'text').map((c) => c.text ?? '').join('')
+    : penyedia === 'gemini'
+    ? (j.candidates?.[0]?.content?.parts ?? []).map((c) => c.text ?? '').join('')
     : j.choices?.[0]?.message?.content ?? ''
   return bersihkan(t)
 }
 
 export async function panggilAi(a: AiSetting, system: string, user: string, maxToken = 600): Promise<string> {
-  const anth = a.penyedia === 'anthropic'
+  const anth = a.penyedia === 'anthropic', gem = a.penyedia === 'gemini'
+  const temp = a.humanize === false ? 0.4 : 0.8
   const headers: Record<string, string> = { 'content-type': 'application/json' }
   let body: unknown
+  let url = a.endpoint.trim()
   if (anth) {
     headers['x-api-key'] = a.apiKey; headers['anthropic-version'] = '2023-06-01'; headers['anthropic-dangerous-direct-browser-access'] = 'true'
-    body = { model: a.model, max_tokens: maxToken, temperature: 0.4, system, messages: [{ role: 'user', content: user }] }
+    body = { model: a.model, max_tokens: maxToken, temperature: temp, system, messages: [{ role: 'user', content: user }] }
+  } else if (gem) {
+    headers['x-goog-api-key'] = a.apiKey
+    url = url.replace('{model}', encodeURIComponent(a.model.trim()))
+    body = { systemInstruction: { parts: [{ text: system }] }, contents: [{ role: 'user', parts: [{ text: user }] }], generationConfig: { temperature: temp, maxOutputTokens: maxToken * 4 } }
   } else {
     if (a.apiKey) headers.authorization = `Bearer ${a.apiKey}`
-    body = { model: a.model, max_tokens: maxToken, temperature: 0.4, messages: [{ role: 'system', content: system }, { role: 'user', content: user }] }
+    body = { model: a.model, max_tokens: maxToken, temperature: temp, messages: [{ role: 'system', content: system }, { role: 'user', content: user }] }
   }
-  const res = await kirim(a.endpoint.trim(), headers, JSON.stringify(body))
+  const res = await kirim(url, headers, JSON.stringify(body))
   if (res.status < 200 || res.status >= 300) throw new Error(pesanGalat(res.status, res.text))
   let json: unknown
   try { json = JSON.parse(res.text) } catch { throw new Error('Jawaban AI tidak dapat dibaca.') }
   const t = ambilTeks(a.penyedia, json)
   if (!t) throw new Error('AI tidak menghasilkan teks. Coba lagi.')
+  return a.humanize === false ? t : humanisasi(t)
+}
+
+/** Rapikan sisa "bau AI": tanda pisah panjang, frasa klise, dan pengulangan kata. */
+export function humanisasi(t: string) {
   return t
+    .replace(/\s*[—–]\s*/g, ', ')
+    .replace(/\bsenantiasa\b/gi, (m) => (m[0] === 'S' ? 'Selalu' : 'selalu'))
+    .replace(/\bsangat luar biasa\b/gi, 'sangat baik')
+    .replace(/\bluar biasa\b/gi, 'sangat baik')
+    .replace(/\bdiharapkan terus\b/gi, 'semoga terus')
+    .replace(/\bdalam hal ini\b,?\s*/gi, '')
+    .replace(/,\s*,/g, ',')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+}
+
+const PEMBUKA = [
+  'mulai dari kekuatan utama murid', 'mulai dari perkembangan yang terlihat selama semester', 'mulai dari sikap atau cara belajar murid di kelas',
+  'mulai dari hal yang paling menonjol pada materi', 'mulai dengan menyebut langsung kemampuan tertentu', 'mulai dari kemajuan dibanding awal semester bila datanya mendukung',
+]
+/** Petunjuk variasi per murid agar narasi satu kelas tidak berpola sama. */
+export function variasiHint(seed: string) {
+  let h = 0
+  for (const ch of seed) h = (h * 31 + ch.charCodeAt(0)) >>> 0
+  return `\nVariasi gaya: ${PEMBUKA[h % PEMBUKA.length]}; jangan memakai pembuka "{NAMA} menunjukkan".`
 }
 
 export const isiNama = (t: string, nama: string) => t.replace(/\{NAMA\}/g, nama)
@@ -98,6 +132,8 @@ export function systemPrompt(a: AiSetting, jenis: 'mapel' | 'paud' | 'catatan', 
   ]
   if (jenis === 'catatan') dasar.push('Ini catatan wali kelas: rangkum gambaran keseluruhan (kekuatan, hal yang perlu ditingkatkan, kehadiran, ekstrakurikuler bila ada) dan tutup dengan saran tindak lanjut singkat.')
   if (jenis === 'paud') dasar.push('Ini rapor PAUD: gunakan bahasa yang menggambarkan perkembangan anak berdasarkan capaian (BB=Belum Berkembang, MB=Mulai Berkembang, BSH=Berkembang Sesuai Harapan, BSB=Berkembang Sangat Baik) tanpa membandingkan dengan anak lain.')
+  if (a.humanize !== false) dasar.push(
+    'GAYA MANUSIA: tulis seperti guru yang mengenal murid dan menulis sendiri, bukan seperti mesin. Variasikan panjang kalimat (campur kalimat pendek dan sedang), pakai kata sehari-hari yang tetap sopan, hindari frasa klise ("senantiasa", "luar biasa", "diharapkan terus", "dalam hal ini"), hindari tanda pisah panjang (—), hindari daftar tiga serangkai yang seragam, dan jangan mengulang pola pembuka yang sama. Boleh ada sedikit nada pribadi yang wajar, tetapi tetap berbasis data dan tidak berlebihan.')
   if (a.instruksi?.trim()) dasar.push(`Instruksi tambahan dari guru: ${a.instruksi.trim().slice(0, 400)}`)
   return dasar.join('\n')
 }

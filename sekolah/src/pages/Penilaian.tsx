@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { getKurikulum, type Baris } from '../curricula'
-import { aiSiap, isiNama, jalankanBatch, panggilAi, promptMapel, promptPaud, systemPrompt } from '../ai'
+import { aiSiap, isiNama, variasiHint, jalankanBatch, panggilAi, promptMapel, promptPaud, systemPrompt } from '../ai'
 import { tpScores } from '../curricula'
 import { buatNarasi, bintang, kelompokUsia, type Capaian } from '../narasiPaud'
 import { put, useCol, useSekolah } from '../store'
@@ -93,7 +93,7 @@ export default function Penilaian() {
     const sw = siswa.find((x) => x.id === sid)
     const pr = promptAi(sid)
     if (!sw || !pr || !kunciTeks || !sekolah.ai) throw new Error(kur.naratif ? 'Pilih capaian dulu.' : 'Isi nilai dulu.')
-    const t = await panggilAi(sekolah.ai, systemPrompt(sekolah.ai, kur.naratif ? 'paud' : 'mapel', kur.asal === 'Internasional'), pr)
+    const t = await panggilAi(sekolah.ai, systemPrompt(sekolah.ai, kur.naratif ? 'paud' : 'mapel', kur.asal === 'Internasional'), pr + (sekolah.ai.humanize === false ? '' : variasiHint(sid)))
     setCell(sid, kunciTeks, isiNama(t, sw.namaPanggilan || sw.nama.split(' ')[0]))
   }
   const narasiAiSatu = async (sid: string) => {

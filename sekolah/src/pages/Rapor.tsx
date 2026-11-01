@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { getKurikulum } from '../curricula'
-import { aiSiap, isiNama, panggilAi, promptCatatan, systemPrompt } from '../ai'
+import { aiSiap, isiNama, variasiHint, panggilAi, promptCatatan, systemPrompt } from '../ai'
 import { RaporDoc, catatanId, dataRapor } from '../rapor'
 import { getState, put, useCol, useSekolah } from '../store'
 import type { CatatanRapor, Rombel, Siswa } from '../types'
@@ -96,7 +96,7 @@ function CatatanForm({ siswa, rombel, semester, onClose }: { siswa: Siswa; rombe
         ekskul: c.ekskul.filter((e) => e.nama).map((e) => ({ nama: e.nama, predikat: e.predikat })), capaian, teksGuru: c.catatanWali,
       })
       if (!nil.length && !capaian?.length) throw new Error('Isi nilai/capaian mata pelajaran dulu agar catatan sesuai penilaian.')
-      const t = await panggilAi(sekolah.ai, systemPrompt(sekolah.ai, 'catatan', kur.asal === 'Internasional'), pr, 700)
+      const t = await panggilAi(sekolah.ai, systemPrompt(sekolah.ai, 'catatan', kur.asal === 'Internasional'), pr + (sekolah.ai.humanize === false ? '' : variasiHint(siswa.id)), 700)
       set({ catatanWali: isiNama(t, siswa.namaPanggilan || siswa.nama.split(' ')[0]) })
       toast('Catatan AI dibuat. Periksa dan sunting sebelum disimpan.')
     } catch (e) { toast((e as Error).message) }

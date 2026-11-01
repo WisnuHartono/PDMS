@@ -90,9 +90,10 @@ diunduh dari tab **Actions → artifact `simas-windows`**.
 
 ## Integrasi AI untuk narasi rapor
 
-Pengaturan → **Integrasi AI**: pilih penyedia (Anthropic, OpenAI, atau yang kompatibel OpenAI seperti OpenRouter/Ollama), isi kunci API, model, dan gaya narasi.
+Pengaturan → **Integrasi AI**: pilih penyedia (Anthropic, Google Gemini, OpenAI, atau yang kompatibel OpenAI seperti OpenRouter/Ollama), isi kunci API, model, dan gaya narasi.
 
 - Tombol **Narasi AI** muncul di Penilaian (per baris dan massal untuk baris kosong) dan **Susun catatan dengan AI** di Catatan Rapor.
 - Kategori ketuntasan dihitung lokal terhadap KKM/KKTP sehingga narasi selaras dengan nilai; AI hanya merangkai kalimat.
 - Nama murid tidak dikirim (penanda `{NAMA}` diisi kembali di perangkat); NIS/NIK tidak pernah dikirim.
 - Aplikasi Windows memanggil API lewat proses utama (tanpa batasan CORS); versi web bergantung pada izin CORS penyedia.
+- Opsi **Humanize** (aktif secara default): narasi ditulis dengan gaya guru yang alami, kalimat bervariasi, pembuka berbeda per murid, tanpa frasa klise; sisa tanda pisah panjang dan kata klise dibersihkan otomatis.

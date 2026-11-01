@@ -74,13 +74,15 @@ export interface Sekolah {
 
 export interface AiSetting {
   aktif: boolean
-  penyedia: 'anthropic' | 'openai' | 'kompatibel'
+  penyedia: 'anthropic' | 'openai' | 'gemini' | 'kompatibel'
   endpoint: string
   model: string
   apiKey: string
   gaya: 'ringkas' | 'standar' | 'rinci'
   /** Pesan tambahan guru, mis. "gunakan sapaan Ananda". */
   instruksi?: string
+  /** Gaya tulisan alami seperti guru menulis sendiri (default aktif). */
+  humanize?: boolean
 }
 
 export interface KopSetting {
