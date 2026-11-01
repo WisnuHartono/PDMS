@@ -975,19 +975,21 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 .dc .lampu.off { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
 .dc .lampu.warn { background: #fef3c7; color: #78350f; border-color: #fcd34d; }
 .dc-path { max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; vertical-align: middle; }
-@media (max-width: 760px) { .topbar .lampu .lampu-t { display: none; } }
+@media (max-width: 760px) { .topbar .lampu .lampu-t { display: none; } .topbar .brand-teks .lampu .lampu-t { display: inline; } }
 
 /* Identitas aplikasi (nama + logo) dengan lampu koneksi di bawahnya */
-.brand-app { flex-direction: column; align-items: flex-start; gap: 3px; min-width: 0; }
+.brand-app { align-items: center; min-width: 0; }
 .brand-row { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .brand-mark { overflow: hidden; flex: none; }
 .brand-mark img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .brand-teks { display: flex; flex-direction: column; line-height: 1.1; min-width: 0; }
 .brand-teks b { display: block; line-height: 1.05; white-space: nowrap; }
 .brand-teks .brand-sub { display: block; opacity: .82; white-space: nowrap; margin-top: 1px; }
-.brand-app > .lampu { padding: 1px 8px 1px 6px; font-size: 11px; margin-left: 1px; }
-.brand-app > .lampu .lampu-dot { width: 8px; height: 8px; }
-@media (max-width: 760px) { .brand-app > .lampu .lampu-t { display: inline; } .brand-teks .brand-sub { display: none; } }
+.brand-teks .lampu { padding: 0; font-size: 10.5px; font-weight: 600; margin-top: 2px; background: transparent !important; border: 0 !important; color: inherit; gap: 5px; line-height: 1.1; opacity: .95; }
+.brand-teks .lampu .lampu-dot { width: 7px; height: 7px; }
+@media (max-width: 760px) { .brand-teks .lampu .lampu-t { display: inline; } .brand-teks .brand-sub { display: none; } }
 .brand-prev { display: flex; align-items: center; padding: 6px 14px; border-radius: 8px; color: #fff; margin-bottom: 8px; background: linear-gradient(100deg, #0c2537 0%, #0f5c7a 45%, #155e75 70%, #1e3a8a 100%); }
 .fs-plain { border: 0; margin: 0; padding: 0; min-width: 0; }
 .fs-plain:disabled { opacity: .6; }
+
+.brand-teks .lampu.off { color: #fecaca; } .brand-teks .lampu.warn { color: #fde68a; } .brand-teks .lampu.sync { color: #bae6fd; }

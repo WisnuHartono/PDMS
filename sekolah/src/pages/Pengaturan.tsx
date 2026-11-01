@@ -417,7 +417,7 @@ function PanelTampilan({ s, set }: { s: Sekolah; set: (p: Partial<Sekolah>) => v
             </Field>
             <Field label="Bentuk logo"><select value={t.appLogoBentuk} onChange={(e) => ubah({ appLogoBentuk: e.target.value as typeof t.appLogoBentuk })}><option value="sudut">Sudut membulat</option><option value="lingkaran">Lingkaran</option><option value="kotak">Kotak</option><option value="tanpa">Tanpa latar</option></select></Field>
             <Field label="Latar logo"><select value={t.appLogoLatar} onChange={(e) => ubah({ appLogoLatar: e.target.value as typeof t.appLogoLatar })}><option value="kuning">Kuning</option><option value="putih">Putih</option><option value="kaca">Kaca</option><option value="transparan">Tanpa latar</option></select></Field>
-            {geser('appLogoUkuran', 'Ukuran logo', 24, 64, ' px')}
+            {geser('appLogoUkuran', 'Ukuran logo', 28, 72, ' px')}
             <Field label="Jenis huruf nama" span={2}>
               <select value={t.appNamaFont} onChange={(e) => ubah({ appNamaFont: e.target.value })}>{Object.entries(FONT_APP).map(([k, v]) => <option key={k} value={k}>{v.nama}</option>)}</select>
             </Field>

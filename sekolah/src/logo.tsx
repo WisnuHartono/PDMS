@@ -6,7 +6,7 @@ export const TAMPILAN_DEFAULT: Required<TampilanSetting> = {
   logoUkuran: 42, logoBentuk: 'sudut', logoLatar: 'putih', logoBingkai: false, logoBayangan: false, logoIsi: 'contain',
   logoZoom: 100, logoGeserX: 0, logoGeserY: 0, namaUkuran: 17, tampilLegalitas: true, tampilNama: true,
   dokFont: 'times', dokUkuran: 11.5, dokJarak: 135, appFont: 'segoe', appUkuran: 14,
-  appNama: 'SIMAS', appSub: 'Administrasi Sekolah', appLogo: '', appLogoUkuran: 36, appLogoBentuk: 'sudut', appLogoLatar: 'kuning',
+  appNama: 'SIMAS', appSub: 'Administrasi Sekolah', appLogo: '', appLogoUkuran: 48, appLogoBentuk: 'sudut', appLogoLatar: 'kuning',
   appNamaUkuran: 19, appSubUkuran: 11, appNamaFont: 'segoe', appNamaTebal: true, appNamaWarna: '#ffffff', appNamaSpasi: 2,
   appTampilSub: true, appTampilVersi: true, appTampilLampu: true,
 }
@@ -46,14 +46,14 @@ export function BrandApp({ t, bawah }: { t: Required<TampilanSetting>; bawah?: R
         <div className="brand-teks">
           <b style={{ fontSize: t.appNamaUkuran, fontFamily: (FONT_APP[t.appNamaFont] ?? FONT_APP.segoe).css, fontWeight: t.appNamaTebal ? 800 : 500, color: t.appNamaWarna, letterSpacing: t.appNamaSpasi * 0.5 }}>{t.appNama || 'SIMAS'}</b>
           {sub && <span className="brand-sub" style={{ fontSize: t.appSubUkuran, fontFamily: (FONT_APP[t.appNamaFont] ?? FONT_APP.segoe).css }}>{sub}</span>}
+          {bawah}
         </div>
       </div>
-      {bawah}
     </div>
   )
 }
 /** Tinggi minimal bilah atas agar identitas aplikasi (logo/nama + lampu) tidak terpotong. */
-export const tinggiBrand = (t: Required<TampilanSetting>) => Math.max(t.appLogoUkuran, Math.round(t.appNamaUkuran * 1.05 + (t.appTampilSub || t.appTampilVersi ? t.appSubUkuran * 1.35 : 0))) + (t.appTampilLampu ? 22 : 0) + 12
+export const tinggiBrand = (t: Required<TampilanSetting>) => Math.max(t.appLogoUkuran, Math.round(t.appNamaUkuran * 1.05 + (t.appTampilSub || t.appTampilVersi ? t.appSubUkuran * 1.35 : 0) + (t.appTampilLampu ? 15 : 0))) + 14
 
 export const FONT_DOK: Record<string, { nama: string; css: string }> = {
   times: { nama: 'Times New Roman (resmi, serif)', css: "'Times New Roman', Times, 'Liberation Serif', serif" },
