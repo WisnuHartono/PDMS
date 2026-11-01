@@ -72,6 +72,24 @@ function PasLabel({ lebar, tinggi, warna, kecil, children }: { lebar: number; ti
   )
 }
 
+/** Nama sekolah: ukuran huruf diatur agar persis memenuhi lebar antara logo dan garis batas. */
+function NamaPas({ teks, maks }: { teks: string; maks: number }) {
+  const luar = useRef<HTMLSpanElement>(null)
+  const dalam = useRef<HTMLElement>(null)
+  useLayoutEffect(() => {
+    const hitung = () => {
+      const o = luar.current, d = dalam.current; if (!o || !d) return
+      const w = o.clientWidth; if (!w) return
+      d.style.fontSize = '10pt'
+      const t = d.offsetWidth; if (!t) return
+      d.style.fontSize = `${Math.max(4, Math.min(maks, (10 * w) / t * 0.995))}pt`
+    }
+    hitung(); document.fonts?.ready.then(hitung).catch(() => undefined)
+  })
+  return <span ref={luar} className="lbl-nama"><b ref={dalam}>{teks}</b></span>
+}
+
+
 export function KartuLabel({ it, o, qr, s }: { it: ItemLabel; o: OpsiLabel; qr?: string; s: Sekolah }) {
   const u = UKURAN[o.ukuran]
   const w = WARNA[o.warna]
@@ -91,7 +109,7 @@ export function KartuLabel({ it, o, qr, s }: { it: ItemLabel; o: OpsiLabel; qr?:
           {(o.sekolah || o.logo) && (
             <div className="lbl-sek" style={{ color: w }}>
               {o.logo && s.logo && <img src={s.logo} alt="" />}
-              {o.sekolah && <b>{s.nama}</b>}
+              {o.sekolah && <NamaPas teks={s.nama} maks={kecil ? 11 : 20} />}
             </div>
           )}
           {(() => {
