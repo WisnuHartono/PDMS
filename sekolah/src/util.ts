@@ -111,5 +111,6 @@ export async function fotoKecil(f: File, max = 320): Promise<string> {
   c.width = Math.round(img.width * s)
   c.height = Math.round(img.height * s)
   c.getContext('2d')!.drawImage(img, 0, 0, c.width, c.height)
-  return c.toDataURL('image/jpeg', 0.85)
+  // Gambar yang bisa transparan (logo PNG/WebP/GIF) tetap PNG agar latar tidak menjadi hitam.
+  return /^image\/(png|webp|gif|svg)/.test(f.type) ? c.toDataURL('image/png') : c.toDataURL('image/jpeg', 0.85)
 }

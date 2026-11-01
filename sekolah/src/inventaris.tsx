@@ -63,9 +63,9 @@ export function KartuLabel({ it, o, qr, s }: { it: ItemLabel; o: OpsiLabel; qr?:
         {o.isi !== 'barcode' && (qr ? <img className="lbl-qr" src={qr} alt={`QR ${it.kode}`} /> : <div className="lbl-qr" />)}
         <div className="lbl-info">
           {(o.sekolah || o.logo) && (
-            <div className="lbl-sek">
+            <div className="lbl-sek" style={{ color: w }}>
               {o.logo && s.logo && <img src={s.logo} alt="" />}
-              {o.sekolah && <b style={{ color: w }}>{s.nama}</b>}
+              {o.sekolah && <b>{s.nama}</b>}
             </div>
           )}
           <div className="lbl-data">
