@@ -626,3 +626,10 @@ table.mini th { font-weight: 700; color: #4b5d6e; }
 .subtabs button.on { font-weight: 800; }
 .adm-teks b, .adm-head h2 { font-weight: 800; }
 .doc-title { font-weight: 800; }
+
+/* Hierarki sidebar: judul kelompok jelas dan terang, sub menu lebih tipis tetapi tetap terbaca */
+.side-group { color: #ffffff; font-weight: 800; font-size: 12.5px; letter-spacing: 0.1em; padding: 16px 20px 6px; margin-top: 4px; border-top: 1px solid rgba(255, 255, 255, 0.12); }
+.side-group:first-child, .sidebar > div:first-child .side-group { border-top: 0; margin-top: 0; padding-top: 10px; }
+.side-label { font-weight: 400; color: #d3e0ea; font-size: 13.5px; }
+.side-item .ico { stroke-width: 1.7; }
+.side-item.on .side-label { font-weight: 600; color: #fff; }
