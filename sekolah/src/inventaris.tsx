@@ -1,5 +1,5 @@
 // Inventaris: label QR/barcode siap cetak dan stok opname (pindai kamera, pemindai USB, atau ketik kode).
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import jsQR from 'jsqr'
 import { formatNoInv, noInvBerikut } from './administrasi'
 import { Barcode128, qrUrl } from './barcode'
@@ -68,8 +68,11 @@ export function KartuLabel({ it, o, qr, s }: { it: ItemLabel; o: OpsiLabel; qr?:
               {o.sekolah && <b style={{ color: w }}>{s.nama}</b>}
             </div>
           )}
-          {baris.map(([k, v, tebal]) => <div key={k} className="lbl-baris"><span>{k}:</span> <b className={tebal ? 'kode' : ''} style={tebal ? { color: w } : undefined}>{v}</b></div>)}
-          {(th || kd) && <div className="lbl-baris">{th && <><span>Tahun:</span> <b>{th}</b></>}{th && kd && <i className="gap" />}{kd && <><span>Kondisi:</span> <b>{kd}</b></>}</div>}
+          <div className="lbl-data">
+            {[...baris, ...(th ? [['Tahun', th, false] as [string, string, boolean]] : []), ...(kd ? [['Kondisi', kd, false] as [string, string, boolean]] : [])].map(([k, v, tebal]) => (
+              <Fragment key={k}><span className="k">{k}</span><span className="t">:</span><b className={tebal ? 'kode' : ''} style={tebal ? { color: w } : undefined}>{v}</b></Fragment>
+            ))}
+          </div>
           {o.isi !== 'qr' && <div className="lbl-bar"><Barcode128 teks={it.kode} tinggi={kecil ? 16 : 24} /></div>}
         </div>
       </div>
