@@ -86,11 +86,23 @@ async function gUnggah(nama: string, isi: Uint8Array, mime: string) {
   const akhir = new TextEncoder().encode(`\r\n--${batas}--`)
   await gFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', { method: 'POST', headers: { 'Content-Type': `multipart/related; boundary=${batas}` }, body: new Blob([awal, isi as BlobPart, akhir]) })
 }
+async function gCari(nama: string): Promise<BerkasCloud | undefined> {
+  const parent = await gFolder()
+  const q = encodeURIComponent(`'${parent}' in parents and name='${nama.replace(/'/g, "\\'")}' and trashed=false`)
+  const r = (await (await gFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&pageSize=1&fields=files(id,name,size,modifiedTime)`)).json()) as { files: { id: string; name: string; size?: string; modifiedTime: string }[] }
+  const f = r.files[0]
+  return f ? { id: f.id, nama: f.name, ukuran: f.size ? Number(f.size) : undefined, waktu: f.modifiedTime } : undefined
+}
+async function gTimpa(nama: string, isi: Uint8Array, mime: string) {
+  const ada = await gCari(nama)
+  if (!ada) return gUnggah(nama, isi, mime)
+  await gFetch(`https://www.googleapis.com/upload/drive/v3/files/${encodeURIComponent(ada.id)}?uploadType=media&fields=id`, { method: 'PATCH', headers: { 'Content-Type': mime }, body: new Blob([isi as BlobPart]) })
+}
 async function gDaftar(): Promise<BerkasCloud[]> {
   const parent = await gFolder()
   const q = encodeURIComponent(`'${parent}' in parents and trashed=false`)
-  const r = (await (await gFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&orderBy=createdTime desc&pageSize=50&fields=files(id,name,size,createdTime)`)).json()) as { files: { id: string; name: string; size?: string; createdTime: string }[] }
-  return r.files.map((f) => ({ id: f.id, nama: f.name, ukuran: f.size ? Number(f.size) : undefined, waktu: f.createdTime }))
+  const r = (await (await gFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&orderBy=modifiedTime desc&pageSize=50&fields=files(id,name,size,modifiedTime)`)).json()) as { files: { id: string; name: string; size?: string; modifiedTime: string }[] }
+  return r.files.map((f) => ({ id: f.id, nama: f.name, ukuran: f.size ? Number(f.size) : undefined, waktu: f.modifiedTime }))
 }
 
 // ---------- WebDAV ----------
@@ -150,6 +162,23 @@ export async function unggah(c: CloudSetting, nama: string, isi: string | Uint8A
     return `Tersimpan di ${c.folder}`
   }
   throw new Error('Tujuan penyimpanan belum dipilih.')
+}
+/** Unggah dengan nama tetap: berkas lama diganti (dipakai sinkronisasi otomatis). */
+export async function timpa(c: CloudSetting, nama: string, isi: string | Uint8Array, mime: string): Promise<void> {
+  if (c.tujuan === 'gdrive') return gTimpa(aman(nama), bytes(isi), mime)
+  await unggah(c, nama, isi, mime)
+}
+/** Cari satu berkas cadangan menurut nama (untuk membaca waktu ubahnya). */
+export async function cariBerkas(c: CloudSetting, nama: string): Promise<BerkasCloud | undefined> {
+  if (c.tujuan === 'gdrive') return gCari(nama)
+  if (c.tujuan === 'webdav') return (await davDaftar(c)).find((b) => b.nama === nama)
+  if (c.tujuan === 'folder') {
+    const r = await desktop()?.folderDaftar?.(c.folder ?? '')
+    if (!r?.ok) throw new Error(r?.pesan || 'Folder tidak dapat dibaca.')
+    const b = r.berkas?.find((x) => x.nama === nama)
+    return b ? { id: b.nama, ...b } : undefined
+  }
+  return undefined
 }
 export async function daftar(c: CloudSetting): Promise<BerkasCloud[]> {
   if (c.tujuan === 'gdrive') return (await gDaftar()).filter((b) => b.nama.endsWith('.simas.json'))

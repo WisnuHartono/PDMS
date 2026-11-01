@@ -349,6 +349,8 @@ export interface CloudSetting {
   /** Folder di perangkat (aplikasi Windows). */
   folder?: string
   otomatis?: 'mati' | 'harian' | 'mingguan'
+  /** Sinkronisasi otomatis: data terbaru diunggah saat online, perubahan saat offline menunggu. */
+  sinkron?: boolean
   /** Kata sandi cadangan untuk cadangan otomatis (disimpan di perangkat ini). */
   sandiOto?: string
   terakhir?: string

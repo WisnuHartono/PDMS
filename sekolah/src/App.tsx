@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Icon } from './icons'
 import { exportTerenkripsi, put, useCol, useSekolah } from './store'
 import { jatuhTempo, unggah } from './cloud'
+import { mulaiSinkron, sinkronSekarang } from './sinkron'
 import { Avatar, Btn, KonfirmasiHost, Nav, ToastHost, useNav, type AsalNav, type PageId } from './ui'
 import { PrintHost } from './PratinjauCetak'
 import Dashboard from './pages/Dashboard'
@@ -98,6 +99,11 @@ export default function App() {
       await put('sekolah', { ...sekolah, cloud: { ...c, terakhir: hasil.includes('berhasil') ? new Date().toISOString() : c.terakhir, hasilTerakhir: hasil } })
     })()
   }, [sekolah, otoJalan])
+  // Sinkronisasi otomatis ke cloud (saat online) dengan penyimpanan lokal sebagai sumber utama
+  const cloudRef = useRef(sekolah.cloud)
+  cloudRef.current = sekolah.cloud
+  useEffect(() => mulaiSinkron(() => cloudRef.current), [])
+  useEffect(() => { void sinkronSekarang(sekolah.cloud) }, [sekolah.cloud?.sinkron, sekolah.cloud?.tujuan, sekolah.cloud?.sandiOto])
   const tinggiTop = Math.max(60, tm.logoUkuran + 16)
   const menu = MENU.filter((m) => boleh(m.id))
 
