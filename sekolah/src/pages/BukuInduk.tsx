@@ -79,19 +79,16 @@ export function LembarInduk({ s }: { s: Siswa }) {
   return (
     <div className="doc induk">
       <KopSurat judul="LEMBAR BUKU INDUK PESERTA DIDIK" />
+      <h4 className="sec">A. Keterangan Tentang Diri Peserta Didik</h4>
       <div className="induk-top">
         <div className="kvg">
-            {row('Nomor Induk / NISN', `${s.noInduk || '-'} / ${s.nisn || '-'}`)}
-            {row('NIK', s.nik)}
+          {row('Nomor Induk / NISN', `${s.noInduk || '-'} / ${s.nisn || '-'}`)}{row('NIK', s.nik)}
+          {row('Nama lengkap', s.nama)}{row('Nama panggilan', s.namaPanggilan)}{row('Jenis kelamin', s.jk === 'L' ? 'Laki-laki' : 'Perempuan')}
+          {row('Tempat, tanggal lahir', `${s.tempatLahir ?? '-'}, ${fmtTanggal(s.tanggalLahir)}`)}{row('Agama', s.agama)}{row('Kewarganegaraan', s.kewarganegaraan)}
+          {row('Anak ke- / jumlah saudara', `${s.anakKe ?? '-'} / ${s.jumlahSaudara ?? '-'}`)}{row('Bahasa sehari-hari', s.bahasaRumah)}
+          {row('Alamat / telepon', `${s.alamat ?? '-'}${s.telepon ? ` / ${s.telepon}` : ''}`)}{row('Tinggal dengan', s.tinggalDengan)}
         </div>
         <div className="pasfoto">{s.foto ? <img src={s.foto} alt="" /> : <span>Pas foto<br />3 x 4</span>}</div>
-      </div>
-      <h4 className="sec">A. Keterangan Tentang Diri Peserta Didik</h4>
-      <div className="kvg">
-        {row('Nama lengkap', s.nama)}{row('Nama panggilan', s.namaPanggilan)}{row('Jenis kelamin', s.jk === 'L' ? 'Laki-laki' : 'Perempuan')}
-        {row('Tempat, tanggal lahir', `${s.tempatLahir ?? '-'}, ${fmtTanggal(s.tanggalLahir)}`)}{row('Agama', s.agama)}{row('Kewarganegaraan', s.kewarganegaraan)}
-        {row('Anak ke- / jumlah saudara', `${s.anakKe ?? '-'} / ${s.jumlahSaudara ?? '-'}`)}{row('Bahasa sehari-hari', s.bahasaRumah)}
-        {row('Alamat / telepon', `${s.alamat ?? '-'}${s.telepon ? ` / ${s.telepon}` : ''}`)}{row('Tinggal dengan', s.tinggalDengan)}
       </div>
       <h4 className="sec">B. Keterangan Kesehatan</h4>
       <div className="kvg">
