@@ -241,7 +241,7 @@ function RegisterView({ bidang, reg, onBack }: { bidang: Bidang; reg: RegisterDe
                 {baris.rows.map((r, i) => (
                   <tr key={r.a.id}>
                     <td className="num">{i + 1}</td>
-                    {kolom.map((f) => <td key={f.k} className={f.t === 'rupiah' || f.t === 'number' ? 'r nowrap' : f.t === 'textarea' ? 'small desc' : f.t === 'date' ? 'nowrap' : ''}>{f.t === 'textarea' ? potong(labelNilai(f, r.d[f.k])) : labelNilai(f, r.d[f.k])}</td>)}
+                    {kolom.map((f) => <td key={f.k} className={f.t === 'rupiah' || f.t === 'number' ? 'r nowrap' : f.t === 'textarea' ? 'small desc' : (f.span ?? 1) >= 2 ? 'wide' : 'nowrap'}>{f.t === 'textarea' ? potong(labelNilai(f, r.d[f.k])) : labelNilai(f, r.d[f.k])}</td>)}
                     {reg.kolomHitung?.map((k) => <td key={k.k} className={k.rupiah ? 'r nowrap' : ''}>{k.rupiah ? rupiah(r.d[k.k]) : <Predikat v={r.d[k.k]} />}</td>)}
                     {reg.kas && <td className="r nowrap strong">{rupiah(r.saldo)}</td>}
                     {reg.lampiran && <td>{r.a.lampiran?.length ? <LampiranLink l={r.a.lampiran[0]} n={r.a.lampiran.length} /> : ''}</td>}

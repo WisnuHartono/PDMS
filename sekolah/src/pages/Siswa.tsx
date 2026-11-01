@@ -78,14 +78,14 @@ export default function SiswaPage() {
         {list.length === 0 ? <Empty>Belum ada data. Klik <b>Tambah Siswa</b> atau impor dari CSV (kolom: No Induk, NISN, Nama, JK, Tempat Lahir, Tanggal Lahir, Agama, Jenjang, Alamat, Nama Ayah, Nama Ibu, Telepon).</Empty> : (
           <div className="table-wrap">
             <table className="tbl">
-              <thead><tr><th></th><th>No Induk</th><th>NISN</th><th>Nama</th><th>L/P</th><th>Tempat, Tgl Lahir</th><th>Jenjang</th><th>Kelas</th><th>Status</th><th></th></tr></thead>
+              <thead><tr><th></th><th>No Induk</th><th>NISN</th><th>Nama</th><th className="c">L/P</th><th>Tempat, Tgl Lahir</th><th className="c">Jenjang</th><th className="c">Kelas</th><th>Status</th><th></th></tr></thead>
               <tbody>
                 {list.map((s) => (
                   <tr key={s.id} onDoubleClick={() => setEdit(s)}>
-                    <td><Avatar nama={s.nama} foto={s.foto} size={28} /></td>
-                    <td>{s.noInduk}</td><td>{s.nisn}</td><td><b>{s.nama}</b></td><td>{s.jk}</td>
-                    <td>{s.tempatLahir}{s.tanggalLahir ? `, ${fmtTanggal(s.tanggalLahir)}` : ''}</td>
-                    <td>{s.jenjang}</td><td>{rombelOf.get(s.id) ?? '-'}</td>
+                    <td className="av"><Avatar nama={s.nama} foto={s.foto} size={24} /></td>
+                    <td className="mono">{s.noInduk}</td><td className="mono">{s.nisn || <span className="muted">-</span>}</td><td className="nowrap"><b>{s.nama}</b></td><td className="c">{s.jk}</td>
+                    <td className="nowrap">{s.tempatLahir}{s.tanggalLahir ? `, ${fmtTanggal(s.tanggalLahir)}` : ''}</td>
+                    <td className="c">{s.jenjang}</td><td className="c">{rombelOf.get(s.id) ?? '-'}</td>
                     <td><span className={`pill ${s.status === 'Aktif' ? 'ok' : ''}`}>{s.status}</span></td>
                     <td className="row-actions">
                       <Btn icon="edit" kind="ghost" title="Ubah" onClick={() => setEdit(s)} />

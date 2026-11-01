@@ -75,7 +75,7 @@ function Harian() {
           <tbody>
             {anggota.map((s, i) => (
               <tr key={s!.id}>
-                <td className="num">{i + 1}</td><td><b>{s!.nama}</b></td><td>{s!.noInduk}</td>
+                <td className="num">{i + 1}</td><td className="nowrap"><b>{s!.nama}</b></td><td className="mono">{s!.noInduk}</td>
                 {STATUS_HADIR_SISWA.map((st) => (
                   <td key={st} className="c">
                     <label className={`radio st-${st} ${data[s!.id]?.status === st ? 'on' : ''}`}>

@@ -71,7 +71,7 @@ export default function RombelPage() {
         {list.length === 0 ? <Empty>Belum ada rombel untuk tahun ajaran ini.</Empty> : (
           <div className="table-wrap">
             <table className="tbl">
-              <thead><tr><th className="c" title="Hasil validasi">Vld</th><th>Rombel</th><th>Jenis</th><th>Jenjang</th><th>Tingkat</th><th>Wali Kelas / Tutor</th><th>Kurikulum</th><th className="num">Siswa</th><th className="num">Pembelajaran</th><th></th></tr></thead>
+              <thead><tr><th className="c" title="Hasil validasi">Vld</th><th>Rombel</th><th>Jenis</th><th className="c">Jenjang</th><th className="c">Tingkat</th><th>Wali Kelas / Tutor</th><th>Kurikulum</th><th className="num">Siswa</th><th className="num">Pembelajaran</th><th></th></tr></thead>
               <tbody>
                 {list.map((r) => {
                   const jp = (r.pembelajaran ?? []).reduce((a, p) => a + (p.jp || 0), 0)
@@ -80,8 +80,8 @@ export default function RombelPage() {
                       <td className="c"><Vld r={r} semua={semuaTa} /></td>
                       <td>{r.indukId ? <span className="muted">└ </span> : null}<b>{r.nama}</b>{r.rombelInduk && <span className="pill info" style={{ marginLeft: 6 }}>Induk</span>}</td>
                       <td>{r.jenis && r.jenis !== 'Reguler' ? <span className="pill">{r.jenis}{r.kategoriMapel ? ` · ${r.kategoriMapel}` : ''}{r.negaraTujuan ? ` · ${r.negaraTujuan}` : ''}</span> : 'Reguler'}</td>
-                      <td>{r.jenjang}</td><td>{r.tingkat}</td>
-                      <td>{namaPegawai(pegawai.find((p) => p.id === r.waliKelasId)) || '-'}</td>
+                      <td className="c">{r.jenjang}</td><td className="c">{r.tingkat}</td>
+                      <td className="nowrap">{namaPegawai(pegawai.find((p) => p.id === r.waliKelasId)) || '-'}</td>
                       <td><span className="pill">{getKurikulum(r.kurikulumId).singkat}</span></td>
                       <td className="num">{r.siswaIds.length}</td>
                       <td className="num">{r.pembelajaran?.length ? `${r.pembelajaran.length} mapel · ${jp} JP` : '-'}</td>

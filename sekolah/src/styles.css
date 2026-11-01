@@ -459,6 +459,69 @@ button.vld-box { cursor: pointer; }
 .side-badge { position: absolute; top: 6px; right: 8px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: #dc2626; color: #fff; font-size: 10px; font-weight: 700; display: grid; place-items: center; }
 @media (max-width: 760px) { .vld-ring { grid-template-columns: 1fr; } }
 
+/* ---------- Tampilan ringkas (compact): rapat, sejajar, tanpa mengurangi isi ---------- */
+body { font-size: 13.5px; }
+.content { padding: 10px 12px 20px; }
+.side-item { height: 42px; }
+.page-head { margin-bottom: 8px; align-items: center; }
+.page-head h2 { font-size: 18px; line-height: 1.25; }
+.page-head p { font-size: 12.5px; }
+.card-h { min-height: 36px; padding: 5px 10px; }
+.card-h h3 { font-size: 13.5px; }
+.card-b { padding: 8px 10px; }
+.grid-3, .grid-2 { gap: 8px; margin-bottom: 8px; }
+.toolbar { padding: 6px 8px; margin-bottom: 8px; }
+.btn { height: 30px; padding: 0 10px; }
+input:not([type=checkbox]):not([type=radio]), select { height: 30px; }
+.form-grid { gap: 7px 10px; margin-bottom: 6px; }
+.field { gap: 2px; }
+.field-l { font-size: 11.5px; }
+h4.sec { margin: 10px 0 6px; }
+.subtabs { margin-bottom: 8px; }
+.subtabs button { padding: 6px 12px; }
+.modal-h { padding: 9px 14px; }
+.modal-b { padding: 10px 14px; }
+.modal-f { padding: 8px 14px; }
+
+/* Tabel: baris ±30 px, angka rata kanan dengan digit sejajar, kolom pendek tidak terlipat */
+.tbl { font-size: 13px; }
+.tbl th { padding: 5px 8px; font-size: 12px; vertical-align: bottom; }
+.tbl td { padding: 3px 8px; line-height: 1.35; }
+.tbl th.num, .tbl td.num, .tbl td.r, .mono, table.mini td.num { font-variant-numeric: tabular-nums; }
+.tbl td.num, .tbl td.r, .tbl td.c { white-space: nowrap; }
+.tbl td.av { width: 30px; padding-right: 0; }
+.tbl .avatar { width: 24px !important; height: 24px !important; font-size: 9.5px !important; vertical-align: middle; }
+.tbl .btn { height: 26px; }
+.tbl .btn-ghost { padding: 0 6px; }
+.tbl .icon-btn { width: 26px; height: 26px; }
+.tbl input:not([type=checkbox]):not([type=radio]), .tbl select { height: 28px; }
+.tbl textarea { min-height: 28px; padding: 3px 6px; }
+.tbl td.wide { min-width: 160px; }
+.tbl td.desc { min-width: 200px; }
+.tbl td .muted.small, .tbl td div.small { line-height: 1.25; }
+.row-actions { width: 1%; }
+.row-actions .btn + .btn { margin-left: 2px; }
+.pill { padding: 0 7px; font-size: 11.5px; line-height: 18px; }
+table.mini td { padding: 3px 6px; }
+
+/* Dasbor & kartu ringkas */
+.kpi { padding: 4px 8px; }
+.kpi b { font-size: 19px; }
+.summary-donut { width: 104px; }
+
+/* Administrasi: kartu bidang lebih rapat */
+.adm-grid { gap: 10px 12px; }
+.adm-card, .adm-head { padding: 12px 16px; gap: 14px; border-radius: 16px; }
+.adm-ikon { width: 46px; height: 46px; border-radius: 12px; }
+.adm-teks { gap: 2px; padding-right: 36px; }
+.adm-teks b, .adm-head h2 { font-size: 15.5px; }
+.adm-teks > span { font-size: 13px; }
+.adm-teks small { margin-top: 0; }
+.adm-no { font-size: 34px; top: 6px; right: 16px; }
+.adm-items { gap: 8px; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+.adm-item { padding: 9px 12px; border-radius: 10px; gap: 2px; }
+.adm-item small { margin-top: 2px; }
+
 /* ---------- Responsif ---------- */
 @media (max-width: 1100px) {
   .grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -473,3 +536,6 @@ button.vld-box { cursor: pointer; }
   .brand-sub { display: none; }
   .stat-row { grid-template-columns: repeat(3, 1fr); }
 }
+.tbl td.clip { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.form-grid { align-items: end; }
+.form-grid > .foto-box { align-self: center; }

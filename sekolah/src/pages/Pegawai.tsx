@@ -10,6 +10,8 @@ const STATUS: StatusKepegawaian[] = ['PNS', 'PPPK', 'GTY/PTY', 'GTT/PTT', 'Honor
 export default function PegawaiPage() {
   const pegawai = useCol('pegawai')
   const mapel = useCol('mapel')
+  const rombel = useCol('rombel')
+  const sekolah = useSekolah()
   const [q, setQ] = useState('')
   const [jenis, setJenis] = useState('')
   const [aktif, setAktif] = useState('1')
@@ -19,6 +21,17 @@ export default function PegawaiPage() {
     .filter((p) => (!jenis || p.jenis === jenis) && (aktif === '' || p.aktif === (aktif === '1')))
     .filter((p) => { const x = q.toLowerCase(); return !x || p.nama.toLowerCase().includes(x) || (p.nip ?? '').includes(x) || (p.nuptk ?? '').includes(x) })
     .sort((a, b) => a.nama.localeCompare(b.nama))
+
+  // Beban mengajar pada TA aktif dari data pembelajaran rombel
+  const ajar = new Map<string, { kode: Set<string>; jp: number }>()
+  for (const r of rombel.filter((x) => x.tahunAjaran === sekolah.tahunAjaranAktif)) for (const b of r.pembelajaran ?? []) {
+    if (!b.guruId) continue
+    const v = ajar.get(b.guruId) ?? { kode: new Set<string>(), jp: 0 }
+    const m = mapel.find((x) => x.id === b.mapelId)
+    if (m) v.kode.add(m.kode.replace(/^(SD|SMP|SMA|SMK)-/, ''))
+    v.jp += b.jp || 0
+    ajar.set(b.guruId, v)
+  }
 
   const exportCsv = () => {
     const rows = [['Nama', 'NIP', 'NUPTK', 'JK', 'Jenis', 'Jabatan', 'Status Kepegawaian', 'Pendidikan', 'TMT', 'Telepon', 'Email']]
@@ -42,16 +55,18 @@ export default function PegawaiPage() {
         {list.length === 0 ? <Empty>Belum ada data guru / pegawai.</Empty> : (
           <div className="table-wrap">
             <table className="tbl">
-              <thead><tr><th></th><th>Nama</th><th>NIP / NUPTK</th><th>L/P</th><th>Jenis</th><th>Jabatan</th><th>Status</th><th>Mapel</th><th></th></tr></thead>
+              <thead><tr><th></th><th>Nama</th><th>NIP</th><th>NUPTK</th><th className="c">L/P</th><th>Jenis</th><th>Jabatan</th><th>Status</th><th>Mapel diampu</th><th className="num">JP</th><th></th></tr></thead>
               <tbody>
                 {list.map((p) => (
                   <tr key={p.id} onDoubleClick={() => setEdit(p)}>
-                    <td><Avatar nama={p.nama} foto={p.foto} size={28} /></td>
-                    <td><b>{namaPegawai(p)}</b></td>
-                    <td>{p.nip || '-'}<br /><span className="muted small">{p.nuptk}</span></td>
-                    <td>{p.jk}</td><td>{p.jenis}</td><td>{p.jabatan}</td>
+                    <td className="av"><Avatar nama={p.nama} foto={p.foto} size={24} /></td>
+                    <td className="nowrap"><b>{namaPegawai(p)}</b></td>
+                    <td className="mono nowrap">{p.nip || '-'}</td>
+                    <td className="mono nowrap">{p.nuptk || '-'}</td>
+                    <td className="c">{p.jk}</td><td className="nowrap">{p.jenis}</td><td className="nowrap">{p.jabatan}</td>
                     <td><span className="pill">{p.statusKepegawaian ?? '-'}</span></td>
-                    <td className="small">{(p.mapelIds ?? []).map((id) => mapel.find((m) => m.id === id)?.kode).filter(Boolean).join(', ')}</td>
+                    <td className="small clip" title={[...(ajar.get(p.id)?.kode ?? [])].join(', ')}>{[...(ajar.get(p.id)?.kode ?? (p.mapelIds ?? []).map((id) => mapel.find((m) => m.id === id)?.kode).filter(Boolean))].join(', ') || <span className="muted">-</span>}</td>
+                    <td className="num">{ajar.get(p.id)?.jp || <span className="muted">-</span>}</td>
                     <td className="row-actions">
                       <Btn icon="edit" kind="ghost" title="Ubah" onClick={() => setEdit(p)} />
                       <Btn icon="trash" kind="ghost" title="Hapus" onClick={async () => { if (await tanya(`Hapus ${p.nama}?`)) await remove('pegawai', p.id) }} />

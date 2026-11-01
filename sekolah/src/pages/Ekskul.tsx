@@ -22,13 +22,13 @@ export default function EkskulPage() {
         </div>
         {!ekskul.length ? <Empty>Belum ada ekstrakurikuler.</Empty> : (
           <table className="tbl">
-            <thead><tr><th>Nama</th><th>Pembina</th><th></th></tr></thead>
+            <thead><tr><th style={{ width: '45%' }}>Nama</th><th>Pembina</th><th></th></tr></thead>
             <tbody>
               {ekskul.map((e) => (
                 <tr key={e.id}>
-                  <td><input value={e.nama} onChange={(x) => put('ekskul', { ...e, nama: x.target.value })} /></td>
+                  <td><input style={{ width: '100%' }} aria-label="Nama ekstrakurikuler" value={e.nama} onChange={(x) => put('ekskul', { ...e, nama: x.target.value })} /></td>
                   <td>
-                    <select value={e.pembinaId ?? ''} onChange={(x) => put('ekskul', { ...e, pembinaId: x.target.value || undefined })}>
+                    <select style={{ width: '100%', maxWidth: 360 }} aria-label="Pembina" value={e.pembinaId ?? ''} onChange={(x) => put('ekskul', { ...e, pembinaId: x.target.value || undefined })}>
                       <option value="">-</option>
                       {pegawai.filter((p) => p.aktif).map((p) => <option key={p.id} value={p.id}>{namaPegawai(p)}</option>)}
                     </select>
