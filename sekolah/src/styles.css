@@ -889,18 +889,26 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 .doc.induk table.ortu th:not(:first-child), .doc.induk table.ortu td:not(:first-child) { width: 50%; }
 .doc.induk .ket { margin-left: 9mm; }
 
-/* Dashboard: kartu profil & informasi sekolah */
-.profil-sk { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 18px; align-items: start; }
-.profil-id { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; padding: 14px 10px; border-radius: 10px; background: linear-gradient(160deg, rgba(15,118,110,.10), rgba(15,118,110,.02)); border: 1px solid var(--line); }
-.profil-id .logo-sk { box-shadow: 0 2px 10px rgba(16,40,60,.15); }
-.profil-id > div { display: flex; flex-direction: column; gap: 4px; align-items: center; }
-.profil-id b { font-size: 16px; line-height: 1.25; }
-.profil-id span { color: var(--muted); font-size: 12px; }
-.profil-grup { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px 22px; }
-.profil-grup h5 { margin: 0 0 6px; font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); border-bottom: 1px solid var(--line); padding-bottom: 4px; }
-.profil-grup dl { margin: 0; display: grid; gap: 4px; }
-.profil-grup dl > div { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 8px; font-size: 13px; }
+/* Dashboard: kartu profil & informasi sekolah (ringkas) */
+.profil-sk { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 14px; align-items: start; }
+.profil-id { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; background: linear-gradient(160deg, rgba(15,118,110,.10), rgba(15,118,110,.02)); border: 1px solid var(--line); }
+.profil-id .logo-sk { flex: none; }
+.profil-id > div { display: flex; flex-direction: column; gap: 2px; align-items: flex-start; min-width: 0; }
+.profil-id b { font-size: 13.5px; line-height: 1.25; }
+.profil-id span { color: var(--muted); font-size: 11.5px; line-height: 1.3; }
+.profil-grup { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 8px 18px; }
+.profil-grup h5 { margin: 0 0 3px; font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); border-bottom: 1px solid var(--line); padding-bottom: 2px; }
+.profil-grup dl { margin: 0; display: grid; gap: 1px; }
+.profil-grup dl > div { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 6px; font-size: 12px; line-height: 1.35; }
 .profil-grup dt { color: var(--muted); }
 .profil-grup dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
-.profil-grup dd.kosong { font-weight: 400; color: var(--muted); font-style: italic; opacity: .7; }
+.profil-lengkapi { margin-top: 8px; border: 0; background: none; padding: 0; color: var(--muted); font-size: 11.5px; cursor: pointer; text-align: left; }
+.profil-lengkapi:hover { color: var(--accent); text-decoration: underline; }
 @media (max-width: 900px) { .profil-sk { grid-template-columns: 1fr; } }
+.profil-sk { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px 18px; align-items: start; }
+.profil-grup { display: contents; }
+.profil-id { align-self: stretch; }
+.profil-grup dl > div { grid-template-columns: 78px minmax(0, 1fr); }
+.profil-id { grid-column: 1 / -1; align-self: auto; padding: 6px 10px; background: rgba(15,118,110,.06); }
+.profil-id > div { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
+.profil-sk { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }

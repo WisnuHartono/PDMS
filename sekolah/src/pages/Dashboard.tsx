@@ -225,11 +225,12 @@ export default function Dashboard() {
             ['Listrik / internet', gabung(sekolah.sumberListrik && `${sekolah.sumberListrik}${sekolah.dayaListrik ? ` ${sekolah.dayaListrik} VA` : ''}`, sekolah.aksesInternet)],
           ]],
         ]
+        const kosong = kelompok.reduce((n, [, , br]) => n + br.filter(([, v]) => !v).length, 0)
         return (
           <Card title="Profil & Informasi Sekolah" className="mb" actions={boleh('pengaturan') ? <button className="icon-btn" title="Ubah di Pengaturan" onClick={() => nav.open('pengaturan')}><Icon name="edit" size={16} /></button> : undefined}>
             <div className="profil-sk">
               <div className="profil-id">
-                <LogoSekolah logo={sekolah.logo} t={{ ...tampilanDari(sekolah), logoUkuran: 72, logoLatar: 'putih', logoBingkai: true }} />
+                <LogoSekolah logo={sekolah.logo} t={{ ...tampilanDari(sekolah), logoUkuran: 48, logoLatar: 'putih', logoBingkai: true }} />
                 <div>
                   <b>{sekolah.nama}</b>
                   <span>{gabung(sekolah.npsn && `NPSN ${sekolah.npsn}`, sekolah.statusSekolah, sekolah.akreditasi && `Akreditasi ${sekolah.akreditasi}`) ?? ' '}</span>
@@ -237,16 +238,18 @@ export default function Dashboard() {
                 </div>
               </div>
               <div className="profil-grup">
-                {kelompok.map(([judul, , baris]) => (
-                  <section key={judul}>
-                    <h5>{judul}</h5>
-                    <dl>
-                      {baris.map(([k, v]) => <div key={k}><dt>{k}</dt><dd className={v ? '' : 'kosong'}>{v ?? 'belum diisi'}</dd></div>)}
-                    </dl>
-                  </section>
-                ))}
+                {kelompok.map(([judul, , baris]) => {
+                  const isi = baris.filter(([, v]) => v)
+                  return isi.length ? (
+                    <section key={judul}>
+                      <h5>{judul}</h5>
+                      <dl>{isi.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>
+                    </section>
+                  ) : null
+                })}
               </div>
             </div>
+            {kosong > 0 && boleh('pengaturan') && <button className="profil-lengkapi" onClick={() => nav.open('pengaturan')}>{kosong} isian profil belum diisi · Lengkapi di Pengaturan →</button>}
           </Card>
         )
       })()}
