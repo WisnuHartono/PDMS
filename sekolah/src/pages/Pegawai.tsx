@@ -1,0 +1,125 @@
+import { useState } from 'react'
+import { put, remove, useCol } from '../store'
+import { AGAMA, type JenisPegawai, type Pegawai, type StatusKepegawaian } from '../types'
+import { Avatar, Btn, Card, Empty, Field, Inp, Modal, PageHead, Sel, toast } from '../ui'
+import { download, fmtTanggal, fotoKecil, namaPegawai, toCsv, uid } from '../util'
+
+const JENIS: JenisPegawai[] = ['Guru', 'Tenaga Kependidikan', 'Yayasan']
+const STATUS: StatusKepegawaian[] = ['PNS', 'PPPK', 'GTY/PTY', 'GTT/PTT', 'Honorer', 'Kontrak', 'Lainnya']
+
+export default function PegawaiPage() {
+  const pegawai = useCol('pegawai')
+  const mapel = useCol('mapel')
+  const [q, setQ] = useState('')
+  const [jenis, setJenis] = useState('')
+  const [aktif, setAktif] = useState('1')
+  const [edit, setEdit] = useState<Pegawai | null>(null)
+
+  const list = pegawai
+    .filter((p) => (!jenis || p.jenis === jenis) && (aktif === '' || p.aktif === (aktif === '1')))
+    .filter((p) => { const x = q.toLowerCase(); return !x || p.nama.toLowerCase().includes(x) || (p.nip ?? '').includes(x) || (p.nuptk ?? '').includes(x) })
+    .sort((a, b) => a.nama.localeCompare(b.nama))
+
+  const exportCsv = () => {
+    const rows = [['Nama', 'NIP', 'NUPTK', 'JK', 'Jenis', 'Jabatan', 'Status Kepegawaian', 'Pendidikan', 'TMT', 'Telepon', 'Email']]
+    for (const p of list) rows.push([namaPegawai(p), p.nip ?? '', p.nuptk ?? '', p.jk, p.jenis, p.jabatan ?? '', p.statusKepegawaian ?? '', p.pendidikanTerakhir ?? '', p.tmt ?? '', p.telepon ?? '', p.email ?? ''])
+    download('guru-pegawai.csv', toCsv(rows), 'text/csv')
+  }
+
+  return (
+    <div>
+      <PageHead title="Guru & Pegawai" sub="Pendidik, tenaga kependidikan, dan pegawai yayasan">
+        <Btn icon="download" onClick={exportCsv}>Ekspor CSV</Btn>
+        <Btn icon="plus" kind="primary" onClick={() => setEdit({ id: uid(), nama: '', jenis: (jenis || 'Guru') as JenisPegawai, jk: 'L', aktif: true })}>Tambah</Btn>
+      </PageHead>
+      <Card title={`${list.length} orang`} actions={
+        <div className="filters">
+          <input placeholder="Cari nama / NIP / NUPTK" value={q} onChange={(e) => setQ(e.target.value)} />
+          <select value={jenis} onChange={(e) => setJenis(e.target.value)}><option value="">Semua jenis</option>{JENIS.map((j) => <option key={j}>{j}</option>)}</select>
+          <select value={aktif} onChange={(e) => setAktif(e.target.value)}><option value="1">Aktif</option><option value="0">Nonaktif</option><option value="">Semua</option></select>
+        </div>
+      }>
+        {list.length === 0 ? <Empty>Belum ada data guru / pegawai.</Empty> : (
+          <div className="table-wrap">
+            <table className="tbl">
+              <thead><tr><th></th><th>Nama</th><th>NIP / NUPTK</th><th>L/P</th><th>Jenis</th><th>Jabatan</th><th>Status</th><th>Mapel</th><th></th></tr></thead>
+              <tbody>
+                {list.map((p) => (
+                  <tr key={p.id} onDoubleClick={() => setEdit(p)}>
+                    <td><Avatar nama={p.nama} foto={p.foto} size={28} /></td>
+                    <td><b>{namaPegawai(p)}</b></td>
+                    <td>{p.nip || '-'}<br /><span className="muted small">{p.nuptk}</span></td>
+                    <td>{p.jk}</td><td>{p.jenis}</td><td>{p.jabatan}</td>
+                    <td><span className="pill">{p.statusKepegawaian ?? '-'}</span></td>
+                    <td className="small">{(p.mapelIds ?? []).map((id) => mapel.find((m) => m.id === id)?.kode).filter(Boolean).join(', ')}</td>
+                    <td className="row-actions">
+                      <Btn icon="edit" kind="ghost" title="Ubah" onClick={() => setEdit(p)} />
+                      <Btn icon="trash" kind="ghost" title="Hapus" onClick={async () => { if (confirm(`Hapus ${p.nama}?`)) await remove('pegawai', p.id) }} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
+      {edit && <PegawaiForm initial={edit} onClose={() => setEdit(null)} />}
+    </div>
+  )
+}
+
+function PegawaiForm({ initial, onClose }: { initial: Pegawai; onClose: () => void }) {
+  const mapel = useCol('mapel')
+  const [p, setP] = useState(initial)
+  const set = (x: Partial<Pegawai>) => setP((o) => ({ ...o, ...x }))
+  const simpan = async () => {
+    if (!p.nama.trim()) return toast('Nama wajib diisi')
+    await put('pegawai', p)
+    toast('Disimpan')
+    onClose()
+  }
+  const toggleMapel = (id: string) => set({ mapelIds: (p.mapelIds ?? []).includes(id) ? p.mapelIds!.filter((x) => x !== id) : [...(p.mapelIds ?? []), id] })
+  return (
+    <Modal title={initial.nama ? `Ubah: ${initial.nama}` : 'Guru / Pegawai Baru'} onClose={onClose} wide footer={<><Btn onClick={onClose}>Batal</Btn><Btn kind="primary" onClick={simpan}>Simpan</Btn></>}>
+      <div className="form-grid">
+        <div className="foto-box span-1">
+          <Avatar nama={p.nama || '?'} foto={p.foto} size={96} />
+          <label className="btn btn-ghost">Pilih foto<input type="file" accept="image/*" hidden onChange={async (e) => { const f = e.target.files?.[0]; if (f) set({ foto: await fotoKecil(f) }) }} /></label>
+        </div>
+        <Field label="Gelar depan"><Inp obj={p} k="gelarDepan" set={set} /></Field>
+        <Field label="Nama lengkap *"><Inp obj={p} k="nama" set={set} autoFocus /></Field>
+        <Field label="Gelar belakang"><Inp obj={p} k="gelarBelakang" set={set} /></Field>
+        <Field label="Jenis"><Sel obj={p} k="jenis" set={set} options={JENIS} /></Field>
+        <Field label="Jabatan"><Inp obj={p} k="jabatan" set={set} placeholder="Guru Kelas, Kepala TU, …" /></Field>
+        <Field label="Status kepegawaian"><Sel obj={p} k="statusKepegawaian" set={set} options={STATUS} empty="-" /></Field>
+        <Field label="NIP"><Inp obj={p} k="nip" set={set} /></Field>
+        <Field label="NUPTK"><Inp obj={p} k="nuptk" set={set} /></Field>
+        <Field label="NIK"><Inp obj={p} k="nik" set={set} /></Field>
+        <Field label="Jenis kelamin"><Sel obj={p} k="jk" set={set} options={[['L', 'Laki-laki'], ['P', 'Perempuan']]} /></Field>
+        <Field label="Tempat lahir"><Inp obj={p} k="tempatLahir" set={set} /></Field>
+        <Field label="Tanggal lahir"><Inp obj={p} k="tanggalLahir" set={set} type="date" /></Field>
+        <Field label="Agama"><Sel obj={p} k="agama" set={set} options={AGAMA} empty="-" /></Field>
+        <Field label="Pendidikan terakhir"><Inp obj={p} k="pendidikanTerakhir" set={set} /></Field>
+        <Field label="Jurusan"><Inp obj={p} k="jurusan" set={set} /></Field>
+        <Field label="TMT"><Inp obj={p} k="tmt" set={set} type="date" /></Field>
+        <Field label="Telepon"><Inp obj={p} k="telepon" set={set} /></Field>
+        <Field label="Email" span={2}><Inp obj={p} k="email" set={set} type="email" /></Field>
+        <Field label="Alamat" span={3}><Inp obj={p} k="alamat" set={set} /></Field>
+        <Field label="Status"><select value={p.aktif ? '1' : '0'} onChange={(e) => set({ aktif: e.target.value === '1' })}><option value="1">Aktif</option><option value="0">Nonaktif</option></select></Field>
+      </div>
+      {p.jenis === 'Guru' && mapel.length > 0 && (
+        <>
+          <h4 className="sec">Mata pelajaran yang diampu</h4>
+          <div className="chips">
+            {[...mapel].sort((a, b) => a.urutan - b.urutan).map((m) => (
+              <label key={m.id} className={`chip ${(p.mapelIds ?? []).includes(m.id) ? 'on' : ''}`}>
+                <input type="checkbox" checked={(p.mapelIds ?? []).includes(m.id)} onChange={() => toggleMapel(m.id)} />{m.nama} <span className="muted">({m.jenjang.join('/')})</span>
+              </label>
+            ))}
+          </div>
+        </>
+      )}
+      {p.tmt && <p className="muted small">Masa kerja sejak {fmtTanggal(p.tmt)}</p>}
+    </Modal>
+  )
+}
