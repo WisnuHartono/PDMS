@@ -22,7 +22,7 @@ export interface FieldDef {
 
 export interface KolomHitung { k: string; l: string; rupiah?: boolean }
 
-export type JenisCetak = 'disposisi' | 'kuitansi' | 'suket' | 'supervisi' | 'notulen'
+export type JenisCetak = 'disposisi' | 'kuitansi' | 'suket' | 'supervisi' | 'notulen' | 'suratResmi' | 'undangan' | 'cuti' | 'suratTugas' | 'sk' | 'suketPegawai' | 'kuitansiUmum' | 'slipGaji' | 'baHapus' | 'panggilanOrtu'
 
 export interface RegisterDef {
   id: string
@@ -72,6 +72,7 @@ export function predikatSupervisi(v: number) {
   return v >= 91 ? 'Amat Baik' : v >= 81 ? 'Baik' : v >= 71 ? 'Cukup' : v > 0 ? 'Kurang' : ''
 }
 
+const hariCuti = (d: Record<string, NilaiArsip>) => { if (!d.mulai) return undefined; const a = new Date(String(d.mulai)).getTime(); const b = new Date(String(d.selesai || d.mulai)).getTime(); return Math.max(1, Math.round((b - a) / 86400000) + 1) }
 const reg = (r: RegisterDef): ItemDef => ({ jenis: 'register', reg: r })
 const hal = (page: PageId, nama: string, ket: string): ItemDef => ({ jenis: 'halaman', page, nama, ket })
 const dok = (id: string, nama: string, ket: string, berlaku = false): ItemDef => ({ jenis: 'dokumen', id, nama, ket, berlaku })
@@ -128,11 +129,12 @@ const anak: Bidang = {
       ],
     }),
     reg({
-      id: 'bk', nama: 'Buku Bimbingan dan Konseling', ket: 'Layanan BK, kunjungan rumah, panggilan orang tua', tanggal: 'tanggal',
+      id: 'bk', nama: 'Buku Bimbingan dan Konseling', ket: 'Layanan BK, kunjungan rumah, panggilan orang tua (cetak surat panggilan)', tanggal: 'tanggal', cetak: 'panggilanOrtu',
       fields: [
         { k: 'tanggal', l: 'Tanggal', t: 'date', wajib: true, daftar: true }, { k: 'siswa', l: 'Peserta didik', t: 'siswa', wajib: true, daftar: true },
         { k: 'layanan', l: 'Jenis layanan', t: 'select', opsi: ['Konseling individu', 'Konseling kelompok', 'Bimbingan klasikal', 'Kunjungan rumah', 'Panggilan orang tua', 'Konferensi kasus', 'Alih tangan'], daftar: true },
         { k: 'masalah', l: 'Permasalahan', t: 'textarea', span: 2, daftar: true }, { k: 'tindak', l: 'Tindak lanjut / hasil', t: 'textarea', span: 2 },
+        { k: 'tglPanggil', l: 'Tanggal panggilan (bila ada)', t: 'date' }, { k: 'jamPanggil', l: 'Jam', t: 'time' },
       ],
     }),
     reg({
@@ -267,12 +269,35 @@ const sdm: Bidang = {
       ],
     }),
     reg({
-      id: 'cuti', nama: 'Cuti dan Izin Pegawai', ket: 'Pengajuan dan persetujuan cuti', tanggal: 'mulai',
+      id: 'cuti', nama: 'Cuti dan Izin Pegawai', ket: 'Pengajuan dan persetujuan cuti; cetak formulir permohonan dan persetujuan', tanggal: 'mulai', cetak: 'cuti',
+      hitung: (d) => ({ lama: hariCuti(d) }), kolomHitung: [{ k: 'lama', l: 'Lama (hari)' }],
       fields: [
         { k: 'pegawai', l: 'Pegawai', t: 'pegawai', wajib: true, daftar: true },
         { k: 'jenis', l: 'Jenis', t: 'select', opsi: ['Cuti tahunan', 'Cuti sakit', 'Cuti melahirkan', 'Cuti alasan penting', 'Izin', 'Dinas luar'], daftar: true },
         { k: 'mulai', l: 'Mulai', t: 'date', wajib: true, daftar: true }, { k: 'selesai', l: 'Selesai', t: 'date', daftar: true },
         { k: 'alasan', l: 'Alasan', span: 2, daftar: true }, { k: 'status', l: 'Status', t: 'select', opsi: ['Diajukan', 'Disetujui', 'Ditolak'], daftar: true },
+        { k: 'alamatCuti', l: 'Alamat selama cuti', span: 3 }, { k: 'telpCuti', l: 'Telepon selama cuti' },
+        { k: 'catatan', l: 'Catatan pertimbangan atasan', span: 4 },
+      ],
+    }),
+    reg({
+      id: 'surat-tugas', nama: 'Surat Tugas', ket: 'Penugasan guru/pegawai: dinas luar, pelatihan, lomba, pendampingan', tanggal: 'tanggal', cetak: 'suratTugas',
+      nomor: { k: 'nomor', buat: (u, d, s) => `${pad3(u)}/ST/${kodeSekolah(s)}/${blnRomawi(d.tanggal)}/${thn(d.tanggal)}` },
+      fields: [
+        { k: 'tanggal', l: 'Tanggal surat', t: 'date', wajib: true, daftar: true }, { k: 'nomor', l: 'Nomor (otomatis)', span: 2, daftar: true },
+        { k: 'pegawai', l: 'Ditugaskan kepada', t: 'pegawai', wajib: true, span: 2, daftar: true }, { k: 'kegiatan', l: 'Untuk melaksanakan tugas', span: 4, wajib: true, daftar: true },
+        { k: 'tempat', l: 'Tempat / instansi tujuan', span: 2, daftar: true }, { k: 'mulai', l: 'Mulai', t: 'date', daftar: true }, { k: 'selesai', l: 'Selesai', t: 'date' },
+        { k: 'dasar', l: 'Dasar penugasan', span: 4, ph: 'mis. Surat undangan Dinas Pendidikan No. ...' },
+      ],
+    }),
+    reg({
+      id: 'suket-pegawai', nama: 'Surat Keterangan Guru / Pegawai', ket: 'Keterangan bekerja, berkelakuan baik, dan keperluan administrasi lainnya', tanggal: 'tanggal', cetak: 'suketPegawai',
+      nomor: { k: 'nomor', buat: (u, d, s) => `${pad3(u)}/421.3/${kodeSekolah(s)}/${blnRomawi(d.tanggal)}/${thn(d.tanggal)}` },
+      fields: [
+        { k: 'tanggal', l: 'Tanggal', t: 'date', wajib: true, daftar: true }, { k: 'nomor', l: 'Nomor (otomatis)', span: 2, daftar: true },
+        { k: 'jenis', l: 'Jenis surat', t: 'select', opsi: ['Keterangan Bekerja', 'Keterangan Berkelakuan Baik', 'Keterangan Penghasilan'], wajib: true, span: 2, daftar: true },
+        { k: 'pegawai', l: 'Guru / pegawai', t: 'pegawai', wajib: true, span: 2, daftar: true }, { k: 'keperluan', l: 'Keperluan', span: 2, daftar: true },
+        { k: 'penghasilan', l: 'Penghasilan per bulan (bila perlu)', t: 'rupiah' },
       ],
     }),
     reg({
@@ -470,7 +495,17 @@ const keuangan: Bidang = {
       ],
     }),
     reg({
-      id: 'honor', nama: 'Daftar Gaji / Honor', ket: 'Honor guru dan pegawai per bulan', total: ['bersih'],
+      id: 'kuitansi-umum', nama: 'Kuitansi / Bukti Pengeluaran', ket: 'Bukti pengeluaran kas kepada pihak ketiga, guru, atau pegawai', tanggal: 'tanggal', cetak: 'kuitansiUmum', total: ['jumlah'], lampiran: true,
+      nomor: { k: 'noKw', buat: (u, d) => `BK/${thn(d.tanggal)}/${pad3(u)}` },
+      fields: [
+        { k: 'noKw', l: 'No. bukti', daftar: true }, { k: 'tanggal', l: 'Tanggal', t: 'date', wajib: true, daftar: true },
+        { k: 'penerima', l: 'Dibayarkan kepada', span: 2, wajib: true, daftar: true }, { k: 'uraian', l: 'Untuk pembayaran', span: 3, wajib: true, daftar: true },
+        { k: 'jumlah', l: 'Jumlah', t: 'rupiah', wajib: true, daftar: true }, { k: 'sumber', l: 'Sumber dana', t: 'select', opsi: SUMBER_DANA, daftar: true },
+        { k: 'kode', l: 'Kode rekening / kegiatan' },
+      ],
+    }),
+    reg({
+      id: 'honor', nama: 'Daftar Gaji / Honor', ket: 'Honor guru dan pegawai per bulan; cetak slip', total: ['bersih'], cetak: 'slipGaji',
       hitung: (d) => ({ bersih: n(d.pokok) + n(d.tunjangan) - n(d.potongan) || undefined }), kolomHitung: [{ k: 'bersih', l: 'Diterima', rupiah: true }],
       fields: [
         { k: 'bulan', l: 'Bulan', t: 'select', opsi: ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'], wajib: true, daftar: true },
@@ -546,7 +581,7 @@ const sarpras: Bidang = {
       ],
     }),
     reg({
-      id: 'hapus-brg', nama: 'Penghapusan Barang', ket: 'Barang rusak berat/hilang yang dihapus dari inventaris', tanggal: 'tanggal', lampiran: true,
+      id: 'hapus-brg', nama: 'Penghapusan Barang', ket: 'Barang rusak berat/hilang yang dihapus dari inventaris; cetak berita acara', tanggal: 'tanggal', lampiran: true, cetak: 'baHapus',
       fields: [
         { k: 'tanggal', l: 'Tanggal', t: 'date', wajib: true, daftar: true }, { k: 'barang', l: 'Barang', span: 2, wajib: true, daftar: true }, { k: 'jumlah', l: 'Jumlah', t: 'number', daftar: true },
         { k: 'alasan', l: 'Alasan', t: 'select', opsi: ['Rusak berat', 'Hilang', 'Usang', 'Dihibahkan'], daftar: true }, { k: 'ba', l: 'No. berita acara', daftar: true },
@@ -574,13 +609,15 @@ const tu: Bidang = {
       ],
     }),
     reg({
-      id: 'surat-keluar', nama: 'Buku Agenda Surat Keluar', ket: 'Penomoran surat otomatis dan arsip', tanggal: 'tanggal', lampiran: true,
+      id: 'surat-keluar', nama: 'Buku Agenda Surat Keluar', ket: 'Penomoran surat otomatis, arsip, dan cetak surat dinas', tanggal: 'tanggal', lampiran: true, cetak: 'suratResmi',
       nomor: { k: 'nomor', buat: (u, d, s) => `${pad3(u)}/${d.klas || '421'}/${kodeSekolah(s)}/${blnRomawi(d.tanggal)}/${thn(d.tanggal)}` },
       fields: [
         { k: 'tanggal', l: 'Tanggal', t: 'date', wajib: true, daftar: true },
         { k: 'klas', l: 'Kode klasifikasi', t: 'select', opsi: ['421', '421.1', '421.2', '421.3', '422', '423', '005', '800', '900'], daftar: false },
         { k: 'nomor', l: 'Nomor surat (otomatis)', span: 2, daftar: true }, { k: 'tujuan', l: 'Tujuan', span: 2, wajib: true, daftar: true },
         { k: 'perihal', l: 'Perihal', span: 2, wajib: true, daftar: true }, { k: 'pembuat', l: 'Konseptor', t: 'pegawai' },
+        { k: 'sifat', l: 'Sifat', t: 'select', opsi: ['Biasa', 'Penting', 'Segera', 'Rahasia'] }, { k: 'jmlLampiran', l: 'Lampiran', ph: 'mis. 1 (satu) berkas' },
+        { k: 'isi', l: 'Isi surat (pisahkan alinea dengan baris kosong)', t: 'textarea', span: 4 }, { k: 'tembusan', l: 'Tembusan', span: 4, ph: 'mis. Ketua Yayasan; Arsip' },
       ],
     }),
     reg({
@@ -593,10 +630,22 @@ const tu: Bidang = {
       ],
     }),
     reg({
-      id: 'sk', nama: 'Register Surat Keputusan (SK)', ket: 'SK kepala sekolah / yayasan', tanggal: 'tanggal', lampiran: true,
+      id: 'sk', nama: 'Register Surat Keputusan (SK)', ket: 'SK kepala sekolah / yayasan; cetak SK lengkap (menimbang, mengingat, memutuskan)', tanggal: 'tanggal', lampiran: true, cetak: 'sk',
       fields: [
         { k: 'nomor', l: 'Nomor SK', daftar: true }, { k: 'tanggal', l: 'Tanggal', t: 'date', daftar: true }, { k: 'tentang', l: 'Tentang', span: 2, wajib: true, daftar: true },
         { k: 'penandatangan', l: 'Penandatangan', daftar: true },
+        { k: 'menimbang', l: 'Menimbang (satu butir per baris)', t: 'textarea', span: 4 }, { k: 'mengingat', l: 'Mengingat (satu butir per baris)', t: 'textarea', span: 4 },
+        { k: 'menetapkan', l: 'Memutuskan / menetapkan (satu diktum per baris)', t: 'textarea', span: 4 },
+      ],
+    }),
+    reg({
+      id: 'undangan', nama: 'Surat Undangan', ket: 'Undangan rapat, kegiatan, dan pertemuan orang tua', tanggal: 'tanggal', cetak: 'undangan',
+      nomor: { k: 'nomor', buat: (u, d, s) => `${pad3(u)}/UND/${kodeSekolah(s)}/${blnRomawi(d.tanggal)}/${thn(d.tanggal)}` },
+      fields: [
+        { k: 'tanggal', l: 'Tanggal surat', t: 'date', wajib: true, daftar: true }, { k: 'nomor', l: 'Nomor (otomatis)', span: 2, daftar: true },
+        { k: 'kepada', l: 'Kepada Yth.', span: 2, wajib: true, daftar: true, ph: 'mis. Bapak/Ibu Orang Tua/Wali Murid' }, { k: 'acara', l: 'Acara', span: 2, wajib: true, daftar: true },
+        { k: 'hari', l: 'Tanggal pelaksanaan', t: 'date', wajib: true, daftar: true }, { k: 'jam', l: 'Waktu', t: 'time', daftar: true }, { k: 'tempat', l: 'Tempat', span: 2, daftar: true },
+        { k: 'agenda', l: 'Agenda', t: 'textarea', span: 4 }, { k: 'catatan', l: 'Catatan tambahan', span: 4, ph: 'mis. mohon membawa buku rapor' },
       ],
     }),
     reg({
