@@ -94,12 +94,20 @@ export function KartuLabel({ it, o, qr, s }: { it: ItemLabel; o: OpsiLabel; qr?:
               {o.sekolah && <b>{s.nama}</b>}
             </div>
           )}
-          <div className="lbl-data">
-            {[...baris, ...(th ? [['Tahun', th, false] as [string, string, boolean]] : []), ...(kd ? [['Kondisi', kd, false] as [string, string, boolean]] : [])].map(([k, v, tebal]) => (
-              <Fragment key={k}><span className="k">{k}</span><span className="t">:</span><b className={tebal ? 'kode' : ''} style={tebal ? { color: w } : undefined}>{v}</b></Fragment>
-            ))}
-          </div>
-          {o.isi !== 'qr' && <div className={`lbl-bar ${o.isi === 'barcode' ? 'solo' : ''}`}><Barcode128 teks={it.kode} tinggi={kecil ? 30 : 34} /></div>}
+          {(() => {
+            const semua = [...baris, ...(th ? [['Tahun', th, false] as [string, string, boolean]] : []), ...(kd ? [['Kondisi', kd, false] as [string, string, boolean]] : [])]
+            const baris2 = (arr: [string, string, boolean][]) => (
+              <div className="lbl-data">
+                {arr.map(([k, v, tebal]) => (
+                  <Fragment key={k}><span className="k">{k}</span><span className="t">:</span><b className={tebal ? 'kode' : ''} style={tebal ? { color: w } : undefined}>{v}</b></Fragment>
+                ))}
+              </div>
+            )
+            if (o.isi !== 'barcode' || semua.length < 4) return baris2(semua)
+            const n = Math.ceil(semua.length / 2)
+            return <div className="lbl-dua">{baris2(semua.slice(0, n))}{baris2(semua.slice(n))}</div>
+          })()}
+          {o.isi !== 'qr' && <div className={`lbl-bar ${o.isi === 'barcode' ? 'solo' : ''}`}><Barcode128 teks={it.kode} tinggi={o.isi === 'barcode' ? (kecil ? 40 : 46) : kecil ? 30 : 34} /></div>}
         </div>
       </div>
       {o.footer && !kecil && <div className="lbl-foot">{o.footer}</div>}

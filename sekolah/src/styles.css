@@ -814,3 +814,5 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 .lbl-bar.solo{width:48mm}.lbl.kecil .lbl-bar.solo{width:36mm}
 
 .lbl-info{flex:0 0 auto !important}.lbl-fit .lbl-body{justify-content:center}.lbl-bar.solo,.lbl.kecil .lbl-bar.solo{width:0}
+
+.lbl-dua{display:flex;gap:5mm;align-items:flex-start}.lbl.kecil .lbl-dua{gap:3mm}
