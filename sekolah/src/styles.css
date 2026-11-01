@@ -1046,3 +1046,21 @@ body { background: var(--bg); color: var(--text); }
 .profil-foto { min-width: 0; width: 100%; }
 .profil-foto .row-actions { width: 100%; }
 .profil-foto .btn { width: 100%; justify-content: center; }
+
+/* Profil & keamanan akun: ringkas */
+.ps-head { display: flex; align-items: center; gap: 10px; padding: 6px 0 8px; flex-wrap: wrap; }
+.ps-id { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; }
+.ps-meta { margin-left: auto; display: flex; gap: 4px 12px; flex-wrap: wrap; align-items: center; }
+.modal .subtabs { margin: 0 0 8px; }
+.modal .profil-form { grid-template-columns: 96px minmax(0, 1fr); gap: 10px; }
+.modal .profil-foto .avatar { width: 80px !important; height: 80px !important; }
+.modal .profil-foto .btn { padding: 3px 8px; font-size: 12px; }
+.modal .profil-form .form-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px 8px; margin: 0; }
+.modal .profil-form .span-1 { grid-column: span 1; }
+.modal .profil-form .span-2 { grid-column: span 2; }
+.modal .profil-form .span-3 { grid-column: span 3; }
+.modal .profil-form .span-4 { grid-column: span 6; }
+.modal .profil-form textarea { min-height: 0; }
+@media (max-width: 700px) { .modal .profil-form .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .modal .profil-form .span-4 { grid-column: span 2; } }
+.modal .grid-2 > div > .sec:first-child { margin-top: 0; }
+.modal .qr { width: 140px; height: 140px; }

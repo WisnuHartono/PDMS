@@ -317,6 +317,7 @@ export function ProfilSaya({ onClose }: { onClose: () => void }) {
   const [v, setV] = useState<PatchProfil>(() => Object.fromEntries(KOLOM_PROFIL.map((k) => [k, sesi.akun[k]])) as PatchProfil)
   const [izinMasuk, setIzinMasuk] = useState(!!sesi.akun.google?.wrap)
   const [impor, setImpor] = useState(true)
+  const [tab, setTab] = useState<'profil' | 'aman' | 'google'>('profil')
   const [cfg, setCfg] = useState<ConfigGoogle>()
   useEffect(() => { configGoogle().then(setCfg) }, [])
   const segar = () => { setSesi({ ...sesi }); setN((x) => x + 1) }
@@ -327,15 +328,25 @@ export function ProfilSaya({ onClose }: { onClose: () => void }) {
   }
   return (
     <Modal title="Profil & Keamanan Akun" onClose={onClose} wide>
-      <h4 className="sec">Data profil</h4>
-      <FormProfil v={v} onChange={setV} nama={sesi.akun.nama} />
-      <div className="filters" style={{ margin: '6px 0 4px' }}>
-        <Btn kind="primary" onClick={() => coba(() => ubahProfil(sesi, v), 'Profil disimpan').then((ok) => ok && segar())}>Simpan profil</Btn>
-        <span className="muted small">Nama pengguna <b>{sesi.akun.username}</b> · jenis akun {sesi.peran.nama}</span>
+      <div className="ps-head">
+        <Avatar nama={sesi.akun.nama} foto={sesi.akun.foto} size={44} />
+        <div className="ps-id"><b>{sesi.akun.nama}</b><span className="muted small">{sesi.akun.username} · {sesi.peran.nama}</span></div>
+        <div className="ps-meta small muted">
+          <span>Sandi diubah {waktu(sesi.akun.sandiDiubah)}</span><span>Login terakhir {waktu(sesi.akun.loginTerakhir)}</span>
+          <span className={'pill ' + (sesi.akun.totpEnc ? 'ok' : 'warn')}>2FA {sesi.akun.totpEnc ? 'aktif' : 'belum'}</span>
+        </div>
       </div>
-      {cfg?.aktif && (
+      <Tabs<'profil' | 'aman' | 'google'> tabs={[['profil', 'Data profil'], ['aman', 'Keamanan'], ...(cfg?.aktif ? [['google', 'Akun Google'] as ['google', string]] : [])]} value={tab} onChange={setTab} />
+      {tab === 'profil' && (
         <>
-          <h4 className="sec">Akun Google</h4>
+          <FormProfil v={v} onChange={setV} nama={sesi.akun.nama} />
+          <div className="filters" style={{ margin: '4px 0 0' }}>
+            <Btn kind="primary" onClick={() => coba(() => ubahProfil(sesi, v), 'Profil disimpan').then((ok) => ok && segar())}>Simpan profil</Btn>
+          </div>
+        </>
+      )}
+      {tab === 'google' && cfg?.aktif && (
+        <>
           {sesi.akun.google ? (
             <p className="small"><span className="pill g">Terhubung</span> {sesi.akun.google.email}{sesi.akun.google.wrap ? ' · boleh masuk dengan Google di perangkat ini' : ''}</p>
           ) : <p className="small muted">Hubungkan akun Google untuk menyalin nama, email, dan foto profil, dan (opsional) masuk tanpa mengetik kata sandi di perangkat ini.</p>}
@@ -350,16 +361,8 @@ export function ProfilSaya({ onClose }: { onClose: () => void }) {
           {sesi.akun.google && <Btn kind="ghost" onClick={() => coba(() => putusGoogle(sesi), 'Akun Google diputuskan').then(segar)}>Putuskan akun Google</Btn>}
         </>
       )}
-      <div className="grid-2" style={{ marginTop: 10 }}>
+      {tab === 'aman' && <div className="grid-2">
         <div>
-          <h4 className="sec">Akun</h4>
-          <table className="mini"><tbody>
-            <tr><td>Nama</td><td><b>{sesi.akun.nama}</b></td></tr>
-            <tr><td>Nama pengguna</td><td>{sesi.akun.username}</td></tr>
-            <tr><td>Jenis akun</td><td>{sesi.peran.nama}</td></tr>
-            <tr><td>Kata sandi diubah</td><td>{waktu(sesi.akun.sandiDiubah)}</td></tr>
-            <tr><td>Login terakhir</td><td>{waktu(sesi.akun.loginTerakhir)}</td></tr>
-          </tbody></table>
           <h4 className="sec">Ganti kata sandi</h4>
           <SandiInput id="sl" label="Kata sandi saat ini" value={lama} onChange={setLama} />
           <SandiInput id="sb" label="Kata sandi baru" value={baru} onChange={setBaru} autoComplete="new-password" meter username={sesi.akun.username} />
@@ -395,7 +398,7 @@ export function ProfilSaya({ onClose }: { onClose: () => void }) {
             </>
           )}
         </div>
-      </div>
+      </div>}
     </Modal>
   )
 }
