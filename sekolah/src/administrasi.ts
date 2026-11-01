@@ -51,7 +51,7 @@ export interface RegisterDef {
 export type ItemDef =
   | { jenis: 'register'; reg: RegisterDef }
   | { jenis: 'halaman'; page: PageId; nama: string; ket: string }
-  | { jenis: 'dokumen'; id: string; nama: string; ket: string; berlaku?: boolean }
+  | { jenis: 'dokumen'; id: string; nama: string; ket: string; berlaku?: boolean; kustom?: boolean }
 
 export interface Bidang { id: string; no: string; nama: string; ket: string; tema: string; ikon: string; items: ItemDef[] }
 
@@ -667,6 +667,27 @@ export const SEMUA_REGISTER: RegisterDef[] = BIDANG.flatMap((b) => b.items.flatM
 export const registerById = (id: string) => SEMUA_REGISTER.find((r) => r.id === id)
 export const DOK_REGISTER = '_dok'
 export const dokId = (id: string) => `dok|${id}`
+/** Definisi dokumen wajib buatan pengguna, atau perubahan (nama, keterangan, sembunyi) atas dokumen bawaan. */
+export const DOKDEF_REGISTER = '_dokdef'
+export const dokDefId = (id: string) => `dokdef|${id}`
+export type DokItem = Extract<ItemDef, { jenis: 'dokumen' }>
+
+/** Daftar dokumen wajib efektif satu bidang: bawaan (dengan perubahan) + tambahan pengguna. */
+export function dokumenBidang(b: Bidang, arsip: Arsip[]): DokItem[] {
+  const defs = arsip.filter((a) => a.register === DOKDEF_REGISTER)
+  const out: DokItem[] = []
+  for (const i of b.items) {
+    if (i.jenis !== 'dokumen') continue
+    const o = defs.find((a) => a.id === dokDefId(i.id))
+    if (o?.data.sembunyi) continue
+    out.push(o ? { ...i, nama: String(o.data.nama || i.nama), ket: String(o.data.ket ?? i.ket), berlaku: o.data.berlaku === 'Ya' } : i)
+  }
+  for (const a of defs) {
+    if (a.data.bidang !== b.id || !a.id.startsWith('dokdef|x-')) continue
+    out.push({ jenis: 'dokumen', id: a.id.slice(7), nama: String(a.data.nama || 'Dokumen'), ket: String(a.data.ket ?? ''), berlaku: a.data.berlaku === 'Ya', kustom: true })
+  }
+  return out
+}
 
 /** Nomor urut berikutnya dalam register (per tahun dari field tanggal bila ada). */
 export function urutBerikut(reg: RegisterDef, semua: Arsip[], d: Record<string, NilaiArsip>) {
@@ -710,7 +731,7 @@ export function totalKolom(rows: { d: Record<string, NilaiArsip> }[], k: string)
 /** Ringkasan kelengkapan satu bidang untuk kartu di halaman utama Administrasi. */
 export function ringkasBidang(b: Bidang, arsip: Arsip[]) {
   const regs = b.items.filter((i) => i.jenis === 'register').map((i) => (i as { reg: RegisterDef }).reg.id)
-  const doks = b.items.filter((i) => i.jenis === 'dokumen') as Extract<ItemDef, { jenis: 'dokumen' }>[]
+  const doks = dokumenBidang(b, arsip)
   const catatan = arsip.filter((a) => regs.includes(a.register)).length
   const dokAda = doks.filter((d) => arsip.find((a) => a.id === dokId(d.id))?.data.status === 'Ada').length
   return { register: regs.length, catatan, dokumen: doks.length, dokAda }
@@ -720,8 +741,7 @@ export function ringkasBidang(b: Bidang, arsip: Arsip[]) {
 export function dokumenJatuhTempo(arsip: Arsip[], hari = 90, ref = new Date()) {
   const batas = new Date(ref.getTime() + hari * 864e5).toISOString().slice(0, 10)
   const out: { bidang: Bidang; nama: string; berlaku: string; lewat: boolean }[] = []
-  for (const b of BIDANG) for (const i of b.items) {
-    if (i.jenis !== 'dokumen') continue
+  for (const b of BIDANG) for (const i of dokumenBidang(b, arsip)) {
     const a = arsip.find((x) => x.id === dokId(i.id))
     const tgl = a?.data.berlaku ? String(a.data.berlaku) : ''
     if (tgl && tgl <= batas) out.push({ bidang: b, nama: i.nama, berlaku: tgl, lewat: tgl < ref.toISOString().slice(0, 10) })

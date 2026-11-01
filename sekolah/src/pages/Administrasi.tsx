@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import {
-  BIDANG, DOK_REGISTER, STATUS_DOKUMEN, barisRegister, dokId, dokumenJatuhTempo, nomorOtomatis, ringkasBidang, totalKolom,
+  BIDANG, DOKDEF_REGISTER, DOK_REGISTER, STATUS_DOKUMEN, barisRegister, dokDefId, dokId, dokumenBidang, dokumenJatuhTempo, nomorOtomatis, ringkasBidang, totalKolom,
   type Bidang, type FieldDef, type ItemDef, type RegisterDef,
 } from '../administrasi'
 import { LabelInventaris, OpnameInventaris, butirInventaris } from '../inventaris'
@@ -106,7 +106,7 @@ function BidangView({ bidang, onBack, onReg }: { bidang: Bidang; onBack: () => v
   const nav = useNav()
   const halaman = bidang.items.filter((i): i is Extract<ItemDef, { jenis: 'halaman' }> => i.jenis === 'halaman')
   const regs = bidang.items.filter((i): i is Extract<ItemDef, { jenis: 'register' }> => i.jenis === 'register')
-  const doks = bidang.items.filter((i): i is Extract<ItemDef, { jenis: 'dokumen' }> => i.jenis === 'dokumen')
+  const doks = dokumenBidang(bidang, arsip)
   return (
     <div>
       <BackBar onBack={onBack} ke="Administrasi Sekolah"><button className="link" onClick={onBack}>Administrasi Sekolah</button> / <b>{bidang.nama}</b></BackBar>
@@ -146,17 +146,19 @@ function BidangView({ bidang, onBack, onReg }: { bidang: Bidang; onBack: () => v
         </>
       )}
 
-      {doks.length > 0 && <DokumenWajib doks={doks} arsip={arsip} />}
+      <DokumenWajib bidang={bidang} doks={doks} arsip={arsip} />
     </div>
   )
 }
 
-function DokumenWajib({ doks, arsip }: { doks: Extract<ItemDef, { jenis: 'dokumen' }>[]; arsip: Arsip[] }) {
+function DokumenWajib({ bidang, doks, arsip }: { bidang: Bidang; doks: Extract<ItemDef, { jenis: 'dokumen' }>[]; arsip: Arsip[] }) {
+  const [def, setDef] = useState<{ item?: Extract<ItemDef, { jenis: 'dokumen' }>; a: Arsip } | null>(null)
   const [edit, setEdit] = useState<{ item: Extract<ItemDef, { jenis: 'dokumen' }>; a: Arsip } | null>(null)
   const kini = today()
   return (
-    <Card title={`Dokumen wajib (${doks.filter((d) => arsip.find((a) => a.id === dokId(d.id))?.data.status === 'Ada').length}/${doks.length} lengkap)`} className="mt">
-      <div className="table-wrap">
+    <Card title={`Dokumen wajib (${doks.filter((d) => arsip.find((a) => a.id === dokId(d.id))?.data.status === 'Ada').length}/${doks.length} lengkap)`} className="mt" actions={<Btn icon="plus" onClick={() => setDef({ a: { id: dokDefId('x-' + uid()), register: DOKDEF_REGISTER, data: { bidang: bidang.id, berlaku: '' }, dibuat: new Date().toISOString() } })}>Tambah dokumen</Btn>}>
+      {doks.length === 0 && <p className="muted small">Belum ada dokumen wajib pada bidang ini. Gunakan "Tambah dokumen" untuk menyusun daftar sesuai kebutuhan sekolah.</p>}
+      {doks.length > 0 && <div className="table-wrap">
         <table className="tbl">
           <thead><tr><th>Dokumen</th><th>Status</th><th>Nomor</th><th>Tanggal</th><th>Berlaku s.d.</th><th>Berkas</th><th></th></tr></thead>
           <tbody>
@@ -172,13 +174,32 @@ function DokumenWajib({ doks, arsip }: { doks: Extract<ItemDef, { jenis: 'dokume
                   <td className="nowrap">{a?.data.tanggal ? fmtTanggal(String(a.data.tanggal)) : '-'}</td>
                   <td className={`nowrap ${bl && bl < kini ? 'bad-t' : ''}`}>{bl ? fmtTanggal(bl) : '-'}</td>
                   <td>{a?.lampiran?.length ? <LampiranLink l={a.lampiran[0]} /> : <span className="muted">-</span>}</td>
-                  <td className="row-actions"><Btn icon="edit" kind="ghost" onClick={() => setEdit({ item: d, a: a ?? { id: dokId(d.id), register: DOK_REGISTER, data: { status: 'Belum ada' }, dibuat: new Date().toISOString() } })}>Perbarui</Btn></td>
+                  <td className="row-actions"><Btn icon="edit" kind="ghost" onClick={() => setEdit({ item: d, a: a ?? { id: dokId(d.id), register: DOK_REGISTER, data: { status: 'Belum ada' }, dibuat: new Date().toISOString() } })}>Perbarui</Btn>
+                    <Btn kind="ghost" onClick={() => setDef({ item: d, a: arsip.find((x) => x.id === dokDefId(d.id)) ?? { id: dokDefId(d.id), register: DOKDEF_REGISTER, data: { bidang: bidang.id, nama: d.nama, ket: d.ket, berlaku: d.berlaku ? 'Ya' : '' }, dibuat: new Date().toISOString() } })}>Ubah</Btn></td>
                 </tr>
               )
             })}
           </tbody>
         </table>
-      </div>
+      </div>}
+      {def && (
+        <FormArsip
+          judul={def.item ? 'Ubah dokumen wajib' : 'Tambah dokumen wajib'}
+          fields={[
+            { k: 'nama', l: 'Nama dokumen', wajib: true, span: 4 },
+            { k: 'ket', l: 'Keterangan / dasar kewajiban', span: 4 },
+            { k: 'berlaku', l: 'Memiliki masa berlaku?', t: 'select', opsi: ['Ya'], span: 2 },
+          ]}
+          awal={def.a} onClose={() => setDef(null)}
+          onSimpan={async (a) => { await put('arsip', { ...a, data: { ...a.data, bidang: bidang.id } }); toast('Daftar dokumen wajib disimpan') }}
+          onHapus={def.item ? async () => {
+            const k = def.item!
+            if (k.kustom) { await remove('arsip', dokDefId(k.id)); await remove('arsip', dokId(k.id)) }
+            else await put('arsip', { ...def.a, data: { ...def.a.data, sembunyi: 'Ya' } })
+            setDef(null); toast(k.kustom ? 'Dokumen dihapus dari daftar' : 'Dokumen bawaan disembunyikan')
+          } : undefined}
+        />
+      )}
       {edit && (
         <FormArsip
           judul={edit.item.nama}
@@ -344,8 +365,8 @@ export function LampiranLink({ l, n }: { l: Lampiran; n?: number }) {
 }
 
 // ---------- Formulir generik ----------
-function FormArsip({ judul, fields, awal, lampiran, reg, onClose, onSimpan }: {
-  judul: string; fields: FieldDef[]; awal: Arsip; lampiran?: boolean; reg?: RegisterDef; onClose: () => void; onSimpan: (a: Arsip) => Promise<void>
+function FormArsip({ judul, fields, awal, lampiran, reg, onClose, onSimpan, onHapus }: {
+  judul: string; fields: FieldDef[]; awal: Arsip; lampiran?: boolean; reg?: RegisterDef; onClose: () => void; onSimpan: (a: Arsip) => Promise<void>; onHapus?: () => Promise<void>
 }) {
   const [a, setA] = useState<Arsip>(awal)
   const [err, setErr] = useState('')
@@ -367,7 +388,7 @@ function FormArsip({ judul, fields, awal, lampiran, reg, onClose, onSimpan }: {
     setA((o) => ({ ...o, lampiran: [...(o.lampiran ?? []), l] }))
   }
   return (
-    <Modal title={judul} onClose={onClose} wide footer={<><Btn onClick={onClose}>Batal</Btn><Btn kind="primary" onClick={simpan}>Simpan</Btn></>}>
+    <Modal title={judul} onClose={onClose} wide footer={<>{onHapus && <Btn kind="danger" onClick={onHapus}>Hapus dari daftar</Btn>}<Btn onClick={onClose}>Batal</Btn><Btn kind="primary" onClick={simpan}>Simpan</Btn></>}>
       <div className="form-grid four">
         {rapatkan([
           ...fields.map((f) => ({ key: f.k, span: f.span ?? (f.t === 'textarea' ? 4 : 1), node: (span: number) => (
