@@ -1166,3 +1166,67 @@ button.link { background: none; border: 0; color: var(--accent); cursor: pointer
 .lampu-ms { border: 0; background: transparent !important; padding: 0; border-radius: 0; }
 .brand-teks .lampu { display: flex; align-self: stretch; }
 .brand-teks .lampu .lampu-ms { margin-left: auto; padding-left: 8px; }
+
+/* ===== Poles interaktif & kreatif ===== */
+:root { --ease: cubic-bezier(.2, .8, .2, 1); }
+/* Lampu koneksi: kedipan jelas; ping abu-abu */
+@keyframes lampu-blink { 0%, 100% { opacity: 1; box-shadow: 0 0 8px 2px var(--l), 0 0 18px 4px color-mix(in srgb, var(--l) 60%, transparent); transform: scale(1.15); } 50% { opacity: .08; box-shadow: none; transform: scale(.75); } }
+.lampu.on .lampu-dot { animation: lampu-blink 1.2s ease-in-out infinite; }
+.lampu.sync .lampu-dot { animation: lampu-blink .7s ease-in-out infinite; }
+.lampu.warn .lampu-dot { animation: lampu-blink .9s ease-in-out infinite; }
+.lampu.off .lampu-dot { animation: lampu-blink .55s steps(2, jump-none) infinite; }
+.lampu-dot { width: 11px; height: 11px; }
+.lampu-ms, .lampu-ms.bagus, .lampu-ms.sedang, .lampu-ms.lambat, .lampu-ms.gagal, .lampu-ms:not(.bagus):not(.sedang):not(.lambat):not(.gagal) { color: #aeb9c5; text-shadow: none; font-weight: 600; opacity: 1; }
+.dc .lampu-ms { color: #64748b; background: transparent; }
+
+/* Animasi halaman: kartu muncul bergantian */
+@keyframes muncul-naik { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.page > * { animation: muncul-naik .38s var(--ease) backwards; }
+.page > *:nth-child(2) { animation-delay: .04s; } .page > *:nth-child(3) { animation-delay: .08s; } .page > *:nth-child(4) { animation-delay: .12s; }
+.page > *:nth-child(5) { animation-delay: .16s; } .page > *:nth-child(n+6) { animation-delay: .2s; }
+.page-head h2 { position: relative; padding-bottom: 5px; }
+.page-head h2::after { content: ''; position: absolute; left: 0; bottom: 0; width: 34px; height: 3px; border-radius: 3px; background: linear-gradient(90deg, var(--accent), var(--tab-on)); transition: width .35s var(--ease); }
+.page-head:hover h2::after { width: 72px; }
+
+/* Kartu & tile */
+.card { transition: box-shadow .25s var(--ease), border-color .25s var(--ease); }
+.card:hover { box-shadow: 0 8px 26px rgba(15, 50, 74, .12); border-color: color-mix(in srgb, var(--accent) 28%, var(--line)); }
+.kpi { transition: transform .18s var(--ease), box-shadow .18s var(--ease), border-color .18s; }
+.kpi:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(15, 50, 74, .14); }
+
+/* Tombol */
+.btn { transition: transform .12s var(--ease), box-shadow .2s var(--ease), background .15s, border-color .15s; }
+.btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(15, 50, 74, .14); }
+.btn:active:not(:disabled) { transform: translateY(0) scale(.97); box-shadow: none; }
+.btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); }
+.btn-primary:hover:not(:disabled) { box-shadow: 0 6px 16px color-mix(in srgb, var(--accent) 45%, transparent); }
+.btn-ghost:hover:not(:disabled) { box-shadow: none; transform: none; }
+
+/* Menu samping */
+.side-item { transition: background .18s, color .18s, padding-left .18s var(--ease); }
+.side-item .ico { transition: transform .22s var(--ease); }
+.side-item:hover .ico { transform: scale(1.15) rotate(-4deg); }
+.side-item.on { box-shadow: inset 4px 0 12px -6px var(--side-on-line, #fbbf24); }
+
+/* Tabel & isian */
+.tbl tbody tr { transition: background .12s, box-shadow .12s; }
+.tbl tbody tr:hover { background: #eef8fa; box-shadow: inset 3px 0 0 var(--accent); }
+input, select, textarea { transition: border-color .15s, box-shadow .2s var(--ease), background .15s; }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent); }
+input[type=checkbox], input[type=radio] { accent-color: var(--accent); }
+
+/* Dialog */
+@keyframes modal-masuk { from { opacity: 0; transform: translateY(14px) scale(.97); } to { opacity: 1; transform: none; } }
+@keyframes latar-masuk { from { opacity: 0; } to { opacity: 1; } }
+.modal-bg { backdrop-filter: blur(2px); animation: latar-masuk .18s ease-out; }
+.modal { animation: modal-masuk .26s var(--ease); border-radius: 12px; }
+
+/* Pil & lencana */
+.pill { transition: transform .15s var(--ease); }
+.pill:hover { transform: scale(1.06); }
+
+/* Gulir tipis */
+* { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--accent) 45%, #c5d0db) transparent; }
+
+@media (prefers-reduced-motion: reduce) { .page > *, .modal, .modal-bg, .lampu-dot { animation: none !important; } .btn, .kpi, .card, .side-item .ico { transition: none !important; } }
+@media print { *, *::before, *::after { animation: none !important; transition: none !important; } }
