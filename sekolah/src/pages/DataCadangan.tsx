@@ -122,7 +122,7 @@ export default function DataCadangan() {
               <li><i>APIs &amp; Services › Library</i>: aktifkan <b>Google Drive API</b>.</li>
               <li><i>OAuth consent screen</i>: <b>External</b>, isi nama aplikasi, tambahkan email Anda di <i>Test users</i>.</li>
               <li><i>Credentials › OAuth client ID › Web application</i>; di <i>Authorized JavaScript origins</i> isi <code>{globalThis.location?.origin}</code>.</li>
-              <li>Salin <b>Client ID</b> ke kolom di atas, simpan, lalu “Hubungkan Google Drive” dan setujui izin.</li>
+              <li>Salin <b>Client ID</b> ke kolom di atas, simpan, lalu “Hubungkan Google Drive” dan setujui izin. Di aplikasi Windows izin diminta lewat browser sistem: daftarkan <code>http://localhost:47831</code> pada Authorized JavaScript origins.</li>
             </ol>
             <p className="small">Izin hanya <code>drive.file</code>: SIMAS hanya melihat folder “SIMAS Cadangan” buatannya sendiri. Token izin disimpan di memori dan berakhir ±1 jam atau saat aplikasi ditutup; sinkronisasi menunggu sampai Anda menyambungkan ulang. Di aplikasi Windows gunakan “Folder / sinkronisasi desktop”.</p>
           </>}

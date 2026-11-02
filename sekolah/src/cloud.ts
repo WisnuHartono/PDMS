@@ -100,6 +100,14 @@ function muatGsi(): Promise<GoogleLib> {
 /** Minta izin Google (jendela persetujuan Google muncul). Token hanya disimpan di memori selama sesi. */
 export async function hubungkanGoogle(clientId: string): Promise<void> {
   if (!clientId.trim()) throw new Error('Isi OAuth Client ID terlebih dahulu.')
+  // Aplikasi desktop (app://): Google menolak alamat itu, jadi izin diminta lewat browser sistem (http://localhost:47831).
+  const d = (globalThis as unknown as { simas?: { googleToken?: (r: { clientId: string; scope: string }) => Promise<{ ok: boolean; access_token?: string; expires_in?: number; pesan?: string }> } }).simas
+  if (d?.googleToken) {
+    const r = await d.googleToken({ clientId: clientId.trim(), scope: SCOPE })
+    if (!r.ok || !r.access_token) throw new Error(r.pesan || 'Izin Google ditolak.')
+    gToken = { v: r.access_token, exp: Date.now() + (r.expires_in ?? 3600) * 1000 - 60000 }
+    return
+  }
   const g = await muatGsi()
   await new Promise<void>((ok, gagal) => {
     const tc = g.accounts.oauth2.initTokenClient({

@@ -97,6 +97,8 @@ if (!app.requestSingleInstanceLock()) {
   // Masuk Google lewat browser sistem (Google tidak menerima alamat app://).
   ipcMain.handle('simas:google-masuk', (e, r) => mulaiMasukGoogle({ clientId: r?.clientId, nonce: r?.nonce, bukaBrowser: (u) => shell.openExternal(u) }))
 
+  ipcMain.handle('simas:google-token', (e, r) => mulaiMasukGoogle({ clientId: r?.clientId, scope: r?.scope, jenis: 'token', bukaBrowser: (u) => shell.openExternal(u) }))
+
   ipcMain.handle('simas:pilih-folder', async (e) => {
     const win = BrowserWindow.fromWebContents(e.sender)
     const r = await dialog.showOpenDialog(win, { title: 'Pilih folder penyimpanan cadangan', properties: ['openDirectory', 'createDirectory'] })
