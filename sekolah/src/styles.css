@@ -1160,3 +1160,5 @@ button.link { background: none; border: 0; color: var(--accent); cursor: pointer
 .lampu-ms.lambat { color: #ff9100; text-shadow: 0 0 6px #ff9100; }
 .dc .lampu-ms { background: #0f172a; }
 @media (max-width: 760px) { .topbar .lampu .lampu-ms { display: none; } .topbar .brand-teks .lampu .lampu-ms { display: inline; } }
+.lampu-ms.gagal { color: #cbd5e1; text-shadow: none; opacity: .8; }
+.lampu-ms:not(.bagus):not(.sedang):not(.lambat):not(.gagal) { color: #7dd3fc; }
