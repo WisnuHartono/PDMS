@@ -1241,3 +1241,6 @@ input[type=checkbox], input[type=radio] { accent-color: var(--accent); }
 /* Lampu jaringan: tanpa efek glow */
 .lampu .lampu-dot, .lampu.on .lampu-dot, .lampu.off .lampu-dot, .lampu.sync .lampu-dot, .lampu.warn .lampu-dot { box-shadow: none !important; }
 .lampu-t, .lampu .lampu-t, .lampu-ms, .lampu-ms.bagus, .lampu-ms.sedang, .lampu-ms.lambat, .lampu-ms.gagal { text-shadow: none !important; }
+
+/* Nilai ping: jarak 4 spasi dari status jaringan */
+.brand-teks .lampu .lampu-ms, .lampu .lampu-ms { margin-left: 4ch; padding-left: 0; }
