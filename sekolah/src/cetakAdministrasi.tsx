@@ -304,7 +304,6 @@ export function CetakItem({ reg, a, d }: { reg: RegisterDef; a: Arsip; d: Record
             </tbody>
           </table>
           <p>Demikian permohonan ini saya ajukan, atas perhatian dan persetujuan Bapak/Ibu saya ucapkan terima kasih.</p>
-          <TandaTangan kanan={{ jabatan: 'Pemohon', nama: p ? namaPegawai(p) : undefined, nip: p?.nip ?? '' }} tanggal={String(d.mulai ?? today())} />
           <div className="box" style={{ marginTop: 14 }}>
             <div className="box-h">Pertimbangan dan keputusan atasan</div>
             <div className="box-b">
@@ -312,7 +311,7 @@ export function CetakItem({ reg, a, d }: { reg: RegisterDef; a: Arsip; d: Record
               <div style={{ marginTop: 6 }}>Keputusan: {['Disetujui', 'Ditolak'].map((x) => <span key={x} style={{ marginRight: 18 }}>{d.status === x ? '☑' : '☐'} {x}</span>)}</div>
             </div>
           </div>
-          <TandaTangan kanan={{ ...kepsek(), jabatan: 'Kepala Sekolah' }} tanggal={String(d.mulai ?? today())} />
+          <TandaTangan kiri={{ jabatan: 'Pemohon', nama: p ? namaPegawai(p) : undefined, nip: p?.nip ?? '', atas: ' ' }} kanan={{ ...kepsek(), jabatan: 'Kepala Sekolah' }} tanggal={String(d.mulai ?? today())} />
         </div>
       )
     }

@@ -69,7 +69,7 @@ export function KopSurat({ judul, sub, sekolah, jenis = 'adm' }: { judul?: strin
   )
 }
 
-type Ttd = { jabatan: string; nama?: string; nip?: string }
+type Ttd = { jabatan: string; nama?: string; nip?: string; atas?: string }
 
 export function TandaTangan({ kiri, kanan, tanggal }: { kiri?: Ttd; kanan?: Ttd; tanggal?: string }) {
   const s = getSekolah()
@@ -91,7 +91,7 @@ export function TandaTangan({ kiri, kanan, tanggal }: { kiri?: Ttd; kanan?: Ttd;
   }
   return (
     <div className="ttd-row">
-      {ttd(kiri, kiri ? 'Mengetahui,' : undefined)}
+      {ttd(kiri, kiri ? (kiri.atas ?? 'Mengetahui,') : undefined)}
       {ttd(kanan, `${s.kotaTtdRapor || s.kabupaten || ''}, ${fmtTanggal(tanggal ?? isoDate(new Date()))}`)}
     </div>
   )
