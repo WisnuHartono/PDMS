@@ -51,7 +51,7 @@ export function RaporDoc({ siswa, rombel, semester }: { siswa: Siswa; rombel: Ro
   const intl = kur.asal === 'Internasional'
   const L = intl
     ? { nama: 'Student Name', nis: 'Student ID', kelas: 'Class', sem: 'Term', ta: 'Academic Year', absen: 'Attendance', sakit: 'Sick', izin: 'Excused', alpa: 'Unexcused', ekskul: 'Extracurricular', wali: 'Homeroom Teacher', catatan: "Homeroom Teacher's Comment", ortu: 'Parent / Guardian', kepsek: 'Principal', no: 'No', mapel: 'Subject', hari: 'day(s)' }
-    : { nama: 'Nama Peserta Didik', nis: 'NIS / NISN', kelas: 'Kelas', sem: 'Semester', ta: 'Tahun Pelajaran', absen: 'Kehadiran / Ketidakhadiran', sakit: 'Sakit', izin: 'Izin', alpa: 'Tanpa Keterangan', ekskul: 'Ekstrakurikuler', wali: 'Wali Kelas', catatan: 'Catatan Wali Kelas', ortu: 'Orang Tua / Wali', kepsek: 'Kepala Sekolah', no: 'No', mapel: kur.naratif ? 'Elemen Capaian Pembelajaran' : 'Mata Pelajaran', hari: 'hari' }
+    : { nama: 'Nama Peserta Didik', nis: 'NIS / NISN', kelas: 'Kelas', sem: 'Semester', ta: 'Tahun Pelajaran', absen: 'Ketidakhadiran', sakit: 'Sakit', izin: 'Izin', alpa: 'Tanpa Keterangan', ekskul: 'Ekstrakurikuler', wali: 'Wali Kelas', catatan: 'Catatan Wali Kelas', ortu: 'Orang Tua / Wali', kepsek: 'Kepala Sekolah', no: 'No', mapel: kur.naratif ? 'Elemen Capaian Pembelajaran' : 'Mata Pelajaran', hari: 'hari' }
   const f = fase(rombel)
   const kelompok = [...new Set(baris.map((b) => b.mapel.kelompok ?? ''))]
 
