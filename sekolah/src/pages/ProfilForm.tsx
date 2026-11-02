@@ -55,6 +55,7 @@ export function TombolGoogle({ onProfil, teks = 'continue_with', cfg }: { onProf
   return (
     <div className="g-wrap">
       <div ref={el} className="g-btn" />
+      <div className="muted small" title={konfig.clientId}>Client ID yang dipakai: <code>{konfig.clientId.slice(0, 13)}…{konfig.clientId.slice(-26)}</code></div>
       {err && <div className="errs small">{err}</div>}
     </div>
   )
