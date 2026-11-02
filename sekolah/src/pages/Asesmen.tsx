@@ -3,7 +3,7 @@ import { aiSiap, isiNama, panggilAi, promptAsesmen, systemPrompt, variasiHint } 
 import { INSTRUMEN_BAWAAN, SKALA, bacaRekam, catatRiwayat, deskriptor, idRekam, kelengkapan, labelSkor, REG_ASESMEN, ringkasan, semuaInstrumen, simpanInstrumen, tulisRekam, type Aspek, type Instrumen, type Rekam } from '../asesmen'
 import { put, remove, useCol, useSekolah } from '../store'
 import { useSesi } from '../security/sesi'
-import type { Siswa } from '../types'
+import type { Rombel, Siswa } from '../types'
 import { Btn, Card, Empty, Field, Modal, PageHead, tanya, toast } from '../ui'
 import { today, uid } from '../util'
 
@@ -70,7 +70,10 @@ export default function Asesmen() {
     toast(n ? `${n} asesmen dikunci` : 'Tidak ada yang siap dikunci (lengkapi aspek dan bukti dulu).')
   }
 
-  const mulai = (ids: string[]) => { const urut = anggota.filter((x) => ids.includes(x.id)); if (!urut.length) return toast('Pilih minimal satu siswa.'); setAntrian(urut.map((x) => x.id)); setDetail(urut[0]); setPilih(false) }
+  const mulai = (o: { rid: string; sem: 1 | 2; iid: string; ids: string[] }) => {
+    const s0 = siswa.find((x) => x.id === o.ids[0]); if (!s0) return toast('Pilih siswa terlebih dahulu.')
+    setRid(o.rid); setSem(o.sem); setIid(o.iid); setAntrian(o.ids); setDetail(s0); setPilih(false)
+  }
   const daftar = antrian.length ? antrian : anggota.map((x) => x.id)
   const idxDetail = detail ? daftar.indexOf(detail.id) : -1
   const pindah = (d: number) => { const t = anggota.find((x) => x.id === daftar[idxDetail + d]); if (t) setDetail(t) }
@@ -148,38 +151,48 @@ export default function Asesmen() {
           onSebelum={idxDetail > 0 ? () => pindah(-1) : undefined}
           onBerikut={idxDetail >= 0 && idxDetail < daftar.length - 1 ? async () => { if (!rekam(detail.id).final) await simpanSiswa(detail.id); pindah(1) } : undefined} />
       )}
-      {pilih && <PilihSiswa anggota={anggota} final={(id) => rekam(id).final} terisi={(id) => kelengkapan(inst, rekam(id)).terisi} total={inst.aspek.length} onMulai={mulai} onClose={() => setPilih(false)} />}
+      {pilih && <PilihSiswa rombel={rombelAktif} siswa={siswa} arsip={arsip} insts={insts} awal={{ rid: r.id, iid: inst.id, sem }} onMulai={mulai} onClose={() => setPilih(false)} />}
       {kelola && <KelolaInstrumen onClose={() => setKelola(false)} onPilih={(id) => { setIid(id); setKelola(false) }} />}
     </div>
   )
 }
 
-function PilihSiswa({ anggota, final, terisi, total, onMulai, onClose }: { anggota: Siswa[]; final: (id: string) => boolean; terisi: (id: string) => number; total: number; onMulai: (ids: string[]) => void; onClose: () => void }) {
-  const [sel, setSel] = useState<string[]>(() => anggota.filter((s) => !final(s.id)).map((s) => s.id))
-  const [cari, setCari] = useState('')
-  const tampil = anggota.filter((s) => s.nama.toLowerCase().includes(cari.toLowerCase()))
-  const tog = (id: string) => setSel((x) => x.includes(id) ? x.filter((i) => i !== id) : [...x, id])
+function PilihSiswa({ rombel, siswa, arsip, insts, awal, onMulai, onClose }: { rombel: Rombel[]; siswa: Siswa[]; arsip: ReturnType<typeof useCol<'arsip'>>; insts: Instrumen[]; awal: { rid: string; iid: string; sem: 1 | 2 }; onMulai: (o: { rid: string; sem: 1 | 2; iid: string; ids: string[] }) => void; onClose: () => void }) {
+  const kunciKelas = (x: Rombel) => `${x.jenjang}|${x.tingkat}`
+  const kelasList = [...new Map(rombel.map((x) => [kunciKelas(x), x])).values()].sort((a, b) => a.jenjang.localeCompare(b.jenjang) || a.tingkat.localeCompare(b.tingkat, 'id', { numeric: true }))
+  const [kelas, setKelas] = useState(() => { const r0 = rombel.find((x) => x.id === awal.rid) ?? rombel[0]; return kunciKelas(r0) })
+  const kelompok = rombel.filter((x) => kunciKelas(x) === kelas)
+  const [rid, setRid] = useState(() => (kelompok.some((x) => x.id === awal.rid) ? awal.rid : kelompok[0]?.id ?? ''))
+  const [iid, setIid] = useState(awal.iid)
+  const [sem, setSem] = useState<1 | 2>(awal.sem)
+  const [pilih, setPilih] = useState('belum')
+  const r = kelompok.find((x) => x.id === rid) ?? kelompok[0]
+  const inst = insts.find((i) => i.id === iid) ?? insts[0]
+  const anggota = (r?.siswaIds ?? []).map((i) => siswa.find((s) => s.id === i)).filter((s): s is Siswa => !!s).sort((a, b) => a.nama.localeCompare(b.nama))
+  const status = (sid: string) => { const x = bacaRekam(arsip.find((a) => a.id === idRekam(r.tahunAjaran, sem, inst.id, sid))); return { final: x.final, k: kelengkapan(inst, x) } }
+  const info = anggota.map((s) => ({ s, ...status(s.id) }))
+  const belum = info.filter((x) => !x.final)
+  const ids = pilih === 'belum' ? belum.map((x) => x.s.id) : pilih === 'semua' ? anggota.map((x) => x.id) : anggota.some((x) => x.id === pilih) ? [pilih] : []
+  const ganti = (k: string) => { setKelas(k); setRid(rombel.find((x) => kunciKelas(x) === k)?.id ?? ''); setPilih('belum') }
+  const lab = (x: Rombel) => `${x.jenjang} · Kelas ${x.tingkat}`
   return (
-    <Modal title="Pilih siswa yang akan dinilai" onClose={onClose}
-      footer={<><Btn onClick={onClose}>Batal</Btn><Btn kind="primary" onClick={() => onMulai(sel)} disabled={!sel.length}>Mulai asesmen ({sel.length})</Btn></>}>
-      <p className="muted small">Siswa dinilai satu per satu sesuai urutan daftar, dengan panduan rubrik tiap aspek. Yang sudah terkunci tidak dipilih otomatis.</p>
-      <div className="row-actions">
-        <input placeholder="Cari nama siswa…" value={cari} onChange={(e) => setCari(e.target.value)} />
-        <Btn kind="ghost" onClick={() => setSel(anggota.filter((s) => !final(s.id)).map((s) => s.id))}>Yang belum selesai</Btn>
-        <Btn kind="ghost" onClick={() => setSel(anggota.map((s) => s.id))}>Semua</Btn>
-        <Btn kind="ghost" onClick={() => setSel([])}>Kosongkan</Btn>
+    <Modal title="Lakukan asesmen" onClose={onClose}
+      footer={<><Btn onClick={onClose}>Batal</Btn><Btn kind="primary" icon="edit" disabled={!ids.length || !r} onClick={() => onMulai({ rid: r.id, sem, iid: inst.id, ids })}>Mulai asesmen{ids.length ? ` (${ids.length} siswa)` : ''}</Btn></>}>
+      <div className="form-grid">
+        <Field label="Kelas" span={2}><select value={kelas} onChange={(e) => ganti(e.target.value)}>{kelasList.map((x) => <option key={kunciKelas(x)} value={kunciKelas(x)}>{lab(x)}</option>)}</select></Field>
+        <Field label="Kelompok belajar" span={2}><select value={r?.id ?? ''} onChange={(e) => { setRid(e.target.value); setPilih('belum') }}>{kelompok.map((x) => <option key={x.id} value={x.id}>{x.nama} ({x.siswaIds.length} siswa)</option>)}</select></Field>
+        <Field label="Instrumen asesmen" span={2}><select value={inst.id} onChange={(e) => { setIid(e.target.value); setPilih('belum') }}>{insts.map((x) => <option key={x.id} value={x.id}>{x.nama}</option>)}</select></Field>
+        <Field label="Semester" span={2}><select value={sem} onChange={(e) => { setSem(Number(e.target.value) as 1 | 2); setPilih('belum') }}><option value={1}>Semester 1 (Ganjil)</option><option value={2}>Semester 2 (Genap)</option></select></Field>
+        <Field label="Nama siswa" span={4}>
+          <select value={pilih} onChange={(e) => setPilih(e.target.value)} disabled={!anggota.length}>
+            <option value="belum">Semua siswa yang belum terkunci ({belum.length})</option>
+            <option value="semua">Semua siswa di kelompok ini ({anggota.length})</option>
+            {info.map(({ s, final, k }) => <option key={s.id} value={s.id}>{s.nama}{final ? ' · terkunci' : k.terisi ? ` · ${k.terisi}/${k.total} terisi` : ''}</option>)}
+          </select>
+        </Field>
       </div>
-      <div className="table-wrap" style={{ maxHeight: 360, overflow: 'auto' }}>
-        <table className="tbl"><tbody>
-          {tampil.map((s) => (
-            <tr key={s.id}>
-              <td style={{ width: 32 }}><input type="checkbox" checked={sel.includes(s.id)} onChange={() => tog(s.id)} aria-label={s.nama} /></td>
-              <td><b>{s.nama}</b></td>
-              <td className="c">{final(s.id) ? <span className="pill ok">Terkunci</span> : <span className="pill">{terisi(s.id)}/{total}</span>}</td>
-            </tr>
-          ))}
-        </tbody></table>
-      </div>
+      {!anggota.length && <p className="muted small">Kelompok belajar ini belum memiliki anggota.</p>}
+      <p className="muted small">Siswa dinilai satu per satu dengan panduan rubrik tiap aspek. {pilih === 'belum' || pilih === 'semua' ? 'Setelah menyimpan, form langsung pindah ke siswa berikutnya.' : 'Hanya siswa yang dipilih yang dinilai.'} Hasil yang dikunci masuk rapor.</p>
     </Modal>
   )
 }
