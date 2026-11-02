@@ -1132,3 +1132,17 @@ button.link { background: none; border: 0; color: var(--accent); cursor: pointer
 .chip-trial:hover { background: rgba(255, 255, 255, .7); }
 /* Trial: geser dari slider, huruf berwarna */
 .chip-trial { right: 36px; color: #0a58ca; border-color: rgba(10, 88, 202, .55); }
+
+/* Input nilai: rata kiri-atas, kotak deskripsi menyesuaikan isi, paragraf rata kanan-kiri */
+.nilai-tbl th, .nilai-tbl td, .nilai-tbl th.c, .nilai-tbl td.c { text-align: left; vertical-align: top; }
+.nilai-tbl .num-in { text-align: left; padding: 0 8px; }
+.nilai-tbl td.nowrap { padding-top: 12px; }
+.nilai-tbl td.desc, .nilai-tbl td.desc.small { text-align: justify; hyphens: auto; }
+.auto-area { resize: none; overflow: hidden; text-align: justify; hyphens: auto; line-height: 1.45; min-height: 34px; }
+.nilai-tbl td .auto-area { display: block; }
+.nilai-tbl td.c > input, .nilai-tbl td.c > select { margin: 0; }
+/* Rapor: deskripsi capaian dan narasi rata kanan-kiri, rata atas */
+.doc table.nilai td { vertical-align: top; }
+.doc table.nilai td.desc, .doc .box-b, .doc .asm-narasi, .doc .asm-tbl td { text-align: justify; hyphens: auto; }
+.nilai-tbl td { padding-top: 12px; }
+.nilai-tbl td:has(> input, > select, > textarea) { padding-top: 7px; }

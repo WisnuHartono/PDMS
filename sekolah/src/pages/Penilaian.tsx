@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { getKurikulum, type Baris } from '../curricula'
 import { aiSiap, isiNama, variasiHint, jalankanBatch, panggilAi, promptMapel, promptPaud, systemPrompt } from '../ai'
 import { tpScores } from '../curricula'
@@ -193,7 +193,7 @@ export default function Penilaian() {
                             </select>
                           )}
                           {c.type === 'text' && (
-                            <textarea rows={kur.naratif ? 2 : 1} style={{ width: c.width ?? 240 }} value={String(row?.[c.key] ?? '')} onChange={(e) => setCell(s.id, c.key, e.target.value)} aria-label={`${s.nama} ${c.title}`} />
+                            <AutoArea rows={kur.naratif ? 2 : 1} lang="id" style={{ width: c.width ?? 240 }} value={String(row?.[c.key] ?? '')} onChange={(e) => setCell(s.id, c.key, e.target.value)} aria-label={`${s.nama} ${c.title}`} />
                           )}
                         </td>
                       ))}
@@ -221,4 +221,11 @@ export default function Penilaian() {
       </Card>
     </div>
   )
+}
+
+/** Kotak isian yang tingginya otomatis mengikuti isi (tanpa gulir), paragraf rata kanan-kiri. */
+function AutoArea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  const ref = useRef<HTMLTextAreaElement>(null)
+  useLayoutEffect(() => { const el = ref.current; if (!el) return; el.style.height = 'auto'; el.style.height = `${el.scrollHeight}px` }, [props.value, props.style])
+  return <textarea ref={ref} className="auto-area" {...props} />
 }
