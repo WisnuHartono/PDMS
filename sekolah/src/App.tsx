@@ -12,6 +12,7 @@ import { boleh, keluar, useSesi } from './security/sesi'
 import { namaPegawai } from './util'
 import { terapkanTema } from './tema'
 import { kertasDari, MARGIN } from './kertas'
+import { setGayaDeskripsi } from './deskripsiRapor'
 import { ChipTrial } from './pages/Lisensi'
 import { BrandApp, LogoSekolah, tampilanDari, terapkanHuruf, terapkanTandaAir, tinggiBrand } from './logo'
 
@@ -93,6 +94,7 @@ export default function App() {
     st.textContent = `@page { size: ${k.w}mm ${k.h}mm; margin: ${MARGIN.potret.y}mm ${MARGIN.potret.x}mm ${MARGIN.potret.b}mm; } @page landscape { size: ${k.h}mm ${k.w}mm; margin: ${MARGIN.lanskap.y}mm ${MARGIN.lanskap.x}mm ${MARGIN.lanskap.b}mm; } @page label { size: ${k.w}mm ${k.h}mm; margin: 0; }`
   }, [sekolah.ukuranKertas])
   const jmlInvalid = useValidasi().filter((t) => t.level === 'invalid').length
+  setGayaDeskripsi(sekolah.gayaDeskripsi)
   const tm = tampilanDari(sekolah)
   useEffect(() => { terapkanHuruf(tampilanDari({ tampilan: sekolah.tampilan })) }, [sekolah.tampilan])
   useEffect(() => { const t = tampilanDari({ tampilan: sekolah.tampilan }); void terapkanTandaAir(sekolah.logo, t.tandaAir, t.tandaAirUkuran, t.tandaAirOpasitas, kertasDari(sekolah)) }, [sekolah.logo, sekolah.tampilan, sekolah.ukuranKertas])

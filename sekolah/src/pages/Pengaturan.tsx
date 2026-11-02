@@ -5,6 +5,7 @@ import PanelTema from './PanelTema'
 import { kodeSekolah } from '../administrasi'
 import { KERTAS, type IdKertas } from '../kertas'
 import { KURIKULUM } from '../curricula'
+import { type GayaDeskripsi } from '../deskripsiRapor'
 import { Icon } from '../icons'
 import { KopSurat, alamatLengkap, kontakLengkap } from '../print'
 import { put, useCol, useSekolah } from '../store'
@@ -287,7 +288,17 @@ export default function Pengaturan() {
             </>
           )}
 
-          {bagian === 'kurikulum' && (
+          {bagian === 'kurikulum' && (<>
+            <Card title="Deskripsi rapor otomatis">
+              <Field label="Gaya deskripsi">
+                <select value={s.gayaDeskripsi ?? 'lengkap'} onChange={(e) => set({ gayaDeskripsi: e.target.value as GayaDeskripsi })}>
+                  <option value="ringkas">Ringkas - satu kalimat capaian</option>
+                  <option value="standar">Standar - capaian, kelemahan, saran</option>
+                  <option value="lengkap">Lengkap - capaian, perbandingan SAS, tren, literasi, saran</option>
+                </select>
+              </Field>
+              <p className="muted small">Bank kalimat disusun berdasarkan 5 tingkat capaian (relatif terhadap KKM), tujuan pembelajaran terkuat dan terlemah, selisih nilai akhir semester dengan rata-rata TP, serta tren antar-TP. Deskripsi manual tetap diutamakan.</p>
+            </Card>
             <Card title="Kurikulum tersedia">
               <ul className="kur-list">
                 {KURIKULUM.map((k) => (
@@ -296,7 +307,7 @@ export default function Pengaturan() {
               </ul>
               <p className="muted small">Kurikulum dipilih per rombel. Implementasinya dihitung otomatis dari data rombel (lihat Beranda).</p>
             </Card>
-          )}
+          </>)}
 
           {bagian === 'tema' && <PanelTema s={s} set={set} />}
           {bagian === 'tampilan' && <PanelTampilan s={s} set={set} />}

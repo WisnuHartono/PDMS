@@ -1,6 +1,7 @@
 // Definisi kurikulum sebagai data + aturan hitung. Untuk menambah kurikulum baru
 // (mis. kurikulum luar negeri), cukup tambahkan objek `Kurikulum` ke daftar KURIKULUM.
 import type { Jenjang } from './types'
+import { getGayaDeskripsi, susunDeskripsi } from './deskripsiRapor'
 
 export type Baris = Record<string, number | string | undefined>
 
@@ -109,7 +110,8 @@ const MERDEKA: Kurikulum = {
     const sas = num(b?.sas)
     const nilai = round(avg([lm, sas]))
     const manual = typeof b?.deskripsi === 'string' && b.deskripsi.trim() ? b.deskripsi.trim() : ''
-    return { nilai, deskripsi: manual || deskripsiMerdeka(b, tujuan, kkm) }
+    const otomatis = getGayaDeskripsi() === 'ringkas' ? deskripsiMerdeka(b, tujuan, kkm) : susunDeskripsi({ tp: tpScores(b, tujuan), akhir: sas, nilai, kkm })
+    return { nilai, deskripsi: manual || otomatis }
   },
   kolomRapor: [
     { label: 'Nilai Akhir', width: '70px', align: 'center', get: (h) => h.nilai },
@@ -142,7 +144,8 @@ const K13: Kurikulum = {
     const pred = predikatK13(nilai, kkm)
     const kata = { A: 'Sangat baik', B: 'Baik', C: 'Cukup', D: 'Perlu bimbingan' }
     let deskripsi = ''
-    if (sorted.length && pred) {
+    if (getGayaDeskripsi() !== 'ringkas') deskripsi = susunDeskripsi({ tp: s, akhir: pas, nilai, kkm })
+    else if (sorted.length && pred) {
       deskripsi = `${kata[pred as keyof typeof kata]} dalam ${lcFirst(sorted[0].t)}`
       if (sorted.length > 1) deskripsi += `, perlu peningkatan dalam ${lcFirst(sorted[sorted.length - 1].t)}`
       deskripsi += '.'
