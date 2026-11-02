@@ -29,7 +29,7 @@ export function htmlDokumen(isi: string, judul: string, word = false) {
   const head = word
     ? '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->'
     : '<!doctype html><html lang="id"><head><meta charset="utf-8">'
-  return `${head}<title>${judul.replace(/</g, '&lt;')}</title><style>${cssDokumen()}\n#print-root{display:block;position:static;background:#fff}.pp-body{padding:0}.doc{margin:0 auto 12px}@page{size:A4;margin:12mm}</style></head><body><div id="print-root"><div class="pp-body">${isi}</div></div></body></html>`
+  return `${head}<title>${judul.replace(/</g, '&lt;')}</title><style>:root{--kw:${getComputedStyle(document.documentElement).getPropertyValue('--kw') || '210mm'};--kh:${getComputedStyle(document.documentElement).getPropertyValue('--kh') || '297mm'};--kw-l:${getComputedStyle(document.documentElement).getPropertyValue('--kw-l') || '297mm'};--kh-l:${getComputedStyle(document.documentElement).getPropertyValue('--kh-l') || '210mm'}}${cssDokumen()}\n#print-root{display:block;position:static;background:#fff}.pp-body{padding:0}.doc{margin:0 auto 12px}</style></head><body><div id="print-root"><div class="pp-body">${isi}</div></div></body></html>`
 }
 
 export function PrintHost() {

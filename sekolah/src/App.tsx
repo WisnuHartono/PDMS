@@ -26,6 +26,7 @@ import AkunPage, { ProfilSaya } from './pages/Akun'
 import { boleh, keluar, useSesi } from './security/sesi'
 import { namaPegawai } from './util'
 import { terapkanTema } from './tema'
+import { kertasDari, MARGIN } from './kertas'
 import { BrandApp, LogoSekolah, tampilanDari, terapkanHuruf, terapkanTandaAir, tinggiBrand } from './logo'
 
 interface MenuItem { id: PageId; label: string; icon: string; group: string }
@@ -77,18 +78,22 @@ export default function App() {
   const sesi = useSesi()!
   const [profil, setProfil] = useState(!!sesi.peran.wajib2fa && !sesi.akun.totpEnc)
   const sekolah = useSekolah()
-  // Ukuran kertas cetak (Pengaturan → Administrasi & Cetak): A4 atau F4 (215 × 330 mm)
+  // Ukuran kertas cetak (Pengaturan → Administrasi & Cetak): A3, A4, A5, B5, F4/Folio, Letter, Legal.
+  // Dokumen yang melebihi satu halaman otomatis dibagi ke halaman berikutnya dengan margin yang sama.
   useEffect(() => {
-    const f4 = sekolah.ukuranKertas === 'F4'
-    document.documentElement.dataset.kertas = f4 ? 'F4' : 'A4'
+    const k = kertasDari(sekolah)
+    const r = document.documentElement
+    r.dataset.kertas = String(sekolah.ukuranKertas ?? 'A4')
+    r.style.setProperty('--kw', `${k.w}mm`); r.style.setProperty('--kh', `${k.h}mm`)
+    r.style.setProperty('--kw-l', `${k.h}mm`); r.style.setProperty('--kh-l', `${k.w}mm`)
     let st = document.getElementById('simas-kertas')
     if (!st) { st = document.createElement('style'); st.id = 'simas-kertas'; document.head.appendChild(st) }
-    st.textContent = f4 ? '@page { size: 215mm 330mm; } @page landscape { size: 330mm 215mm; }' : '@page { size: A4; } @page landscape { size: A4 landscape; }'
+    st.textContent = `@page { size: ${k.w}mm ${k.h}mm; margin: ${MARGIN.potret.y}mm ${MARGIN.potret.x}mm; } @page landscape { size: ${k.h}mm ${k.w}mm; margin: ${MARGIN.lanskap.y}mm ${MARGIN.lanskap.x}mm; } @page label { size: ${k.w}mm ${k.h}mm; margin: 0; }`
   }, [sekolah.ukuranKertas])
   const jmlInvalid = useValidasi().filter((t) => t.level === 'invalid').length
   const tm = tampilanDari(sekolah)
   useEffect(() => { terapkanHuruf(tampilanDari({ tampilan: sekolah.tampilan })) }, [sekolah.tampilan])
-  useEffect(() => { const t = tampilanDari({ tampilan: sekolah.tampilan }); void terapkanTandaAir(sekolah.logo, t.tandaAir, t.tandaAirUkuran, t.tandaAirOpasitas) }, [sekolah.logo, sekolah.tampilan])
+  useEffect(() => { const t = tampilanDari({ tampilan: sekolah.tampilan }); void terapkanTandaAir(sekolah.logo, t.tandaAir, t.tandaAirUkuran, t.tandaAirOpasitas, kertasDari(sekolah)) }, [sekolah.logo, sekolah.tampilan, sekolah.ukuranKertas])
   // Cadangan otomatis terenkripsi (folder / WebDAV) saat aplikasi dibuka bila sudah waktunya
   const [otoJalan, setOtoJalan] = useState(false)
   useEffect(() => {

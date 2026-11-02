@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import DataCadangan from './DataCadangan'
 import PanelTema from './PanelTema'
 import { kodeSekolah } from '../administrasi'
+import { KERTAS, type IdKertas } from '../kertas'
 import { KURIKULUM } from '../curricula'
 import { Icon } from '../icons'
 import { KopSurat, alamatLengkap, kontakLengkap } from '../print'
@@ -274,11 +275,12 @@ export default function Pengaturan() {
                 <p className="muted small">Kode kosong = NPSN. Format: nomor urut / kode klasifikasi / kode sekolah / bulan (romawi) / tahun. Nomor urut otomatis per tahun di buku Surat Keluar dan Surat Keterangan.</p>
               </Card>
               <Card title="Kertas cetak">
-                <div className="radio-row">
-                  <label className={`opsi-kertas ${s.ukuranKertas !== 'F4' ? 'on' : ''}`}><input type="radio" checked={s.ukuranKertas !== 'F4'} onChange={() => set({ ukuranKertas: 'A4' })} /><b>A4</b><small>210 × 297 mm</small></label>
-                  <label className={`opsi-kertas ${s.ukuranKertas === 'F4' ? 'on' : ''}`}><input type="radio" checked={s.ukuranKertas === 'F4'} onChange={() => set({ ukuranKertas: 'F4' })} /><b>F4 / Folio</b><small>215 × 330 mm</small></label>
+                <div className="radio-row" style={{ flexWrap: 'wrap' }}>
+                  {(Object.entries(KERTAS) as [IdKertas, (typeof KERTAS)[IdKertas]][]).map(([id, k]) => (
+                    <label key={id} className={`opsi-kertas ${(s.ukuranKertas ?? 'A4') === id ? 'on' : ''}`}><input type="radio" checked={(s.ukuranKertas ?? 'A4') === id} onChange={() => set({ ukuranKertas: id })} /><b>{k.nama}</b><small>{k.w} × {k.h} mm</small></label>
+                  ))}
                 </div>
-                <p className="muted small">Berlaku untuk pratinjau, cetak, dan Simpan PDF.</p>
+                <p className="muted small">Berlaku untuk pratinjau, cetak, dan Simpan PDF di buku induk, rapor, surat, kuitansi, dan semua dokumen administrasi. Bila isi dokumen melebihi satu halaman, otomatis dilanjutkan ke halaman berikutnya (baris tabel tidak terpotong, judul tabel diulang).</p>
               </Card>
             </>
           )}

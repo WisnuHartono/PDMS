@@ -67,7 +67,7 @@ export interface Sekolah {
   kop?: KopSetting
   /** Singkatan sekolah untuk nomor surat, mis. "SHB". Default: NPSN. */
   kodeSurat?: string
-  ukuranKertas?: 'A4' | 'F4'
+  ukuranKertas?: 'A3' | 'A4' | 'A5' | 'B5' | 'F4' | 'Letter' | 'Legal'
   /** Integrasi AI untuk menyusun narasi rapor. Kunci API disimpan di perangkat ini (ikut cadangan terenkripsi). */
   ai?: AiSetting
   /** Lokasi cadangan: lokal, folder sinkron (Google Drive/OneDrive/Dropbox desktop), Google Drive, atau WebDAV. */

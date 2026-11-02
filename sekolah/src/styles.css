@@ -337,8 +337,8 @@ body.pratinjau { overflow: hidden; }
 .pp-bar .btn-ghost { color: #fff; }
 #print-root.open .pp-body { padding: 20px 12px 40px; }
 #print-root.open .pp-body .doc { background: #fff; margin: 0 auto 18px; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.18); }
-.doc { width: 210mm; min-height: 297mm; padding: 14mm 15mm; font-family: var(--doc-font, 'Times New Roman', Times, serif); font-size: var(--doc-size, 11.5pt); line-height: var(--doc-line, 1.35); color: #000; }
-.doc.landscape { width: 297mm; min-height: 210mm; padding: 10mm 12mm; font-size: calc(var(--doc-size, 11.5pt) - 1.5pt); }
+.doc { width: var(--kw, 210mm); min-height: var(--kh, 297mm); padding: 14mm 15mm; font-family: var(--doc-font, 'Times New Roman', Times, serif); font-size: var(--doc-size, 11.5pt); line-height: var(--doc-line, 1.35); color: #000; }
+.doc.landscape { width: var(--kw-l, 297mm); min-height: var(--kh-l, 210mm); padding: 10mm 12mm; font-size: calc(var(--doc-size, 11.5pt) - 1.5pt); }
 .doc .muted { color: #444; }
 .kop { margin-bottom: 6px; }
 .kop-row { padding-bottom: 5px; border-bottom: 3px double #000; }
@@ -355,8 +355,6 @@ body.pratinjau { overflow: hidden; }
 .ttd-space { position: relative; }
 .ttd-img { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); max-height: 70px; max-width: 170px; }
 .ttd-stempel { position: absolute; left: 18%; top: 50%; transform: translate(-50%, -50%); width: 86px; height: 86px; object-fit: contain; opacity: 0.85; }
-:root[data-kertas="F4"] .doc:not(.landscape) { width: 215mm; min-height: 330mm; }
-:root[data-kertas="F4"] .doc.landscape { width: 330mm; min-height: 215mm; }
 .doc-title { text-align: center; font-size: calc(var(--doc-size, 11.5pt) + 1.5pt); margin: 6px 0 1px; text-decoration: underline; }
 .doc-sub { text-align: center; margin-bottom: 8px; }
 .doc table.ident { margin: 8px 0; border-collapse: collapse; }
@@ -1064,3 +1062,13 @@ body { background: var(--bg); color: var(--text); }
 @media (max-width: 700px) { .modal .profil-form .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .modal .profil-form .span-4 { grid-column: span 2; } }
 .modal .grid-2 > div > .sec:first-child { margin-top: 0; }
 .modal .qr { width: 140px; height: 140px; }
+
+/* Halaman cetak: margin diatur oleh @page, isi mengalir ke halaman berikutnya bila melebihi satu halaman */
+.doc.label-sheet { page: label; }
+@media print {
+  .doc:not(.label-sheet) { width: auto !important; min-height: 0 !important; padding: 0 !important; box-sizing: border-box; page-break-after: always; break-after: page; }
+  .doc:not(.label-sheet):last-child { page-break-after: auto; break-after: auto; }
+  .doc tr, .doc .box, .doc .ttd-row, .doc .kop-row, .doc img { break-inside: avoid; page-break-inside: avoid; }
+  .doc thead { display: table-header-group; }
+  .doc h4.sec, .doc .doc-title, .doc .doc-sub { break-after: avoid; page-break-after: avoid; }
+}

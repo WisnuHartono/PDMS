@@ -1,3 +1,4 @@
+import { MARGIN } from './kertas'
 import type { CSSProperties, ReactNode } from 'react'
 import { Icon } from './icons'
 import type { Sekolah, TampilanSetting } from './types'
@@ -86,7 +87,7 @@ export function terapkanHuruf(t: Required<TampilanSetting>, el: HTMLElement = do
 }
 
 /** Pasang tanda air logo sekolah di belakang semua dokumen cetak (.doc): ukuran proporsional lebar kertas, diulang tiap halaman. */
-export async function terapkanTandaAir(logo: string | undefined, on: boolean, ukuran: number, opasitas: number) {
+export async function terapkanTandaAir(logo: string | undefined, on: boolean, ukuran: number, opasitas: number, kertas: { w: number; h: number } = { w: 210, h: 297 }) {
   let st = document.getElementById('simas-tanda-air') as HTMLStyleElement | null
   if (!st) { st = document.createElement('style'); st.id = 'simas-tanda-air'; document.head.appendChild(st) }
   if (!on || !logo || !logo.startsWith('data:image/')) { st.textContent = ''; return }
@@ -104,8 +105,14 @@ export async function terapkanTandaAir(logo: string | undefined, on: boolean, uk
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}mm" height="${h}mm" viewBox="0 0 ${w} ${h}"><image href="${logo}" x="${(w - lw) / 2}" y="${(h - lh) / 2}" width="${lw}" height="${lh}" opacity="${opasitas / 100}" preserveAspectRatio="xMidYMid meet"/></svg>`
     return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`
   }
+  const { w, h } = kertas
+  const cetakP = { w: w - 2 * MARGIN.potret.x, h: h - 2 * MARGIN.potret.y }
+  const cetakL = { w: h - 2 * MARGIN.lanskap.x, h: w - 2 * MARGIN.lanskap.y }
+  const bg = (d: { w: number; h: number }, o: string) => `background:${ubin(d.w, d.h)} ${o}/${d.w}mm ${d.h}mm repeat-y`
+  // Layar/pratinjau: satu halaman penuh per ubin. Cetak: isi halaman (tanpa margin), sehingga logo tepat di tengah tiap halaman fisik.
   st.textContent = `.doc{position:relative;isolation:isolate}
-.doc::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:${ubin(210, 297)} 50% 0/210mm 297mm repeat-y;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-.doc.landscape::before{background:${ubin(297, 210)} 50% 0/297mm 210mm repeat-y}
-.doc.label-sheet::before{display:none}`
+.doc::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;${bg({ w, h }, '50% 0')};-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.doc.landscape::before{${bg({ w: h, h: w }, '50% 0')}}
+.doc.label-sheet::before{display:none}
+@media print{.doc::before{${bg(cetakP, '0 0')}}.doc.landscape::before{${bg(cetakL, '0 0')}}}`
 }
