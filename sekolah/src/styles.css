@@ -1146,3 +1146,17 @@ button.link { background: none; border: 0; color: var(--accent); cursor: pointer
 .doc table.nilai td.desc, .doc .box-b, .doc .asm-narasi, .doc .asm-tbl td { text-align: justify; hyphens: auto; }
 .nilai-tbl td { padding-top: 12px; }
 .nilai-tbl td:has(> input, > select, > textarea) { padding-top: 7px; }
+
+/* Lampu koneksi: warna neon/fluoresen + indikator waktu tempuh (ms) */
+.lampu.on { --l: #39ff14; }
+.lampu.off { --l: #ff073a; }
+.lampu.sync { --l: #00f0ff; }
+.lampu.warn { --l: #fff700; }
+.lampu-dot { box-shadow: 0 0 6px 1px var(--l), 0 0 14px 2px color-mix(in srgb, var(--l) 55%, transparent); }
+.lampu-t { text-shadow: 0 0 6px color-mix(in srgb, var(--l) 60%, transparent); }
+.lampu-ms { font: 700 11px Consolas, 'Courier New', monospace; padding: 1px 6px; border-radius: 99px; background: rgba(0, 0, 0, .35); border: 1px solid currentColor; }
+.lampu-ms.bagus { color: #39ff14; text-shadow: 0 0 6px #39ff14; }
+.lampu-ms.sedang { color: #fff700; text-shadow: 0 0 6px #fff700; }
+.lampu-ms.lambat { color: #ff9100; text-shadow: 0 0 6px #ff9100; }
+.dc .lampu-ms { background: #0f172a; }
+@media (max-width: 760px) { .topbar .lampu .lampu-ms { display: none; } .topbar .brand-teks .lampu .lampu-ms { display: inline; } }
