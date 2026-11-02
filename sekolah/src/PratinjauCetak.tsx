@@ -117,7 +117,7 @@ export function PrintHost() {
             if (nyata && Math.abs(nyata - hh) > 0.5) { kl.style.top = `${nyata - s0}px`; win.style.height = `${e0 - s0 + nyata}px` }
           }
           // garis penutup + footer: identitas dokumen di kiri, nomor halaman di kanan
-          const no = document.createElement('div'); no.className = 'pp-no'; no.style.cssText = `left:${mx}px;right:${mx}px`
+          const no = document.createElement('div'); no.className = 'pp-no'; no.style.cssText = `left:${mx}px;right:${mx}px;bottom:${Math.min(6, (land ? MARGIN.lanskap.y : MARGIN.potret.y) - 6)}mm`
           const kiri = document.createElement('span'); kiri.textContent = d.dataset.footer ?? ''
           const kanan = document.createElement('span'); kanan.textContent = `Halaman ${i + 1} dari ${n}`
           no.append(kiri, kanan)
