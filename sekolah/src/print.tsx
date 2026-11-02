@@ -78,7 +78,7 @@ export function TandaTangan({ kiri, kanan, tanggal }: { kiri?: Ttd; kanan?: Ttd;
     const digital = s.pakaiTtdDigital && /kepala sekolah/i.test(x.jabatan) && (s.ttdKepsek || s.stempel)
     return (
       <div className="ttd">
-        <div>{top ?? ' '}</div>
+        <div>{top ?? '\u00a0'}</div>
         <div>{x.jabatan}</div>
         <div className="ttd-space">
           {digital && s.stempel && <img className="ttd-stempel" src={s.stempel} alt="" />}

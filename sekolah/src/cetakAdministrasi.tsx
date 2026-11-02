@@ -311,7 +311,7 @@ export function CetakItem({ reg, a, d }: { reg: RegisterDef; a: Arsip; d: Record
               <div style={{ marginTop: 6 }}>Keputusan: {['Disetujui', 'Ditolak'].map((x) => <span key={x} style={{ marginRight: 18 }}>{d.status === x ? '☑' : '☐'} {x}</span>)}</div>
             </div>
           </div>
-          <TandaTangan kiri={{ jabatan: 'Pemohon', nama: p ? namaPegawai(p) : undefined, nip: p?.nip ?? '', atas: ' ' }} kanan={{ ...kepsek(), jabatan: 'Kepala Sekolah' }} tanggal={String(d.mulai ?? today())} />
+          <TandaTangan kiri={{ jabatan: 'Pemohon', nama: p ? namaPegawai(p) : undefined, nip: p?.nip ?? '', atas: '\u00a0' }} kanan={{ ...kepsek(), jabatan: 'Kepala Sekolah' }} tanggal={String(d.mulai ?? today())} />
         </div>
       )
     }
