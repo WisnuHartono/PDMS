@@ -1162,3 +1162,7 @@ button.link { background: none; border: 0; color: var(--accent); cursor: pointer
 @media (max-width: 760px) { .topbar .lampu .lampu-ms { display: none; } .topbar .brand-teks .lampu .lampu-ms { display: inline; } }
 .lampu-ms.gagal { color: #cbd5e1; text-shadow: none; opacity: .8; }
 .lampu-ms:not(.bagus):not(.sedang):not(.lambat):not(.gagal) { color: #7dd3fc; }
+/* Ping tanpa bingkai, rata kanan sejajar dengan akhir teks "Administrasi Sekolah · v0.4" */
+.lampu-ms { border: 0; background: transparent !important; padding: 0; border-radius: 0; }
+.brand-teks .lampu { display: flex; align-self: stretch; }
+.brand-teks .lampu .lampu-ms { margin-left: auto; padding-left: 8px; }
