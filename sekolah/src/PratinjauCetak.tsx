@@ -74,7 +74,10 @@ export function PrintHost() {
         })
         const tinggi = d.offsetHeight
         const dTop = d.getBoundingClientRect().top
-        const batas = Array.from(d.querySelectorAll<HTMLElement>('tr, p, li, .box, .ttd-row, .kvn, .kvg, .induk-top, .asm-rapor, img, table')).map((e) => e.getBoundingClientRect().bottom - dTop).filter((v) => v > 0).sort((x, y) => x - y)
+        // Blok yang tidak boleh terbelah (tabel berdampingan, kotak catatan, tanda tangan) dipindah utuh ke halaman berikutnya,
+        // kecuali lebih tinggi dari satu halaman.
+        const atom = Array.from(d.querySelectorAll<HTMLElement>('.two, .box, .ttd-row')).filter((e) => e.getBoundingClientRect().height <= C)
+        const batas = Array.from(d.querySelectorAll<HTMLElement>('tr, p, li, .box, .ttd-row, .two, .kvn, .kvg, .induk-top, .asm-rapor, img, table')).filter((e) => !atom.some((a) => a !== e && a.contains(e))).map((e) => e.getBoundingClientRect().bottom - dTop).filter((v) => v > 0).sort((x, y) => x - y)
         const tabel = Array.from(d.querySelectorAll<HTMLTableElement>('table')).filter((t) => t.tHead).map((t) => { const r = t.getBoundingClientRect(); return { t, top: r.top - dTop, bottom: r.bottom - dTop, h: t.tHead!.getBoundingClientRect().height } })
         const halamanDoc: { s: number; e: number; hdr?: (typeof tabel)[number] }[] = []
         let a = 0

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { Suspense, lazy, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Icon } from './icons'
 import { exportTerenkripsi, put, useCol, useSekolah } from './store'
 import { awalanBerkas, jatuhTempo, unggah } from './cloud'
@@ -6,21 +6,6 @@ import { mulaiSinkron, sinkronSekarang } from './sinkron'
 import { LampuKoneksi } from './koneksi'
 import { Avatar, Btn, KonfirmasiHost, Nav, ToastHost, useNav, type AsalNav, type PageId } from './ui'
 import { PrintHost } from './PratinjauCetak'
-import Dashboard from './pages/Dashboard'
-import SiswaPage from './pages/Siswa'
-import PegawaiPage from './pages/Pegawai'
-import BukuInduk from './pages/BukuInduk'
-import RombelPage from './pages/Rombel'
-import MapelPage from './pages/Mapel'
-import EkskulPage from './pages/Ekskul'
-import AbsensiSiswa from './pages/AbsensiSiswa'
-import AbsensiPegawai from './pages/AbsensiPegawai'
-import Penilaian from './pages/Penilaian'
-import Rapor from './pages/Rapor'
-import Asesmen from './pages/Asesmen'
-import Pengaturan from './pages/Pengaturan'
-import Prasarana from './pages/Prasarana'
-import Administrasi from './pages/Administrasi'
 import Validasi, { useValidasi } from './pages/Validasi'
 import AkunPage, { ProfilSaya } from './pages/Akun'
 import { boleh, keluar, useSesi } from './security/sesi'
@@ -50,6 +35,22 @@ export const MENU: MenuItem[] = [
   { id: 'pengaturan', label: 'Pengaturan', icon: 'pengaturan', group: 'Sistem' },
   { id: 'akun', label: 'Akun & Keamanan', icon: 'kunci', group: 'Sistem' },
 ]
+
+const Dashboard = lazy(() => import('./pages/Dashboard'))
+const SiswaPage = lazy(() => import('./pages/Siswa'))
+const PegawaiPage = lazy(() => import('./pages/Pegawai'))
+const BukuInduk = lazy(() => import('./pages/BukuInduk'))
+const RombelPage = lazy(() => import('./pages/Rombel'))
+const MapelPage = lazy(() => import('./pages/Mapel'))
+const EkskulPage = lazy(() => import('./pages/Ekskul'))
+const AbsensiSiswa = lazy(() => import('./pages/AbsensiSiswa'))
+const AbsensiPegawai = lazy(() => import('./pages/AbsensiPegawai'))
+const Penilaian = lazy(() => import('./pages/Penilaian'))
+const Rapor = lazy(() => import('./pages/Rapor'))
+const Asesmen = lazy(() => import('./pages/Asesmen'))
+const Pengaturan = lazy(() => import('./pages/Pengaturan'))
+const Prasarana = lazy(() => import('./pages/Prasarana'))
+const Administrasi = lazy(() => import('./pages/Administrasi'))
 
 const PAGES: Record<PageId, () => ReactNode> = {
   dashboard: () => <Dashboard />,
@@ -192,7 +193,7 @@ export default function App() {
                 <span className="muted small">ke {asal.label}</span>
               </div>
             )}
-            {PAGES[halaman]()}
+            <Suspense fallback={<div className="muted" style={{ padding: 24 }}>Memuat…</div>}>{PAGES[halaman]()}</Suspense>
           </div>
         </main>
       </div>

@@ -1068,7 +1068,7 @@ body { background: var(--bg); color: var(--text); }
 @media print {
   .doc:not(.label-sheet) { width: auto !important; min-height: 0 !important; padding: 0 !important; box-sizing: border-box; page-break-after: always; break-after: page; }
   .doc:not(.label-sheet):last-child { page-break-after: auto; break-after: auto; }
-  .doc tr, .doc .box, .doc .ttd-row, .doc .kop-row, .doc img { break-inside: avoid; page-break-inside: avoid; }
+  .doc tr, .doc .box, .doc .two, .doc .ttd-row, .doc .kop-row, .doc img { break-inside: avoid; page-break-inside: avoid; }
   .doc thead { display: table-header-group; }
   .doc h4.sec, .doc .doc-title, .doc .doc-sub { break-after: avoid; page-break-after: avoid; }
 }
@@ -1098,9 +1098,9 @@ button.link { background: none; border: 0; color: var(--accent); cursor: pointer
 
 /* Rapor: judul diberi jarak, identitas selebar tabel nilai dan kolom kanan sejajar */
 .doc.rapor .doc-title { margin: 6px 0 16px; }
-.doc.rapor table.ident { width: 100%; table-layout: fixed; margin: 10px 0 12px; }
+.doc.rapor table.ident { width: 100%; margin: 10px 0 12px; }
 .doc.rapor table.ident td { padding: 2px 6px 2px 0; overflow-wrap: anywhere; }
-.doc.rapor table.ident td:nth-child(1) { width: 23%; white-space: nowrap; }
-.doc.rapor table.ident td:nth-child(2) { width: 30%; }
-.doc.rapor table.ident td:nth-child(3) { width: 21%; padding-left: 14px; white-space: nowrap; }
-.doc.rapor table.ident td:nth-child(4) { width: 26%; padding-right: 0; }
+
+.doc.rapor table.ident td:nth-child(1), .doc.rapor table.ident td:nth-child(3), .doc.rapor table.ident td:nth-child(4) { width: 1%; white-space: nowrap; }
+.doc.rapor table.ident td:nth-child(3) { padding-left: 18px; }
+.doc.rapor table.ident td:nth-child(4) { padding-right: 0; }
