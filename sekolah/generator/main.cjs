@@ -21,7 +21,7 @@ function statusKunci() {
 
 function jendela() {
   Menu.setApplicationMenu(null)
-  const w = new BrowserWindow({ width: 980, height: 760, minWidth: 760, minHeight: 600, title: 'SIMAS Generator Serial', backgroundColor: '#eef2f6', webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true } })
+  const w = new BrowserWindow({ width: 900, height: 580, minWidth: 720, minHeight: 520, title: 'SIMAS Generator Serial', backgroundColor: '#eef2f6', webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true } })
   w.loadFile(path.join(__dirname, 'index.html'))
 }
 
