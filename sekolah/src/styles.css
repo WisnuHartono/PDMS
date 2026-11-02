@@ -1087,3 +1087,11 @@ body { background: var(--bg); color: var(--text); }
   .pp-halaman { display: none !important; }
   .pp-sumber { position: static !important; visibility: visible !important; width: auto !important; pointer-events: auto; z-index: auto; }
 }
+
+/* Hasil uji integrasi Google */
+.uji-hasil { margin: 8px 0; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface, #fff); }
+.uji-hasil ul { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 6px; }
+.uji-hasil li { display: flex; gap: 8px; align-items: flex-start; }
+.uji-ik { flex: none; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 800; color: #fff; margin-top: 1px; }
+.uji-ok .uji-ik { background: #1a9d5b; } .uji-gagal .uji-ik { background: #d23b3b; } .uji-peringatan .uji-ik { background: #e0a100; } .uji-lewati .uji-ik { background: #8a93a0; }
+button.link { background: none; border: 0; color: var(--accent); cursor: pointer; text-decoration: underline; padding: 0; font: inherit; }

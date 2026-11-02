@@ -9,6 +9,8 @@ import {
 import { otpauthUri, totpSecretBaru } from '../security/crypto'
 import { getSesi, setSesi, useSesi } from '../security/sesi'
 import { useCol } from '../store'
+import { ujiKonfigurasi, ujiSinkronAkun, skripPengaturan, bacaKonfigBerkas, type Langkah } from '../security/ujiGoogle'
+import { download } from '../util'
 import { Avatar, Btn, Card, Empty, Field, Modal, PageHead, Tabs, toast, tanya } from '../ui'
 import { FormProfil, TombolGoogle } from './ProfilForm'
 import { namaPegawai } from '../util'
@@ -209,12 +211,32 @@ function PeranForm({ initial, onClose }: { initial: Peran; onClose: () => void }
   )
 }
 
+const IKON_LANGKAH: Record<Langkah['status'], string> = { ok: '✓', gagal: '✗', peringatan: '!', lewati: '–' }
+function HasilUji({ langkah }: { langkah: Langkah[] }) {
+  if (!langkah.length) return null
+  const gagal = langkah.filter((l) => l.status === 'gagal').length, peringatan = langkah.filter((l) => l.status === 'peringatan').length
+  return (
+    <div className="uji-hasil" role="status">
+      <p className="small"><b>{gagal ? `${gagal} langkah gagal` : peringatan ? 'Lolos, dengan catatan' : 'Semua langkah lolos'}</b></p>
+      <ul>{langkah.map((l) => (
+        <li key={l.id} className={`uji-${l.status}`}><span className="uji-ik" aria-hidden>{IKON_LANGKAH[l.status]}</span><div><b>{l.judul}</b><div className="small">{l.detail}</div>{l.saran && <div className="small muted">Saran: {l.saran}</div>}</div></li>
+      ))}</ul>
+    </div>
+  )
+}
+
 function GoogleConfig() {
   const sesi = useSesi()!
   const [c, setC] = useState<ConfigGoogle>({ aktif: false, clientId: '' })
   const [akun] = useData(daftarAkun, [] as TAkun[])
   useEffect(() => { configGoogle().then(setC) }, [])
   const terhubung = akun.filter((a) => a.google)
+  const [hasil, setHasil] = useState<Langkah[]>([])
+  const [menguji, setMenguji] = useState(false)
+  const origin = globalThis.location?.origin ?? ''
+  const uji = async () => { setMenguji(true); setHasil([]); try { setHasil(await ujiKonfigurasi(c)) } finally { setMenguji(false) } }
+  const salin = async (t: string) => { try { await navigator.clipboard.writeText(t); toast('Disalin') } catch { toast('Salin manual: ' + t) } }
+  const impor = async (f?: File) => { if (!f) return; try { const k = bacaKonfigBerkas(await f.text()); setC({ ...c, ...k }); toast('Konfigurasi diimpor. Tekan Simpan untuk menerapkan.') } catch (e) { toast((e as Error).message) } }
   return (
     <div className="grid-2">
       <Card title="Masuk dengan Google & sinkron email">
@@ -223,15 +245,32 @@ function GoogleConfig() {
           <Field label="OAuth Client ID Google" span={4}><input value={c.clientId} onChange={(e) => setC({ ...c, clientId: e.target.value })} placeholder="1234567890-abc.apps.googleusercontent.com" /></Field>
           <Field label="Batasi domain email (opsional)" span={4} hint="mis. sekolah.sch.id: hanya akun Google dari domain ini yang boleh dihubungkan"><input value={c.domain ?? ''} onChange={(e) => setC({ ...c, domain: e.target.value })} placeholder="sekolah.sch.id" /></Field>
         </div>
-        <Btn kind="primary" onClick={() => coba(() => simpanConfigGoogle(sesi, c), 'Pengaturan Google disimpan')}>Simpan</Btn>
+        <div className="filters">
+          <Btn kind="primary" onClick={() => coba(() => simpanConfigGoogle(sesi, c), 'Pengaturan Google disimpan')}>Simpan</Btn>
+          <Btn onClick={uji} disabled={menguji}>{menguji ? 'Menguji…' : 'Uji koneksi'}</Btn>
+          <label className="btn btn-ghost">Impor konfigurasi<input type="file" accept="application/json,.json" hidden onChange={(e) => { void impor(e.target.files?.[0]); e.target.value = '' }} /></label>
+          <Btn kind="ghost" onClick={() => c.clientId ? download('simas-google.json', JSON.stringify({ aktif: c.aktif, clientId: c.clientId.trim(), ...(c.domain?.trim() ? { domain: c.domain.trim().toLowerCase() } : {}) }, null, 2), 'application/json') : toast('Isi Client ID dulu')}>Ekspor</Btn>
+        </div>
+        <HasilUji langkah={hasil} />
+        <p className="small">Alamat aplikasi untuk didaftarkan di Google (<i>Authorized JavaScript origins</i>): <code className="sel">{origin}</code> <button className="link" onClick={() => void salin(origin)}>salin</button></p>
         <details className="dc-det" open={!c.clientId}>
-          <summary>Cara mendapatkan Client ID</summary>
-          <ol className="small">
-            <li>Buka <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noreferrer">Google Cloud Console › Credentials</a> dan pilih/buat proyek.</li>
-            <li><i>OAuth consent screen</i>: pilih <b>External</b> (atau Internal untuk Google Workspace), isi nama aplikasi, tambahkan email Anda sebagai <i>Test user</i>.</li>
-            <li><i>Create credentials › OAuth client ID › Web application</i>. Pada <i>Authorized JavaScript origins</i> isi <code>{globalThis.location?.origin}</code>.</li>
-            <li>Salin Client ID ke kolom di atas dan simpan. Client ID bukan rahasia.</li>
+          <summary>Panduan lengkap integrasi Google (± 10 menit)</summary>
+          <ol className="small steps">
+            <li><b>Siapkan akun.</b> Masuk ke <a href="https://console.cloud.google.com/" target="_blank" rel="noreferrer">Google Cloud Console</a> dengan akun Google sekolah (disarankan akun Workspace sekolah, bukan akun pribadi).</li>
+            <li><b>Buat proyek:</b> menu proyek di bagian atas › <i>New project</i> › beri nama “SIMAS Sekolah” › Create. Gratis; tidak perlu kartu kredit.</li>
+            <li><b>Layar persetujuan:</b> <a href="https://console.cloud.google.com/apis/credentials/consent" target="_blank" rel="noreferrer">APIs & Services › OAuth consent screen</a>. Pilih <b>Internal</b> bila memakai Google Workspace sekolah (semua akun sekolah langsung boleh), atau <b>External</b> lalu tambahkan email guru/staf pada <i>Test users</i> (maks. 100) sampai aplikasi dipublikasikan. Isi nama aplikasi, email dukungan, dan email kontak.</li>
+            <li><b>Buat Client ID:</b> <a href="https://console.cloud.google.com/apis/credentials/oauthclient" target="_blank" rel="noreferrer">Credentials › Create credentials › OAuth client ID</a> › <i>Application type</i> = <b>Web application</b>. Pada <i>Authorized JavaScript origins</i> › <i>Add URI</i> isi <code>{origin}</code> (tanpa garis miring di akhir). Bila aplikasi juga dibuka dari alamat lain (mis. domain sekolah), tambahkan juga.</li>
+            <li><b>Salin Client ID</b> (berakhiran <code>.apps.googleusercontent.com</code>) ke kolom di atas. Client ID bukan rahasia; <u>jangan</u> memakai “Client secret”.</li>
+            <li>Isi <i>Batasi domain email</i> bila hanya akun sekolah yang boleh (mis. <code>sekolah.sch.id</code>), centang <b>Aktifkan</b>, tekan <b>Simpan</b>, lalu <b>Uji koneksi</b>. Perubahan di Google dapat butuh beberapa menit.</li>
+            <li><b>Hubungkan akun:</b> tiap pengguna membuka <i>Profil & Keamanan › Akun Google</i>, menekan tombol Google, lalu memakai <b>Uji sinkronisasi</b> bila perlu.</li>
+            <li><b>Cadangan Google Drive</b> (opsional): di <i>Pengaturan › Data & Cadangan</i> Client ID yang sama dapat dipakai; aktifkan <i>Google Drive API</i> di <a href="https://console.cloud.google.com/apis/library/drive.googleapis.com" target="_blank" rel="noreferrer">API Library</a>. Aplikasi hanya meminta akses ke berkas yang dibuatnya sendiri (<code>drive.file</code>).</li>
           </ol>
+          <p className="small"><b>Masalah umum:</b> <code>origin_mismatch</code>/“alamat belum terdaftar” → alamat aplikasi belum ada di Authorized JavaScript origins (periksa http/https dan port). <code>access_denied</code>/“aplikasi belum diverifikasi” → akun belum ditambahkan sebagai Test user. <code>invalid_client</code> → Client ID salah salin. Tombol Google kosong → internet/firewall memblokir accounts.google.com. “Token sudah kedaluwarsa” → jam perangkat salah.</p>
+          <p className="small"><b>Skrip otomatis:</b> skrip membuat proyek, mengaktifkan Drive & People API, membuka halaman yang perlu diisi, memeriksa Client ID yang Anda tempel, lalu menghasilkan <code>simas-google.json</code> untuk <i>Impor konfigurasi</i>. Google tidak mengizinkan pembuatan Client ID web lewat skrip, jadi langkah itu tetap manual (dipandu skrip). Butuh <a href="https://cloud.google.com/sdk/docs/install" target="_blank" rel="noreferrer">Google Cloud CLI</a>.</p>
+          <div className="filters">
+            <Btn onClick={() => download('simas-setup-google.ps1', '\ufeff' + skripPengaturan('powershell', { origin, domain: c.domain }), 'text/plain')}>Unduh skrip Windows (.ps1)</Btn>
+            <Btn onClick={() => download('simas-setup-google.sh', skripPengaturan('bash', { origin, domain: c.domain }), 'text/x-shellscript')}>Unduh skrip Linux/macOS (.sh)</Btn>
+          </div>
         </details>
       </Card>
       <Card title="Cara kerja & keamanan">
@@ -319,6 +358,8 @@ export function ProfilSaya({ onClose }: { onClose: () => void }) {
   const [v, setV] = useState<PatchProfil>(() => Object.fromEntries(KOLOM_PROFIL.map((k) => [k, sesi.akun[k]])) as PatchProfil)
   const [izinMasuk, setIzinMasuk] = useState(!!sesi.akun.google?.wrap)
   const [impor, setImpor] = useState(true)
+  const [modeUji, setModeUji] = useState(false)
+  const [hasilUji, setHasilUji] = useState<Langkah[]>([])
   const [tab, setTab] = useState<'profil' | 'aman' | 'google'>('profil')
   const [cfg, setCfg] = useState<ConfigGoogle>()
   useEffect(() => { configGoogle().then(setCfg) }, [])
@@ -354,12 +395,15 @@ export function ProfilSaya({ onClose }: { onClose: () => void }) {
           ) : <p className="small muted">Hubungkan akun Google untuk menyalin nama, email, dan foto profil, dan (opsional) masuk tanpa mengetik kata sandi di perangkat ini.</p>}
           <label className="chk"><input type="checkbox" checked={impor} onChange={(e) => setImpor(e.target.checked)} /> Salin nama, email, dan foto dari akun Google</label>
           <label className="chk"><input type="checkbox" checked={izinMasuk} onChange={(e) => setIzinMasuk(e.target.checked)} /> Izinkan masuk dengan Google di perangkat ini (kunci data disimpan sebagai kunci perangkat)</label>
-          <TombolGoogle cfg={cfg} onProfil={(g) => coba(async () => {
+          <label className="chk"><input type="checkbox" checked={modeUji} onChange={(e) => setModeUji(e.target.checked)} /> <b>Mode uji</b>: periksa koneksi dan sinkronisasi tanpa mengubah data apa pun</label>
+          {modeUji && <div className="filters"><Btn onClick={async () => { setHasilUji([]); setHasilUji(await ujiKonfigurasi(cfg)) }}>Uji koneksi</Btn><span className="muted small">Lalu tekan tombol Google di bawah untuk menguji sinkronisasi akun Anda.</span></div>}
+          <TombolGoogle cfg={cfg} onProfil={(g) => modeUji ? setHasilUji(ujiSinkronAkun(sesi.akun, g, cfg)) : coba(async () => {
             if (sesi.akun.google && sesi.akun.google.sub === g.sub && !izinMasuk === !sesi.akun.google.wrap) await sinkronProfilGoogle(sesi, g)
             else await hubungkanGoogle(sesi, g, { izinMasuk, impor })
             setV(Object.fromEntries(KOLOM_PROFIL.map((k) => [k, sesi.akun[k]])) as PatchProfil)
             segar()
           }, 'Akun Google terhubung dan profil disinkronkan')} />
+          {modeUji && <HasilUji langkah={hasilUji} />}
           {sesi.akun.google && <Btn kind="ghost" onClick={() => coba(() => putusGoogle(sesi), 'Akun Google diputuskan').then(segar)}>Putuskan akun Google</Btn>}
         </>
       )}
