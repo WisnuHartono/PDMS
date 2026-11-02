@@ -1244,3 +1244,7 @@ input[type=checkbox], input[type=radio] { accent-color: var(--accent); }
 
 /* Nilai ping: jarak 4 spasi dari status jaringan */
 .brand-teks .lampu .lampu-ms, .lampu .lampu-ms { margin-left: 4ch; padding-left: 0; }
+
+/* Mode isi deskripsi rapor */
+.desc-mode { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-top: 6px; }
+.desc-mode select { font-size: 11.5px; padding: 2px 6px; max-width: 170px; }

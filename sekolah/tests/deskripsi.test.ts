@@ -32,3 +32,16 @@ describe('deskripsi rapor otomatis', () => {
     expect(d.toLowerCase()).toMatch(/bimbing|pendampingan|remedi|penguatan|ulang/)
   })
 })
+
+import { KURIKULUM } from '../src/curricula'
+describe('mode deskripsi', () => {
+  const kur = KURIKULUM.find((k) => k.id === 'merdeka')!
+  const base = { tp0: 90, tp1: 80, sas: 85, deskripsi: 'Tulisan guru.' }
+  it('manual diutamakan; mode otomatis memakai bank; variasi mengubah kalimat', () => {
+    expect(kur.hitung(base, ['A', 'B'], 75).deskripsi).toBe('Tulisan guru.')
+    const o = kur.hitung({ ...base, modeDesk: 'otomatis' }, ['A', 'B'], 75).deskripsi!
+    expect(o).not.toContain('Tulisan guru')
+    const v = kur.hitung({ ...base, modeDesk: 'otomatis', variasiDesk: 1 }, ['A', 'B'], 75).deskripsi
+    expect(v).not.toBe(o)
+  })
+})

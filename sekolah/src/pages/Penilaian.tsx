@@ -110,8 +110,18 @@ export default function Penilaian() {
     toast(gagal ? `${target.length - gagal} narasi dibuat, ${gagal} gagal: ${galat}` : `${target.length} narasi AI dibuat. Periksa dan sunting sebelum disimpan.`)
   }
 
+  const gantiModeDesk = (sid: string, mode: 'otomatis' | 'ai' | 'manual', teksSaatIni?: string) => {
+    setData((d) => ({ ...d, [sid]: { ...d[sid], modeDesk: mode } }))
+    setDirty(true)
+    if (mode === 'ai') void narasiAiSatu(sid)
+    if (mode === 'manual' && kunciTeks && !String(data[sid]?.[kunciTeks] ?? '').trim() && teksSaatIni) setCell(sid, kunciTeks, teksSaatIni)
+  }
   const setCell = (sid: string, key: string, v: string | number | undefined) => {
-    setData((d) => ({ ...d, [sid]: { ...d[sid], [key]: v } }))
+    setData((d) => {
+      const o = { ...d[sid], [key]: v }
+      if (!kur.naratif && key === kunciTeks && typeof v === 'string' && v.trim() && o.modeDesk !== 'ai') o.modeDesk = 'manual'
+      return { ...d, [sid]: o }
+    })
     setDirty(true)
   }
   const simpan = async () => {
@@ -199,7 +209,19 @@ export default function Penilaian() {
                       ))}
                       {!kur.naratif && <td className={`c strong ${h.nilai !== undefined && h.nilai < kkm ? 'bad-t' : ''}`}>{h.nilai ?? '-'}</td>}
                       {kur.kolomRapor.some((k) => /^(pred\.?|grade|capaian)$/i.test(k.label)) && <td className="c">{h.predikat ?? '-'}{h.extra?.predKet ? ` / ${h.extra.predKet}` : ''}</td>}
-                      {!kur.naratif && <td className="small desc">{h.deskripsi || <span className="muted">-</span>}{aiOn && kunciTeks && <div><Btn kind="ghost" icon="ai" disabled={!promptAi(s.id) || sibukAi[s.id]} title="Susun narasi dengan AI dari nilai per TP; hasil masuk ke kolom deskripsi manual" onClick={() => narasiAiSatu(s.id)}>{sibukAi[s.id] ? '…' : 'Narasi AI'}</Btn></div>}</td>}
+                      {!kur.naratif && <td className="small desc">{h.deskripsi || <span className="muted">-</span>}
+                        {(
+                          <div className="desc-mode">
+                            <select value={String(row?.modeDesk ?? 'otomatis')} aria-label={`Mode deskripsi ${s.nama}`} title="Cara mengisi deskripsi rapor"
+                              onChange={(e) => gantiModeDesk(s.id, e.target.value as 'otomatis' | 'ai' | 'manual', h.deskripsi)}>
+                              <option value="otomatis">Otomatis (bank data)</option>
+                              {aiOn && kunciTeks && <option value="ai">Narasi AI</option>}
+                              {kunciTeks && <option value="manual">Manual</option>}
+                            </select>
+                            {(row?.modeDesk ?? 'otomatis') === 'otomatis' && <Btn kind="ghost" icon="refresh" title="Pilih variasi kalimat lain dari bank data" onClick={() => setCell(s.id, 'variasiDesk', (typeof row?.variasiDesk === 'number' ? row.variasiDesk : 0) + 1)}>Variasi</Btn>}
+                            {row?.modeDesk === 'ai' && <Btn kind="ghost" icon="ai" disabled={!promptAi(s.id) || sibukAi[s.id]} title="Susun ulang dengan AI dari nilai per TP" onClick={() => narasiAiSatu(s.id)}>{sibukAi[s.id] ? '…' : 'Ulangi AI'}</Btn>}
+                          </div>
+                        )}</td>}
                       {kur.naratif && (
                         <td className="small">
                           {typeof row?.capaian === 'string' && <div className="bintang" title={String(row.capaian)}>{bintang(row.capaian)}</div>}

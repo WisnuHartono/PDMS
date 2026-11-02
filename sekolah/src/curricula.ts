@@ -109,8 +109,8 @@ const MERDEKA: Kurikulum = {
     const lm = avg(tpScores(b, tujuan).map((x) => x.v))
     const sas = num(b?.sas)
     const nilai = round(avg([lm, sas]))
-    const manual = typeof b?.deskripsi === 'string' && b.deskripsi.trim() ? b.deskripsi.trim() : ''
-    const otomatis = getGayaDeskripsi() === 'ringkas' ? deskripsiMerdeka(b, tujuan, kkm) : susunDeskripsi({ tp: tpScores(b, tujuan), akhir: sas, nilai, kkm })
+    const manual = b?.modeDesk === 'otomatis' ? '' : typeof b?.deskripsi === 'string' && b.deskripsi.trim() ? b.deskripsi.trim() : ''
+    const otomatis = getGayaDeskripsi() === 'ringkas' ? deskripsiMerdeka(b, tujuan, kkm) : susunDeskripsi({ tp: tpScores(b, tujuan), akhir: sas, nilai, kkm, variasi: num(b?.variasiDesk) })
     return { nilai, deskripsi: manual || otomatis }
   },
   kolomRapor: [
@@ -144,7 +144,7 @@ const K13: Kurikulum = {
     const pred = predikatK13(nilai, kkm)
     const kata = { A: 'Sangat baik', B: 'Baik', C: 'Cukup', D: 'Perlu bimbingan' }
     let deskripsi = ''
-    if (getGayaDeskripsi() !== 'ringkas') deskripsi = susunDeskripsi({ tp: s, akhir: pas, nilai, kkm })
+    if (getGayaDeskripsi() !== 'ringkas') deskripsi = susunDeskripsi({ tp: s, akhir: pas, nilai, kkm, variasi: num(b?.variasiDesk) })
     else if (sorted.length && pred) {
       deskripsi = `${kata[pred as keyof typeof kata]} dalam ${lcFirst(sorted[0].t)}`
       if (sorted.length > 1) deskripsi += `, perlu peningkatan dalam ${lcFirst(sorted[sorted.length - 1].t)}`

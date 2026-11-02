@@ -197,6 +197,8 @@ export interface MasukanDeskripsi {
   nilai?: number
   kkm: number
   gaya?: GayaDeskripsi
+  /** geser pilihan kalimat bank (tombol Variasi); 0 = bawaan */
+  variasi?: number
 }
 
 /** Susun deskripsi rapor dari nilai. Mengembalikan teks kosong bila belum ada nilai TP. */
@@ -208,7 +210,7 @@ export function susunDeskripsi(m: MasukanDeskripsi): string {
   const nilai = m.nilai ?? (m.akhir !== undefined ? rata([ratarata, m.akhir]) : ratarata)
   const tk = tingkatDari(nilai, kkm)
   // benih tetap dari data nilai, bukan acak
-  const benih = Math.round(tp.reduce((a, x, i) => a + x.v * (i + 3), 0) + (m.akhir ?? 0) * 5)
+  const benih = Math.round(tp.reduce((a, x, i) => a + x.v * (i + 3), 0) + (m.akhir ?? 0) * 5 + (m.variasi ?? 0) * 13)
   const urut = [...tp].sort((a, b) => b.v - a.v)
   const bawahKkm = urut.filter((x) => x.v < kkm).reverse()
   const kalimat: string[] = []
