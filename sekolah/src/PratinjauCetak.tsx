@@ -63,8 +63,8 @@ export function PrintHost() {
         const land = d.classList.contains('landscape')
         const W = px(rs().getPropertyValue(land ? '--kw-l' : '--kw') || (land ? '297mm' : '210mm'))
         const H = px(rs().getPropertyValue(land ? '--kh-l' : '--kh') || (land ? '210mm' : '297mm'))
-        const mx = px(`${land ? MARGIN.lanskap.x : MARGIN.potret.x}mm`), my = px(`${land ? MARGIN.lanskap.y : MARGIN.potret.y}mm`)
-        const cw = W - 2 * mx, C = H - 2 * my
+        const mx = px(`${land ? MARGIN.lanskap.x : MARGIN.potret.x}mm`), my = px(`${land ? MARGIN.lanskap.y : MARGIN.potret.y}mm`), myb = px(`${land ? MARGIN.lanskap.b : MARGIN.potret.b}mm`)
+        const cw = W - 2 * mx, C = H - my - myb
         d.classList.add('pp-sumber'); d.style.width = `${cw}px`
         // Baris judul kolom (semua sel <th>) dijadikan <thead> agar diulang otomatis di halaman berikutnya (cetak & pratinjau)
         d.querySelectorAll('table').forEach((t) => {
@@ -94,7 +94,7 @@ export function PrintHost() {
         halamanDoc.forEach(({ s: s0, e: e0, hdr }, i) => {
           const lb = document.createElement('div')
           lb.className = `pp-sheet${land ? ' landscape' : ''}`
-          lb.style.cssText = `width:${W}px;height:${H}px;padding:${my}px ${mx}px`
+          lb.style.cssText = `width:${W}px;height:${H}px;padding:${my}px ${mx}px ${myb}px`
           const hh = hdr?.h ?? 0
           const win = document.createElement('div'); win.className = 'pp-win'; win.style.height = `${e0 - s0 + hh}px`
           const kl = document.createElement('div'); kl.className = 'pp-klon'; kl.style.cssText = `top:${hh - s0}px;width:${cw}px`
@@ -117,7 +117,7 @@ export function PrintHost() {
             if (nyata && Math.abs(nyata - hh) > 0.5) { kl.style.top = `${nyata - s0}px`; win.style.height = `${e0 - s0 + nyata}px` }
           }
           // garis penutup + footer: identitas dokumen di kiri, nomor halaman di kanan
-          const no = document.createElement('div'); no.className = 'pp-no'; no.style.cssText = `left:${mx}px;right:${mx}px;bottom:${Math.min(6, (land ? MARGIN.lanskap.y : MARGIN.potret.y) - 6)}mm`
+          const no = document.createElement('div'); no.className = 'pp-no'; no.style.cssText = `left:${mx}px;right:${mx}px;bottom:${land ? MARGIN.lanskap.b - 6 : MARGIN.potret.b - 8}mm`
           const kiri = document.createElement('span'); kiri.textContent = d.dataset.footer ?? ''
           const kanan = document.createElement('span'); kanan.textContent = `Halaman ${i + 1} dari ${n}`
           no.append(kiri, kanan)
@@ -149,7 +149,7 @@ export function PrintHost() {
       const m = land ? MARGIN.lanskap : MARGIN.potret
       d.setAttribute('data-pf', String(i))
       const kotak = 'font: 8.5pt/1.2 sans-serif; color: #333; border-top: 0.3mm solid #333; padding-top: 1mm; vertical-align: top;'
-      css += `.doc[data-pf="${i}"] { page: pf${i}; counter-reset: page 1; } @page pf${i} { size: ${w} ${h}; margin: ${m.y}mm ${m.x}mm; @bottom-left { content: "${q(d.dataset.footer ?? '')}"; ${kotak} } @bottom-right { content: "Halaman " counter(page); ${kotak} } }\n`
+      css += `.doc[data-pf="${i}"] { page: pf${i}; counter-reset: page 1; } @page pf${i} { size: ${w} ${h}; margin: ${m.y}mm ${m.x}mm ${m.b}mm; @bottom-left { content: "${q(d.dataset.footer ?? '')}"; ${kotak} } @bottom-right { content: "Halaman " counter(page); ${kotak} } }\n`
     })
     let st = document.getElementById('simas-footer-cetak')
     if (!st) { st = document.createElement('style'); st.id = 'simas-footer-cetak'; document.head.appendChild(st) }

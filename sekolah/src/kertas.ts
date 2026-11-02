@@ -13,6 +13,6 @@ export const KERTAS = {
 export type IdKertas = keyof typeof KERTAS
 
 /** Margin halaman cetak (mm): potret dan lanskap. Sisa halaman diisi isi dokumen, lalu otomatis pindah ke halaman berikutnya. */
-export const MARGIN = { potret: { y: 14, x: 15 }, lanskap: { y: 10, x: 12 } }
+export const MARGIN = { potret: { y: 14, b: 24, x: 15 }, lanskap: { y: 10, b: 20, x: 12 } }
 
 export const kertasDari = (s: Pick<Sekolah, 'ukuranKertas'>) => KERTAS[(s.ukuranKertas ?? 'A4') as IdKertas] ?? KERTAS.A4

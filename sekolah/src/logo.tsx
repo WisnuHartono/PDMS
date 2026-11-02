@@ -106,8 +106,8 @@ export async function terapkanTandaAir(logo: string | undefined, on: boolean, uk
     return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`
   }
   const { w, h } = kertas
-  const cetakP = { w: w - 2 * MARGIN.potret.x, h: h - 2 * MARGIN.potret.y }
-  const cetakL = { w: h - 2 * MARGIN.lanskap.x, h: w - 2 * MARGIN.lanskap.y }
+  const cetakP = { w: w - 2 * MARGIN.potret.x, h: h - MARGIN.potret.y - MARGIN.potret.b }
+  const cetakL = { w: h - 2 * MARGIN.lanskap.x, h: w - MARGIN.lanskap.y - MARGIN.lanskap.b }
   const bg = (d: { w: number; h: number }, o: string) => `background:${ubin(d.w, d.h)} ${o}/${d.w}mm ${d.h}mm repeat-y`
   // Layar/pratinjau: satu halaman penuh per ubin. Cetak: isi halaman (tanpa margin), sehingga logo tepat di tengah tiap halaman fisik.
   st.textContent = `.doc,.pp-sheet{position:relative;isolation:isolate}

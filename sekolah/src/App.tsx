@@ -89,7 +89,7 @@ export default function App() {
     r.style.setProperty('--kw-l', `${k.h}mm`); r.style.setProperty('--kh-l', `${k.w}mm`)
     let st = document.getElementById('simas-kertas')
     if (!st) { st = document.createElement('style'); st.id = 'simas-kertas'; document.head.appendChild(st) }
-    st.textContent = `@page { size: ${k.w}mm ${k.h}mm; margin: ${MARGIN.potret.y}mm ${MARGIN.potret.x}mm; } @page landscape { size: ${k.h}mm ${k.w}mm; margin: ${MARGIN.lanskap.y}mm ${MARGIN.lanskap.x}mm; } @page label { size: ${k.w}mm ${k.h}mm; margin: 0; }`
+    st.textContent = `@page { size: ${k.w}mm ${k.h}mm; margin: ${MARGIN.potret.y}mm ${MARGIN.potret.x}mm ${MARGIN.potret.b}mm; } @page landscape { size: ${k.h}mm ${k.w}mm; margin: ${MARGIN.lanskap.y}mm ${MARGIN.lanskap.x}mm ${MARGIN.lanskap.b}mm; } @page label { size: ${k.w}mm ${k.h}mm; margin: 0; }`
   }, [sekolah.ukuranKertas])
   const jmlInvalid = useValidasi().filter((t) => t.level === 'invalid').length
   const tm = tampilanDari(sekolah)
