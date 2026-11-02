@@ -1095,3 +1095,12 @@ body { background: var(--bg); color: var(--text); }
 .uji-ik { flex: none; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 800; color: #fff; margin-top: 1px; }
 .uji-ok .uji-ik { background: #1a9d5b; } .uji-gagal .uji-ik { background: #d23b3b; } .uji-peringatan .uji-ik { background: #e0a100; } .uji-lewati .uji-ik { background: #8a93a0; }
 button.link { background: none; border: 0; color: var(--accent); cursor: pointer; text-decoration: underline; padding: 0; font: inherit; }
+
+/* Rapor: judul diberi jarak, identitas selebar tabel nilai dan kolom kanan sejajar */
+.doc.rapor .doc-title { margin: 6px 0 16px; }
+.doc.rapor table.ident { width: 100%; table-layout: fixed; margin: 10px 0 12px; }
+.doc.rapor table.ident td { padding: 2px 6px 2px 0; overflow-wrap: anywhere; }
+.doc.rapor table.ident td:nth-child(1) { width: 23%; white-space: nowrap; }
+.doc.rapor table.ident td:nth-child(2) { width: 30%; }
+.doc.rapor table.ident td:nth-child(3) { width: 21%; padding-left: 14px; white-space: nowrap; }
+.doc.rapor table.ident td:nth-child(4) { width: 26%; padding-right: 0; }
