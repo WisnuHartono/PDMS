@@ -1237,3 +1237,7 @@ input[type=checkbox], input[type=radio] { accent-color: var(--accent); }
 /* Lampu proporsional dengan teks (lebih kecil) */
 .lampu .lampu-dot, .lampu.on .lampu-dot, .lampu.off .lampu-dot, .lampu.sync .lampu-dot, .lampu.warn .lampu-dot { width: .6em; height: .6em; min-width: 6px; min-height: 6px; box-shadow: 0 0 4px 1px var(--l), 0 0 8px 2px color-mix(in srgb, var(--l) 45%, transparent); }
 .lampu { gap: .45em; }
+
+/* Lampu jaringan: tanpa efek glow */
+.lampu .lampu-dot, .lampu.on .lampu-dot, .lampu.off .lampu-dot, .lampu.sync .lampu-dot, .lampu.warn .lampu-dot { box-shadow: none !important; }
+.lampu-t, .lampu .lampu-t, .lampu-ms, .lampu-ms.bagus, .lampu-ms.sedang, .lampu-ms.lambat, .lampu-ms.gagal { text-shadow: none !important; }
