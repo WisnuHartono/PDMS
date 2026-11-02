@@ -1234,3 +1234,6 @@ input[type=checkbox], input[type=radio] { accent-color: var(--accent); }
 /* Lampu koneksi statis (tanpa kedip): hijau neon = online, merah neon = offline, kuning neon = periksa jaringan/ping tinggi */
 .lampu .lampu-dot, .lampu.on .lampu-dot, .lampu.off .lampu-dot, .lampu.sync .lampu-dot, .lampu.warn .lampu-dot { animation: none !important; transform: none; opacity: 1; width: 11px; height: 11px; background: var(--l); box-shadow: 0 0 6px 1px var(--l), 0 0 14px 3px color-mix(in srgb, var(--l) 55%, transparent); }
 .lampu.on { --l: #39ff14; } .lampu.off { --l: #ff073a; } .lampu.warn { --l: #ffee00; } .lampu.sync { --l: #00f0ff; }
+/* Lampu proporsional dengan teks (lebih kecil) */
+.lampu .lampu-dot, .lampu.on .lampu-dot, .lampu.off .lampu-dot, .lampu.sync .lampu-dot, .lampu.warn .lampu-dot { width: .6em; height: .6em; min-width: 6px; min-height: 6px; box-shadow: 0 0 4px 1px var(--l), 0 0 8px 2px color-mix(in srgb, var(--l) 45%, transparent); }
+.lampu { gap: .45em; }
