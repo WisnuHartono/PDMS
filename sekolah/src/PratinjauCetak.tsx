@@ -66,27 +66,53 @@ export function PrintHost() {
         const mx = px(`${land ? MARGIN.lanskap.x : MARGIN.potret.x}mm`), my = px(`${land ? MARGIN.lanskap.y : MARGIN.potret.y}mm`)
         const cw = W - 2 * mx, C = H - 2 * my
         d.classList.add('pp-sumber'); d.style.width = `${cw}px`
+        // Baris judul kolom (semua sel <th>) dijadikan <thead> agar diulang otomatis di halaman berikutnya (cetak & pratinjau)
+        d.querySelectorAll('table').forEach((t) => {
+          if (t.tHead) return
+          const tr = t.rows[0]
+          if (tr && tr.cells.length && Array.from(tr.cells).every((c) => c.tagName === 'TH') && t.rows.length > 1) t.createTHead().appendChild(tr)
+        })
         const tinggi = d.offsetHeight
         const dTop = d.getBoundingClientRect().top
         const batas = Array.from(d.querySelectorAll<HTMLElement>('tr, p, li, .box, .ttd-row, .kvn, .kvg, .induk-top, .asm-rapor, img, table')).map((e) => e.getBoundingClientRect().bottom - dTop).filter((v) => v > 0).sort((x, y) => x - y)
-        const halamanDoc: [number, number][] = []
+        const tabel = Array.from(d.querySelectorAll<HTMLTableElement>('table')).filter((t) => t.tHead).map((t) => { const r = t.getBoundingClientRect(); return { t, top: r.top - dTop, bottom: r.bottom - dTop, h: t.tHead!.getBoundingClientRect().height } })
+        const halamanDoc: { s: number; e: number; hdr?: (typeof tabel)[number] }[] = []
         let a = 0
         while (a < tinggi - 1) {
-          const limit = a + C
+          // halaman dimulai di tengah tabel: sisakan ruang untuk judul kolom yang diulang
+          const hdr = a > 0 ? tabel.filter((x) => x.top < a - 1 && x.bottom > a + 1).pop() : undefined
+          const kap = C - (hdr?.h ?? 0)
+          const limit = a + kap
           let e = tinggi
           if (tinggi > limit + 1) { const ok = batas.filter((v) => v > a + C * 0.3 && v <= limit + 0.5); e = ok.length ? ok[ok.length - 1] : limit }
-          halamanDoc.push([a, e]); a = e
+          halamanDoc.push({ s: a, e, hdr }); a = e
         }
         const n = halamanDoc.length
-        halamanDoc.forEach(([s0, e0], i) => {
+        halamanDoc.forEach(({ s: s0, e: e0, hdr }, i) => {
           const lb = document.createElement('div')
           lb.className = `pp-sheet${land ? ' landscape' : ''}`
           lb.style.cssText = `width:${W}px;height:${H}px;padding:${my}px ${mx}px`
-          const win = document.createElement('div'); win.className = 'pp-win'; win.style.height = `${e0 - s0}px`
-          const kl = document.createElement('div'); kl.className = 'pp-klon'; kl.style.cssText = `top:${-s0}px;width:${cw}px`
+          const hh = hdr?.h ?? 0
+          const win = document.createElement('div'); win.className = 'pp-win'; win.style.height = `${e0 - s0 + hh}px`
+          const kl = document.createElement('div'); kl.className = 'pp-klon'; kl.style.cssText = `top:${hh - s0}px;width:${cw}px`
           const c = d.cloneNode(true) as HTMLElement
           c.classList.remove('pp-sumber'); c.style.cssText = 'width:100%;min-height:0;padding:0;margin:0;box-shadow:none'
           kl.appendChild(c); win.appendChild(kl); lb.appendChild(win)
+          if (hdr) {
+            // salinan judul kolom tabel yang terpotong, di bagian atas halaman
+            const wrap = d.cloneNode(false) as HTMLElement
+            wrap.classList.remove('pp-sumber'); wrap.style.cssText = 'position:absolute;left:0;top:0;width:100%;min-height:0;padding:0;margin:0;box-shadow:none;background:#fff;z-index:2'
+            const tb = hdr.t.cloneNode(false) as HTMLTableElement
+            tb.style.width = `${hdr.t.getBoundingClientRect().width}px`; tb.style.marginLeft = `${hdr.t.getBoundingClientRect().left - d.getBoundingClientRect().left}px`; tb.style.marginTop = '0'
+            const th = hdr.t.tHead!.cloneNode(true) as HTMLTableSectionElement
+            Array.from(hdr.t.tHead!.rows[0].cells).forEach((cell, k) => { (th.rows[0].cells[k] as HTMLElement).style.width = `${cell.getBoundingClientRect().width}px` })
+            tb.appendChild(th); wrap.appendChild(tb); win.appendChild(wrap)
+            // tinggi judul kolom hasil salinan diukur langsung agar baris pertama tidak terpotong
+            out.appendChild(lb); lb.style.visibility = 'hidden'
+            const nyata = tb.getBoundingClientRect().height
+            lb.remove(); lb.style.visibility = ''
+            if (nyata && Math.abs(nyata - hh) > 0.5) { kl.style.top = `${nyata - s0}px`; win.style.height = `${e0 - s0 + nyata}px` }
+          }
           const no = document.createElement('div'); no.className = 'pp-no'; no.textContent = `Halaman ${i + 1} dari ${n}`
           lb.appendChild(no); lembar.push(lb)
         })
