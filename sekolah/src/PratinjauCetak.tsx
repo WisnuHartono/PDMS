@@ -7,6 +7,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { Icon } from './icons'
 import { getSesi } from './security/sesi'
+import { MARGIN } from './kertas'
 import { put } from './store'
 import { Btn, _pasangPrint, toast } from './ui'
 import { download, today, uid } from './util'
@@ -45,34 +46,70 @@ export function PrintHost() {
     return () => { window.removeEventListener('keydown', k); document.body.classList.remove('pratinjau') }
   }, [node])
 
-  // Pratinjau mengikuti ukuran kertas terpilih: tinggi tiap dokumen dibulatkan ke kelipatan satu halaman penuh,
-  // sehingga tanda air logo dan garis batas halaman jatuh tepat di tiap halaman (tidak terpotong).
+  // Pratinjau berupa lembar-lembar kertas sesuai ukuran terpilih: isi dokumen dipotong per halaman di batas baris/paragraf
+  // (bukan di tengah teks), lengkap dengan margin, nomor halaman, dan tanda air di tiap lembar.
+  const halaman = useRef<HTMLDivElement>(null)
   useEffect(() => {
-    const el = body.current
-    if (!node || !el) return
-    const mmPx = (v: string) => { const t = document.createElement('div'); t.style.cssText = `position:absolute;visibility:hidden;height:${v}`; el.appendChild(t); const h = t.offsetHeight; t.remove(); return h }
-    const sesuaikan = () => {
-      el.querySelectorAll<HTMLElement>('.doc:not(.label-sheet)').forEach((d) => {
+    const el = body.current, out = halaman.current
+    if (!node || !el || !out) return
+    const px = (v: string) => { const t = document.createElement('div'); t.style.cssText = `position:absolute;visibility:hidden;width:${v}`; out.appendChild(t); const w = t.getBoundingClientRect().width; t.remove(); return w }
+    const rs = () => getComputedStyle(document.documentElement)
+    const susun = () => {
+      out.textContent = ''
+      const docs = Array.from(el.querySelectorAll<HTMLElement>('.doc:not(.label-sheet)'))
+      let total = 0
+      const lembar: HTMLElement[] = []
+      docs.forEach((d) => {
         const land = d.classList.contains('landscape')
-        const rs = getComputedStyle(document.documentElement)
-        const hh = mmPx(rs.getPropertyValue(land ? '--kh-l' : '--kh') || (land ? '210mm' : '297mm'))
-        if (!hh) return
-        d.style.minHeight = '0px'
-        const n = Math.max(1, Math.ceil((d.scrollHeight - 2) / hh))
-        d.style.minHeight = `${n * hh}px`
-        d.dataset.halaman = String(n)
+        const W = px(rs().getPropertyValue(land ? '--kw-l' : '--kw') || (land ? '297mm' : '210mm'))
+        const H = px(rs().getPropertyValue(land ? '--kh-l' : '--kh') || (land ? '210mm' : '297mm'))
+        const mx = px(`${land ? MARGIN.lanskap.x : MARGIN.potret.x}mm`), my = px(`${land ? MARGIN.lanskap.y : MARGIN.potret.y}mm`)
+        const cw = W - 2 * mx, C = H - 2 * my
+        d.classList.add('pp-sumber'); d.style.width = `${cw}px`
+        const tinggi = d.offsetHeight
+        const dTop = d.getBoundingClientRect().top
+        const batas = Array.from(d.querySelectorAll<HTMLElement>('tr, p, li, .box, .ttd-row, .kvn, .kvg, .induk-top, .asm-rapor, img, table')).map((e) => e.getBoundingClientRect().bottom - dTop).filter((v) => v > 0).sort((x, y) => x - y)
+        const halamanDoc: [number, number][] = []
+        let a = 0
+        while (a < tinggi - 1) {
+          const limit = a + C
+          let e = tinggi
+          if (tinggi > limit + 1) { const ok = batas.filter((v) => v > a + C * 0.3 && v <= limit + 0.5); e = ok.length ? ok[ok.length - 1] : limit }
+          halamanDoc.push([a, e]); a = e
+        }
+        const n = halamanDoc.length
+        halamanDoc.forEach(([s0, e0], i) => {
+          const lb = document.createElement('div')
+          lb.className = `pp-sheet${land ? ' landscape' : ''}`
+          lb.style.cssText = `width:${W}px;height:${H}px;padding:${my}px ${mx}px`
+          const win = document.createElement('div'); win.className = 'pp-win'; win.style.height = `${e0 - s0}px`
+          const kl = document.createElement('div'); kl.className = 'pp-klon'; kl.style.cssText = `top:${-s0}px;width:${cw}px`
+          const c = d.cloneNode(true) as HTMLElement
+          c.classList.remove('pp-sumber'); c.style.cssText = 'width:100%;min-height:0;padding:0;margin:0;box-shadow:none'
+          kl.appendChild(c); win.appendChild(kl); lb.appendChild(win)
+          const no = document.createElement('div'); no.className = 'pp-no'; no.textContent = `Halaman ${i + 1} dari ${n}`
+          lb.appendChild(no); lembar.push(lb)
+        })
+        total += n
       })
+      lembar.forEach((l) => out.appendChild(l))
+      void total
     }
-    sesuaikan()
-    const ro = new ResizeObserver(() => { ro.disconnect(); sesuaikan(); el.querySelectorAll('.doc').forEach((d) => ro.observe(d)) })
-    el.querySelectorAll('.doc').forEach((d) => ro.observe(d))
-    document.fonts?.ready.then(sesuaikan).catch(() => undefined)
+    susun()
+    document.fonts?.ready.then(susun).catch(() => undefined)
+    const ro = new ResizeObserver(() => { ro.disconnect(); susun(); observasi() })
+    const observasi = () => el.querySelectorAll('.doc').forEach((d) => ro.observe(d))
+    observasi()
     return () => ro.disconnect()
   }, [node])
 
   const judul = () => aman(body.current?.querySelector('.doc-title')?.textContent ?? body.current?.querySelector('h1')?.textContent ?? 'Dokumen SIMAS')
   const namaBerkas = () => `${judul()} ${today()}`
-  const isi = () => body.current?.innerHTML ?? ''
+  const isi = () => {
+    const c = body.current?.cloneNode(true) as HTMLElement | undefined
+    c?.querySelectorAll<HTMLElement>('.pp-sumber').forEach((e) => { e.classList.remove('pp-sumber'); e.style.removeProperty('width') })
+    return c?.innerHTML ?? ''
+  }
 
   const cetak = () => { try { window.print() } catch { toast('Cetak tidak tersedia di tampilan ini. Gunakan Simpan Word atau buka aplikasi di browser/Windows.') } }
   const simpanPdf = async () => {
@@ -119,6 +156,7 @@ export function PrintHost() {
         </div>
       )}
       <div className="pp-body" ref={body}>{node}</div>
+      <div className="pp-halaman no-print" ref={halaman} />
     </div>,
     document.body,
   )

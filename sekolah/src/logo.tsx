@@ -110,9 +110,9 @@ export async function terapkanTandaAir(logo: string | undefined, on: boolean, uk
   const cetakL = { w: h - 2 * MARGIN.lanskap.x, h: w - 2 * MARGIN.lanskap.y }
   const bg = (d: { w: number; h: number }, o: string) => `background:${ubin(d.w, d.h)} ${o}/${d.w}mm ${d.h}mm repeat-y`
   // Layar/pratinjau: satu halaman penuh per ubin. Cetak: isi halaman (tanpa margin), sehingga logo tepat di tengah tiap halaman fisik.
-  st.textContent = `.doc{position:relative;isolation:isolate}
-.doc::before{content:"";position:absolute;inset:0;z-index:5;pointer-events:none;${bg({ w, h }, '50% 0')};-webkit-print-color-adjust:exact;print-color-adjust:exact}
-.doc.landscape::before{${bg({ w: h, h: w }, '50% 0')}}
+  st.textContent = `.doc,.pp-sheet{position:relative;isolation:isolate}
+.doc::before,.pp-sheet::before{content:"";position:absolute;inset:0;z-index:5;pointer-events:none;${bg({ w, h }, '50% 0')};-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.doc.landscape::before,.pp-sheet.landscape::before{${bg({ w: h, h: w }, '50% 0')}}
 .doc.label-sheet::before{display:none}
 @media print{.doc::before{${bg(cetakP, '0 0')}}.doc.landscape::before{${bg(cetakL, '0 0')}}}`
 }
