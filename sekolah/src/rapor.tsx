@@ -56,7 +56,7 @@ export function RaporDoc({ siswa, rombel, semester }: { siswa: Siswa; rombel: Ro
   const kelompok = [...new Set(baris.map((b) => b.mapel.kelompok ?? ''))]
 
   return (
-    <div className="doc rapor">
+    <div className="doc rapor" data-footer={`${rombel.nama} | ${siswa.nama} | ${siswa.noInduk}${siswa.nisn ? `/${siswa.nisn}` : ''}`}>
       <KopSurat jenis="rapor" />
       <h1 className="doc-title">{kur.judulRapor}</h1>
       <table className="ident">

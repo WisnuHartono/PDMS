@@ -10,5 +10,5 @@ contextBridge.exposeInMainWorld('simas', {
   folderTulis: (r) => ipcRenderer.invoke('simas:folder-tulis', r),
   folderDaftar: (d) => ipcRenderer.invoke('simas:folder-daftar', d),
   folderBaca: (r) => ipcRenderer.invoke('simas:folder-baca', r),
-  simpanPdf: (nama) => ipcRenderer.invoke('simas:simpan-pdf', String(nama || 'Dokumen SIMAS.pdf')),
+  simpanPdf: (nama, kiri) => ipcRenderer.invoke('simas:simpan-pdf', String(nama || 'Dokumen SIMAS.pdf'), String(kiri || '')),
 })

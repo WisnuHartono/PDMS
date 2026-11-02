@@ -12,7 +12,7 @@ import { put } from './store'
 import { Btn, _pasangPrint, toast } from './ui'
 import { download, today, uid } from './util'
 
-interface SimasDesktop { simpanPdf?: (nama: string) => Promise<{ ok: boolean; path?: string; batal?: boolean; pesan?: string }> }
+interface SimasDesktop { simpanPdf?: (nama: string, kiri?: string) => Promise<{ ok: boolean; path?: string; batal?: boolean; pesan?: string }> }
 const desktop = () => (globalThis as unknown as { simas?: SimasDesktop }).simas
 
 const aman = (s: string) => s.replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80) || 'Dokumen SIMAS'
@@ -116,7 +116,11 @@ export function PrintHost() {
             lb.remove(); lb.style.visibility = ''
             if (nyata && Math.abs(nyata - hh) > 0.5) { kl.style.top = `${nyata - s0}px`; win.style.height = `${e0 - s0 + nyata}px` }
           }
-          const no = document.createElement('div'); no.className = 'pp-no'; no.textContent = `Halaman ${i + 1} dari ${n}`
+          // garis penutup + footer: identitas dokumen di kiri, nomor halaman di kanan
+          const no = document.createElement('div'); no.className = 'pp-no'; no.style.cssText = `left:${mx}px;right:${mx}px`
+          const kiri = document.createElement('span'); kiri.textContent = d.dataset.footer ?? ''
+          const kanan = document.createElement('span'); kanan.textContent = `Halaman ${i + 1} dari ${n}`
+          no.append(kiri, kanan)
           lb.appendChild(no); lembar.push(lb)
         })
         total += n
@@ -130,6 +134,27 @@ export function PrintHost() {
     const observasi = () => el.querySelectorAll('.doc').forEach((d) => ro.observe(d))
     observasi()
     return () => ro.disconnect()
+  }, [node])
+
+  // Cetak: garis + footer lewat kotak margin @page (browser modern). Tiap dokumen punya halaman bernama sendiri agar teks kirinya berbeda.
+  useEffect(() => {
+    const el = body.current
+    if (!node || !el) return
+    const rs = getComputedStyle(document.documentElement)
+    const q = (t: string) => t.replace(/[\\"]/g, ' ').replace(/[\r\n]+/g, ' ')
+    let css = ''
+    el.querySelectorAll<HTMLElement>('.doc:not(.label-sheet)').forEach((d, i) => {
+      const land = d.classList.contains('landscape')
+      const w = (rs.getPropertyValue(land ? '--kw-l' : '--kw') || (land ? '297mm' : '210mm')).trim(), h = (rs.getPropertyValue(land ? '--kh-l' : '--kh') || (land ? '210mm' : '297mm')).trim()
+      const m = land ? MARGIN.lanskap : MARGIN.potret
+      d.setAttribute('data-pf', String(i))
+      const kotak = 'font: 8.5pt/1.2 sans-serif; color: #333; border-top: 0.3mm solid #333; padding-top: 1mm; vertical-align: top;'
+      css += `.doc[data-pf="${i}"] { page: pf${i}; counter-reset: page 1; } @page pf${i} { size: ${w} ${h}; margin: ${m.y}mm ${m.x}mm; @bottom-left { content: "${q(d.dataset.footer ?? '')}"; ${kotak} } @bottom-right { content: "Halaman " counter(page); ${kotak} } }\n`
+    })
+    let st = document.getElementById('simas-footer-cetak')
+    if (!st) { st = document.createElement('style'); st.id = 'simas-footer-cetak'; document.head.appendChild(st) }
+    st.textContent = css
+    return () => { st?.remove() }
   }, [node])
 
   const judul = () => aman(body.current?.querySelector('.doc-title')?.textContent ?? body.current?.querySelector('h1')?.textContent ?? 'Dokumen SIMAS')
@@ -146,7 +171,8 @@ export function PrintHost() {
     if (d?.simpanPdf) {
       setSibuk(true)
       try {
-        const r = await d.simpanPdf(`${namaBerkas()}.pdf`)
+        const kiriSet = new Set(Array.from(body.current?.querySelectorAll<HTMLElement>('.doc[data-footer]') ?? []).map((x) => x.dataset.footer ?? ''))
+        const r = await d.simpanPdf(`${namaBerkas()}.pdf`, kiriSet.size === 1 ? [...kiriSet][0] : '')
         if (r.ok) toast(`PDF disimpan: ${r.path}`)
         else if (!r.batal) toast(r.pesan ?? 'Gagal menyimpan PDF')
       } finally { setSibuk(false) }

@@ -40,7 +40,7 @@ if (!app.requestSingleInstanceLock()) {
   })
 
   // Simpan dokumen yang sedang dipratinjau menjadi PDF A4 (memakai CSS cetak yang sama dengan printer).
-  ipcMain.handle('simas:simpan-pdf', async (e, nama) => {
+  ipcMain.handle('simas:simpan-pdf', async (e, nama, kiri) => {
     const win = BrowserWindow.fromWebContents(e.sender)
     const aman = String(nama).replace(/[\\/:*?"<>|]+/g, ' ').slice(0, 120)
     const { canceled, filePath } = await dialog.showSaveDialog(win, {
@@ -50,7 +50,10 @@ if (!app.requestSingleInstanceLock()) {
     })
     if (canceled || !filePath) return { ok: false, batal: true }
     try {
-      const pdf = await e.sender.printToPDF({ printBackground: true, preferCSSPageSize: true, pageSize: 'A4' })
+      // footer: garis, identitas dokumen di kiri, nomor halaman di kanan (Electron belum mendukung kotak margin @page)
+      const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
+      const footerTemplate = `<div style="width:100%;box-sizing:border-box;padding:0 15mm;font-size:8.5pt;font-family:sans-serif;color:#333"><div style="display:flex;justify-content:space-between;border-top:0.3mm solid #333;padding-top:1mm"><span>${esc(kiri || '')}</span><span>Halaman <span class="pageNumber"></span> dari <span class="totalPages"></span></span></div></div>`
+      const pdf = await e.sender.printToPDF({ printBackground: true, preferCSSPageSize: true, pageSize: 'A4', displayHeaderFooter: true, headerTemplate: '<span></span>', footerTemplate })
       await fs.writeFile(filePath, pdf)
       shell.showItemInFolder(filePath)
       return { ok: true, path: filePath }
