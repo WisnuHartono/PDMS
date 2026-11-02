@@ -68,6 +68,10 @@ export default function Asesmen() {
     toast(n ? `${n} asesmen dikunci` : 'Tidak ada yang siap dikunci (lengkapi aspek dan bukti dulu).')
   }
 
+  const mulai = () => { const s = anggota.find((x) => !rekam(x.id).final) ?? anggota[0]; if (s) setDetail(s) }
+  const idxDetail = detail ? anggota.findIndex((x) => x.id === detail.id) : -1
+  const pindah = (d: number) => { const t = anggota[idxDetail + d]; if (t) setDetail(t) }
+
   const final = anggota.filter((s) => rekam(s.id).final).length
   const terisi = anggota.filter((s) => kelengkapan(inst, rekam(s.id)).terisi > 0).length
   const nDraft = Object.keys(drafts).length
@@ -75,9 +79,10 @@ export default function Asesmen() {
   return (
     <div>
       <PageHead title="Asesmen Siswa" sub={`${inst.nama} · ${r.nama} · TA ${r.tahunAjaran} Semester ${sem} · hasil terkunci masuk rapor`}>
+        <Btn kind="primary" icon="edit" onClick={mulai} disabled={!anggota.length}>Lakukan asesmen</Btn>
         <Btn icon="edit" onClick={() => setKelola(true)}>Kelola instrumen</Btn>
         <Btn icon="kunci" onClick={kunciSemua}>Kunci yang lengkap</Btn>
-        <Btn kind="primary" onClick={simpanSemua} disabled={!nDraft}>{nDraft ? `Simpan (${nDraft})` : 'Tersimpan'}</Btn>
+        <Btn onClick={simpanSemua} disabled={!nDraft}>{nDraft ? `Simpan (${nDraft})` : 'Tersimpan'}</Btn>
       </PageHead>
       <div className="filters bar">
         <select value={r.id} onChange={(e) => setRid(e.target.value)} aria-label="Rombel">{rombelAktif.map((x) => <option key={x.id} value={x.id}>{x.nama} ({x.jenjang})</option>)}</select>
@@ -135,7 +140,10 @@ export default function Asesmen() {
 
       {detail && (
         <PanduanSiswa key={detail.id + inst.id} siswa={detail} inst={inst} kelas={r.nama} rekam={rekam(detail.id)} onChange={(fn) => ubah(detail.id, fn)}
-          onSimpan={async () => { await simpanSiswa(detail.id); toast('Asesmen disimpan') }} onKunci={() => kunci(detail.id)} onClose={() => setDetail(null)} />
+          onSimpan={async () => { await simpanSiswa(detail.id); toast('Asesmen disimpan') }} onKunci={() => kunci(detail.id)} onClose={() => setDetail(null)}
+          posisi={idxDetail >= 0 ? `Siswa ${idxDetail + 1} dari ${anggota.length}` : undefined}
+          onSebelum={idxDetail > 0 ? () => pindah(-1) : undefined}
+          onBerikut={idxDetail >= 0 && idxDetail < anggota.length - 1 ? async () => { if (!rekam(detail.id).final) await simpanSiswa(detail.id); pindah(1) } : undefined} />
       )}
       {kelola && <KelolaInstrumen onClose={() => setKelola(false)} onPilih={(id) => { setIid(id); setKelola(false) }} />}
     </div>
@@ -161,7 +169,7 @@ function Rubrik({ inst }: { inst: Instrumen }) {
   )
 }
 
-function PanduanSiswa({ siswa, inst, kelas, rekam, onChange, onSimpan, onKunci, onClose }: { siswa: Siswa; inst: Instrumen; kelas: string; rekam: Rekam; onChange: (fn: (x: Rekam) => Rekam) => void; onSimpan: () => void; onKunci: () => void; onClose: () => void }) {
+function PanduanSiswa({ siswa, inst, kelas, rekam, onChange, onSimpan, onKunci, onClose, posisi, onSebelum, onBerikut }: { posisi?: string; onSebelum?: () => void; onBerikut?: () => void; siswa: Siswa; inst: Instrumen; kelas: string; rekam: Rekam; onChange: (fn: (x: Rekam) => Rekam) => void; onSimpan: () => void; onKunci: () => void; onClose: () => void }) {
   const sekolah = useSekolah()
   const [ai, setAi] = useState(false)
   const k = kelengkapan(inst, rekam)
@@ -181,7 +189,7 @@ function PanduanSiswa({ siswa, inst, kelas, rekam, onChange, onSimpan, onKunci, 
   }
   return (
     <Modal wide title={`${inst.nama} · ${siswa.nama}`} onClose={onClose}
-      footer={<><Btn onClick={onClose}>Tutup</Btn><Btn onClick={onSimpan} disabled={kunci}>Simpan</Btn>{!kunci && <Btn kind="primary" icon="validasi" onClick={onKunci}>Kunci</Btn>}</>}>
+      footer={<>{posisi && <span className="muted small">{posisi}</span>}<Btn onClick={onClose}>Tutup</Btn>{onSebelum && <Btn onClick={onSebelum}>← Sebelumnya</Btn>}<Btn onClick={onSimpan} disabled={kunci}>Simpan</Btn>{!kunci && <Btn icon="validasi" onClick={onKunci}>Kunci</Btn>}{onBerikut && <Btn kind="primary" onClick={onBerikut}>{kunci ? 'Berikutnya →' : 'Simpan & berikutnya →'}</Btn>}</>}>
       {kunci && <p className="pill ok">Terkunci{rekam.penilai ? ` · dinilai oleh ${rekam.penilai}` : ''}{rekam.tanggal ? ` · ${rekam.tanggal}` : ''}. Buka kunci dari tabel untuk mengubah.</p>}
       {inst.aspek.map((a: Aspek) => (
         <fieldset key={a.key} className="asm-aspek" disabled={kunci}>
