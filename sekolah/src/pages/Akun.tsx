@@ -9,7 +9,7 @@ import {
 import { otpauthUri, totpSecretBaru } from '../security/crypto'
 import { getSesi, setSesi, useSesi } from '../security/sesi'
 import { useCol } from '../store'
-import { originGoogle } from '../security/google'
+import { desktopGoogle, originGoogle } from '../security/google'
 import { ujiKonfigurasi, ujiSinkronAkun, skripPengaturan, bacaKonfigBerkas, type Langkah } from '../security/ujiGoogle'
 import { download } from '../util'
 import { Avatar, Btn, Card, Empty, Field, Modal, PageHead, Tabs, toast, tanya } from '../ui'
@@ -253,7 +253,7 @@ function GoogleConfig() {
           <Btn kind="ghost" onClick={() => c.clientId ? download('simas-google.json', JSON.stringify({ aktif: c.aktif, clientId: c.clientId.trim(), ...(c.domain?.trim() ? { domain: c.domain.trim().toLowerCase() } : {}) }, null, 2), 'application/json') : toast('Isi Client ID dulu')}>Ekspor</Btn>
         </div>
         <HasilUji langkah={hasil} />
-        <p className="small">Alamat aplikasi untuk didaftarkan di Google (<i>Authorized JavaScript origins</i>): <code className="sel">{origin}</code> <button className="link" onClick={() => void salin(origin)}>salin</button></p>
+        <p className="small">Alamat aplikasi untuk didaftarkan di Google (<i>Authorized JavaScript origins</i>): <code className="sel">{origin}</code> <button className="link" onClick={() => void salin(origin)}>salin</button><br /><span className="muted">Mode: {desktopGoogle() ? 'aplikasi desktop (login Google lewat browser sistem, versi Google-desktop v2)' : 'web (tombol Google langsung di halaman)'}</span></p>
         <details className="dc-det" open={!c.clientId}>
           <summary>Panduan lengkap integrasi Google (± 10 menit)</summary>
           <ol className="small steps">
