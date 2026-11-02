@@ -14,6 +14,9 @@ export function useOnline() {
 
 /** Waktu tempuh (ms) ke internet: mengukur permintaan kecil tiap 15 detik selama aplikasi terlihat.
  *  'ukur' = sedang mengukur, 'gagal' = tidak ada server yang menjawab (mis. diblokir firewall/sandbox). */
+/** Waktu tempuh di atas nilai ini dianggap lambat (lampu kuning). */
+export const BATAS_PING_MS = 250
+
 export function usePing(aktif: boolean): number | 'ukur' | 'gagal' {
   const [ms, setMs] = useState<number | 'ukur' | 'gagal'>('ukur')
   useEffect(() => {
@@ -48,9 +51,12 @@ export function LampuKoneksi({ ringkas = false }: { ringkas?: boolean }) {
   const ping = usePing(on)
   const mutu = typeof ping !== 'number' ? '' : ping < 120 ? 'bagus' : ping < 350 ? 'sedang' : 'lambat'
   const perlu = on && (st.fase === 'tunda' || st.fase === 'konflik' || st.fase === 'gagal')
-  const kelas = !on ? 'off' : st.fase === 'jalan' ? 'sync' : perlu ? 'warn' : 'on'
-  const label = !on ? 'Offline' : st.fase === 'jalan' ? 'Menyinkronkan' : perlu ? 'Perlu tindakan' : 'Online'
-  const rinci = !on
+  const lambat = typeof ping === 'number' && ping >= BATAS_PING_MS
+  const jaringan = on && (lambat || ping === 'gagal')
+  const kelas = !on ? 'off' : st.fase === 'jalan' ? 'sync' : perlu || jaringan ? 'warn' : 'on'
+  const label = !on ? 'Offline' : st.fase === 'jalan' ? 'Menyinkronkan' : perlu ? 'Perlu tindakan' : jaringan ? 'Periksa jaringan' : 'Online'
+  const rinciJaringan = ping === 'gagal' ? ' Waktu tempuh tidak dapat diukur: tidak ada server uji yang menjawab, periksa jaringan/firewall.' : lambat ? ` Waktu tempuh ${ping} ms lebih besar dari normal (di bawah ${BATAS_PING_MS} ms), jaringan lambat.` : ''
+  const rinci = rinciJaringan.trim() && on && perlu === false && st.fase !== 'jalan' ? `Terhubung ke internet.${rinciJaringan}` : !on
     ? `Tidak ada koneksi internet. Data disimpan di perangkat${st.kotor ? ' dan perubahan akan diunggah otomatis saat online' : ''}.`
     : st.fase === 'mati' ? `Terhubung ke internet${typeof ping === 'number' ? ` (waktu tempuh ${ping} ms)` : ''}. Sinkronisasi cloud belum diaktifkan.` : `Terhubung ke internet${typeof ping === 'number' ? ` (waktu tempuh ${ping} ms)` : ''}. ${st.pesan}`
   return (

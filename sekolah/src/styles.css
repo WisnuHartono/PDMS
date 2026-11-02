@@ -1230,3 +1230,7 @@ input[type=checkbox], input[type=radio] { accent-color: var(--accent); }
 
 @media (prefers-reduced-motion: reduce) { .page > *, .modal, .modal-bg, .lampu-dot { animation: none !important; } .btn, .kpi, .card, .side-item .ico { transition: none !important; } }
 @media print { *, *::before, *::after { animation: none !important; transition: none !important; } }
+
+/* Lampu koneksi statis (tanpa kedip): hijau neon = online, merah neon = offline, kuning neon = periksa jaringan/ping tinggi */
+.lampu .lampu-dot, .lampu.on .lampu-dot, .lampu.off .lampu-dot, .lampu.sync .lampu-dot, .lampu.warn .lampu-dot { animation: none !important; transform: none; opacity: 1; width: 11px; height: 11px; background: var(--l); box-shadow: 0 0 6px 1px var(--l), 0 0 14px 3px color-mix(in srgb, var(--l) 55%, transparent); }
+.lampu.on { --l: #39ff14; } .lampu.off { --l: #ff073a; } .lampu.warn { --l: #ffee00; } .lampu.sync { --l: #00f0ff; }
