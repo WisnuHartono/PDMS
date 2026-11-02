@@ -45,6 +45,31 @@ export function PrintHost() {
     return () => { window.removeEventListener('keydown', k); document.body.classList.remove('pratinjau') }
   }, [node])
 
+  // Pratinjau mengikuti ukuran kertas terpilih: tinggi tiap dokumen dibulatkan ke kelipatan satu halaman penuh,
+  // sehingga tanda air logo dan garis batas halaman jatuh tepat di tiap halaman (tidak terpotong).
+  useEffect(() => {
+    const el = body.current
+    if (!node || !el) return
+    const mmPx = (v: string) => { const t = document.createElement('div'); t.style.cssText = `position:absolute;visibility:hidden;height:${v}`; el.appendChild(t); const h = t.offsetHeight; t.remove(); return h }
+    const sesuaikan = () => {
+      el.querySelectorAll<HTMLElement>('.doc:not(.label-sheet)').forEach((d) => {
+        const land = d.classList.contains('landscape')
+        const rs = getComputedStyle(document.documentElement)
+        const hh = mmPx(rs.getPropertyValue(land ? '--kh-l' : '--kh') || (land ? '210mm' : '297mm'))
+        if (!hh) return
+        d.style.minHeight = '0px'
+        const n = Math.max(1, Math.ceil((d.scrollHeight - 2) / hh))
+        d.style.minHeight = `${n * hh}px`
+        d.dataset.halaman = String(n)
+      })
+    }
+    sesuaikan()
+    const ro = new ResizeObserver(() => { ro.disconnect(); sesuaikan(); el.querySelectorAll('.doc').forEach((d) => ro.observe(d)) })
+    el.querySelectorAll('.doc').forEach((d) => ro.observe(d))
+    document.fonts?.ready.then(sesuaikan).catch(() => undefined)
+    return () => ro.disconnect()
+  }, [node])
+
   const judul = () => aman(body.current?.querySelector('.doc-title')?.textContent ?? body.current?.querySelector('h1')?.textContent ?? 'Dokumen SIMAS')
   const namaBerkas = () => `${judul()} ${today()}`
   const isi = () => body.current?.innerHTML ?? ''

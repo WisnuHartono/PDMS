@@ -1072,3 +1072,9 @@ body { background: var(--bg); color: var(--text); }
   .doc thead { display: table-header-group; }
   .doc h4.sec, .doc .doc-title, .doc .doc-sub { break-after: avoid; page-break-after: avoid; }
 }
+
+/* Pratinjau: garis batas halaman sesuai ukuran kertas */
+@media screen {
+  #print-root.open .pp-body .doc:not(.landscape):not(.label-sheet) { background-image: repeating-linear-gradient(to bottom, transparent 0, transparent calc(var(--kh, 297mm) - 1px), #c3c9d2 calc(var(--kh, 297mm) - 1px), #c3c9d2 var(--kh, 297mm)); }
+  #print-root.open .pp-body .doc.landscape { background-image: repeating-linear-gradient(to bottom, transparent 0, transparent calc(var(--kh-l, 210mm) - 1px), #c3c9d2 calc(var(--kh-l, 210mm) - 1px), #c3c9d2 var(--kh-l, 210mm)); }
+}
