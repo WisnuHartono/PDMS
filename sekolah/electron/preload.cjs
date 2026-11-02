@@ -4,6 +4,7 @@ const { contextBridge, ipcRenderer } = require('electron')
 contextBridge.exposeInMainWorld('simas', {
   aiFetch: (req) => ipcRenderer.invoke('simas:ai', req),
   dav: (r) => ipcRenderer.invoke('simas:dav', r),
+  googleMasuk: (r) => ipcRenderer.invoke('simas:google-masuk', { clientId: String(r?.clientId || ''), nonce: String(r?.nonce || '') }),
   pilihFolder: () => ipcRenderer.invoke('simas:pilih-folder'),
   folderTulis: (r) => ipcRenderer.invoke('simas:folder-tulis', r),
   folderDaftar: (d) => ipcRenderer.invoke('simas:folder-daftar', d),

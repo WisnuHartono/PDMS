@@ -48,7 +48,7 @@ export function TombolGoogle({ onProfil, teks = 'continue_with', cfg }: { onProf
     let batal = false
     pasangTombolGoogle(el.current, konfig.clientId, nonce, async (cred) => {
       try { const g = await verifikasiIdToken(cred, { clientId: konfig.clientId, nonce }); if (!batal) { setErr(''); onProfil(g) } } catch (e) { setErr((e as Error).message); setUlang((x) => x + 1) }
-    }, teks).catch((e) => setErr((e as Error).message))
+    }, teks, (m) => setErr(m)).catch((e) => setErr((e as Error).message))
     return () => { batal = true }
   }, [konfig?.aktif, konfig?.clientId, ulang]) // eslint-disable-line react-hooks/exhaustive-deps
   if (!konfig?.aktif || !konfig.clientId) return null

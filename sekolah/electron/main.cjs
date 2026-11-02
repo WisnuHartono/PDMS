@@ -4,6 +4,7 @@ const { app, BrowserWindow, Menu, dialog, ipcMain, net, protocol, shell } = requ
 const fs = require('node:fs/promises')
 const path = require('node:path')
 const { pathToFileURL } = require('node:url')
+const { mulaiMasukGoogle } = require('./google-masuk.cjs')
 
 protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true } },
@@ -93,6 +94,9 @@ if (!app.requestSingleInstanceLock()) {
     return (await folderOk(d)) ? d : buat ? null : undefined
   }
   const namaOk = (n) => typeof n === 'string' && n === path.basename(n) && /^[\w.\- ()]+$/.test(n) && n.length < 160 && /\.(simas\.json|xlsx|zip|csv)$/i.test(n)
+  // Masuk Google lewat browser sistem (Google tidak menerima alamat app://).
+  ipcMain.handle('simas:google-masuk', (e, r) => mulaiMasukGoogle({ clientId: r?.clientId, nonce: r?.nonce, bukaBrowser: (u) => shell.openExternal(u) }))
+
   ipcMain.handle('simas:pilih-folder', async (e) => {
     const win = BrowserWindow.fromWebContents(e.sender)
     const r = await dialog.showOpenDialog(win, { title: 'Pilih folder penyimpanan cadangan', properties: ['openDirectory', 'createDirectory'] })

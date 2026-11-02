@@ -63,7 +63,31 @@ export function muatGis(): Promise<GId> {
 }
 export const nonceBaru = () => Array.from(globalThis.crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, '0')).join('')
 
-export async function pasangTombolGoogle(el: HTMLElement, clientId: string, nonce: string, onCredential: (c: string) => void, teksTombol: 'signin_with' | 'continue_with' | 'signup_with' = 'continue_with') {
+/** Aplikasi desktop (Electron): Google menolak alamat app://, jadi login dibuka di browser sistem lewat halaman lokal. */
+export const PORT_GOOGLE_DESKTOP = 47831
+export const ORIGIN_GOOGLE_DESKTOP = `http://localhost:${PORT_GOOGLE_DESKTOP}`
+type Desktop = { googleMasuk?: (r: { clientId: string; nonce: string }) => Promise<{ ok: boolean; credential?: string; pesan?: string }> }
+export const desktopGoogle = () => (globalThis as unknown as { simas?: Desktop }).simas?.googleMasuk ? (globalThis as unknown as { simas: Desktop }).simas : undefined
+/** Alamat yang harus didaftarkan di Google (Authorized JavaScript origins). */
+export const originGoogle = () => (desktopGoogle() ? ORIGIN_GOOGLE_DESKTOP : globalThis.location?.origin ?? '')
+
+export async function pasangTombolGoogle(el: HTMLElement, clientId: string, nonce: string, onCredential: (c: string) => void, teksTombol: 'signin_with' | 'continue_with' | 'signup_with' = 'continue_with', onError?: (pesan: string) => void) {
+  const d = desktopGoogle()
+  if (d) {
+    el.innerHTML = ''
+    const b = document.createElement('button')
+    b.type = 'button'; b.className = 'btn g-desktop'; b.textContent = 'Lanjutkan dengan Google (buka browser)'
+    b.onclick = async () => {
+      b.disabled = true; b.textContent = 'Menunggu login di browser…'
+      try {
+        const r = await d.googleMasuk!({ clientId, nonce })
+        if (r.ok && r.credential) onCredential(r.credential)
+        else onError?.(r.pesan ?? 'Login Google dibatalkan.')
+      } catch (e) { onError?.((e as Error).message) } finally { b.disabled = false; b.textContent = 'Lanjutkan dengan Google (buka browser)' }
+    }
+    el.appendChild(b)
+    return
+  }
   const g = await muatGis()
   g.initialize({ client_id: clientId, nonce, auto_select: false, callback: (r) => { if (r.credential) onCredential(r.credential) } })
   el.innerHTML = ''

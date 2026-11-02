@@ -9,6 +9,7 @@ import {
 import { otpauthUri, totpSecretBaru } from '../security/crypto'
 import { getSesi, setSesi, useSesi } from '../security/sesi'
 import { useCol } from '../store'
+import { originGoogle } from '../security/google'
 import { ujiKonfigurasi, ujiSinkronAkun, skripPengaturan, bacaKonfigBerkas, type Langkah } from '../security/ujiGoogle'
 import { download } from '../util'
 import { Avatar, Btn, Card, Empty, Field, Modal, PageHead, Tabs, toast, tanya } from '../ui'
@@ -233,7 +234,7 @@ function GoogleConfig() {
   const terhubung = akun.filter((a) => a.google)
   const [hasil, setHasil] = useState<Langkah[]>([])
   const [menguji, setMenguji] = useState(false)
-  const origin = globalThis.location?.origin ?? ''
+  const origin = originGoogle()
   const uji = async () => { setMenguji(true); setHasil([]); try { setHasil(await ujiKonfigurasi(c)) } finally { setMenguji(false) } }
   const salin = async (t: string) => { try { await navigator.clipboard.writeText(t); toast('Disalin') } catch { toast('Salin manual: ' + t) } }
   const impor = async (f?: File) => { if (!f) return; try { const k = bacaKonfigBerkas(await f.text()); setC({ ...c, ...k }); toast('Konfigurasi diimpor. Tekan Simpan untuk menerapkan.') } catch (e) { toast((e as Error).message) } }
@@ -280,7 +281,7 @@ function GoogleConfig() {
           <li><b>Kompromi keamanan:</b> berbeda dengan kata sandi, kunci perangkat tidak meminta rahasia saat membuka data; siapa pun yang menguasai profil browser perangkat itu bisa mencoba membukanya. Aktifkan hanya di perangkat pribadi sekolah. Verifikasi 2 langkah tetap diminta bila aktif.</li>
           <li>Kata sandi sementara/kedaluwarsa tetap harus diganti lewat login kata sandi. Reset oleh Administrator mencabut izin masuk Google akun itu.</li>
           <li>Login dapat memakai <b>email</b> atau nama pengguna bersama kata sandi.</li>
-          <li>Tombol Google memerlukan internet dan alamat aplikasi yang didaftarkan di Client ID; di aplikasi Windows (alamat <code>app://</code>) Google biasanya menolak, gunakan kata sandi.</li>
+          <li>Tombol Google memerlukan internet dan alamat aplikasi yang didaftarkan di Client ID. Di aplikasi Windows tombol membuka login Google di browser sistem lewat <code>http://localhost:47831</code> (daftarkan alamat itu di Client ID); hasilnya diverifikasi kembali oleh aplikasi.</li>
         </ul>
         <p className="small"><b>{terhubung.length}</b> akun terhubung: {terhubung.map((a) => `${a.username} (${a.google!.email}${a.google!.wrap ? ', boleh masuk' : ''})`).join('; ') || '-'}</p>
       </Card>

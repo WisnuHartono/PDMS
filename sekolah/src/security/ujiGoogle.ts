@@ -1,5 +1,5 @@
 // Pengujian koneksi dan sinkronisasi akun Google, serta pembuat skrip pengaturan otomatis.
-import { muatGis, type ProfilGoogle } from './google'
+import { desktopGoogle, muatGis, ORIGIN_GOOGLE_DESKTOP, type ProfilGoogle } from './google'
 
 export type StatusLangkah = 'ok' | 'gagal' | 'peringatan' | 'lewati'
 export interface Langkah { id: string; judul: string; status: StatusLangkah; detail: string; saran?: string }
@@ -29,6 +29,8 @@ export interface DepUji {
   ambil?: (url: string, init?: RequestInit) => Promise<Response>
   muat?: () => Promise<{ initialize: (c: { client_id: string; callback: () => void }) => void; prompt?: (cb: (n: GisMoment) => void) => void }>
   origin?: string
+  /** True bila berjalan di aplikasi desktop (login lewat browser sistem). */
+  desktop?: boolean
   tunggu?: number
 }
 interface GisMoment { isNotDisplayed?: () => boolean; getNotDisplayedReason?: () => string; isDisplayed?: () => boolean }
@@ -61,8 +63,14 @@ export async function ujiKonfigurasi(c: { clientId: string; domain?: string }, d
     out.push(j.keys?.length ? ok('kunci', 'Kunci verifikasi token', `${j.keys.length} kunci publik Google berhasil diambil (dipakai memeriksa tanda tangan token).`) : gagal('kunci', 'Kunci verifikasi token', 'Respons kunci Google kosong.'))
   } catch { out.push(gagal('kunci', 'Kunci verifikasi token', 'Tidak dapat mengambil kunci publik Google.', 'Izinkan www.googleapis.com di jaringan sekolah.')) }
 
+  const desktop = d.desktop ?? !!desktopGoogle()
+  if (desktop) {
+    out.push(ok('origin', 'Alamat aplikasi', `Aplikasi desktop membuka login Google di browser sistem lewat ${ORIGIN_GOOGLE_DESKTOP}. Daftarkan alamat itu pada Authorized JavaScript origins.`))
+    out.push({ id: 'prompt', judul: 'Client ID & alamat terdaftar', status: 'lewati', detail: 'Uji lengkap dilakukan saat Anda menekan tombol Google (browser akan terbuka).', saran: `Jika Google menolak dengan origin_mismatch, tambahkan ${ORIGIN_GOOGLE_DESKTOP} di Credentials › Authorized JavaScript origins.` })
+    return out
+  }
   if (/^https:\/\//.test(origin) || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) out.push(ok('origin', 'Alamat aplikasi', `${origin} — daftarkan alamat ini pada Authorized JavaScript origins.`))
-  else out.push({ id: 'origin', judul: 'Alamat aplikasi', status: 'peringatan', detail: `Alamat saat ini (${origin || 'tidak diketahui'}) tidak dapat didaftarkan di Google (aplikasi Windows memakai app://).`, saran: 'Di aplikasi Windows gunakan login kata sandi; Google Login dipakai dari versi web (HTTPS).' })
+  else out.push({ id: 'origin', judul: 'Alamat aplikasi', status: 'peringatan', detail: `Alamat saat ini (${origin || 'tidak diketahui'}) tidak dapat didaftarkan di Google.`, saran: 'Buka SIMAS lewat HTTPS (atau http://localhost), atau pakai aplikasi desktop terbaru yang membuka login Google di browser.' })
 
   let gis: Awaited<ReturnType<NonNullable<DepUji['muat']>>>
   try { gis = await dgnBatas((d.muat ?? muatGis)() as Promise<typeof gis>, 'Pustaka Google tidak termuat (waktu habis).'); out.push(ok('gis', 'Pustaka Google Identity Services', 'Berhasil dimuat.')) } catch (e) { return [...out, gagal('gis', 'Pustaka Google Identity Services', (e as Error).message, 'Periksa internet/firewall lalu ulangi.')] }
