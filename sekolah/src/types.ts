@@ -92,6 +92,10 @@ export interface TampilanSetting {
   dokFont?: string // kunci FONT_DOK
   dokUkuran?: number // pt, 9-14
   dokJarak?: number // tinggi baris x100, 110-180
+  /** Tanda air logo sekolah di belakang dokumen cetak. */
+  tandaAir?: boolean
+  tandaAirUkuran?: number // persen lebar kertas, 20-90
+  tandaAirOpasitas?: number // persen, 3-30
   appFont?: string // kunci FONT_APP
   appUkuran?: number // px, 12-17
   /** Identitas aplikasi di pojok kiri atas (diatur Administrator) */

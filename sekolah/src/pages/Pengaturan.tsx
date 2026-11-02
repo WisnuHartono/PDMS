@@ -492,6 +492,14 @@ function PanelTampilan({ s, set }: { s: Sekolah; set: (p: Partial<Sekolah>) => v
         </div>
         <p className="muted small">Berlaku seragam di rapor, buku induk, surat, dan semua administrasi. Kop surat tetap memakai pilihan hurufnya sendiri di bagian Kop Surat; label inventaris selalu Arial agar mudah dipindai.</p>
       </Card>
+      <Card title="Tanda air dokumen" className="mb">
+        <div className="form-grid g4">
+          <Field label="Tanda air logo sekolah"><div className="radio-row"><input type="checkbox" checked={t.tandaAir} onChange={(e) => ubah({ tandaAir: e.target.checked })} /> Tampilkan di belakang dokumen</div></Field>
+          {geser('tandaAirUkuran', 'Ukuran (% sisi pendek kertas)', 20, 90, '%', 5)}
+          {geser('tandaAirOpasitas', 'Ketebalan (opasitas)', 3, 30, '%', 1)}
+        </div>
+        <p className="muted small">Logo sekolah dipasang di tengah setiap halaman kuitansi, bukti bayar, surat, register, rapor, dan semua dokumen administrasi, dengan ukuran mengikuti kertas (potret maupun lanskap). Unggah logo di Profil Sekolah; label inventaris tidak diberi tanda air.</p>
+      </Card>
       <Card title="Huruf aplikasi" className="mb">
         <div className="form-grid g4">
           <Field label="Jenis huruf aplikasi" span={2}>

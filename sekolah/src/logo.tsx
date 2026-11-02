@@ -5,7 +5,7 @@ import type { Sekolah, TampilanSetting } from './types'
 export const TAMPILAN_DEFAULT: Required<TampilanSetting> = {
   logoUkuran: 42, logoBentuk: 'sudut', logoLatar: 'putih', logoBingkai: false, logoBayangan: false, logoIsi: 'contain',
   logoZoom: 100, logoGeserX: 0, logoGeserY: 0, namaUkuran: 17, tampilLegalitas: true, tampilNama: true,
-  dokFont: 'times', dokUkuran: 11.5, dokJarak: 135, appFont: 'segoe', appUkuran: 14,
+  dokFont: 'times', dokUkuran: 11.5, dokJarak: 135, tandaAir: true, tandaAirUkuran: 55, tandaAirOpasitas: 8, appFont: 'segoe', appUkuran: 14,
   appNama: 'SIMAS', appSub: 'Administrasi Sekolah', appLogo: '', appLogoUkuran: 48, appLogoBentuk: 'sudut', appLogoLatar: 'kuning',
   appNamaUkuran: 19, appSubUkuran: 11, appNamaFont: 'segoe', appNamaTebal: true, appNamaWarna: '', appNamaSpasi: 2,
   appTampilSub: true, appTampilVersi: true, appTampilLampu: true,
@@ -83,4 +83,29 @@ export function terapkanHuruf(t: Required<TampilanSetting>, el: HTMLElement = do
   el.style.setProperty('--doc-line', String(t.dokJarak / 100))
   el.style.setProperty('--app-font', (FONT_APP[t.appFont] ?? FONT_APP.segoe).css)
   el.style.setProperty('--app-size', `${t.appUkuran}px`)
+}
+
+/** Pasang tanda air logo sekolah di belakang semua dokumen cetak (.doc): ukuran proporsional lebar kertas, diulang tiap halaman. */
+export async function terapkanTandaAir(logo: string | undefined, on: boolean, ukuran: number, opasitas: number) {
+  let st = document.getElementById('simas-tanda-air') as HTMLStyleElement | null
+  if (!st) { st = document.createElement('style'); st.id = 'simas-tanda-air'; document.head.appendChild(st) }
+  if (!on || !logo || !logo.startsWith('data:image/')) { st.textContent = ''; return }
+  const rasio = await new Promise<number>((ok) => {
+    const im = new Image()
+    im.onload = () => ok(im.naturalWidth && im.naturalHeight ? im.naturalWidth / im.naturalHeight : 1)
+    im.onerror = () => ok(0)
+    im.src = logo
+  })
+  if (!rasio) { st.textContent = ''; return }
+  const ubin = (w: number, h: number) => {
+    // kotak logo = persen dari sisi pendek kertas, rasio gambar dipertahankan, di tengah halaman
+    const maks = Math.min(w, h) * (ukuran / 100)
+    const lw = rasio >= 1 ? maks : maks * rasio, lh = rasio >= 1 ? maks / rasio : maks
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}mm" height="${h}mm" viewBox="0 0 ${w} ${h}"><image href="${logo}" x="${(w - lw) / 2}" y="${(h - lh) / 2}" width="${lw}" height="${lh}" opacity="${opasitas / 100}" preserveAspectRatio="xMidYMid meet"/></svg>`
+    return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`
+  }
+  st.textContent = `.doc{position:relative;isolation:isolate}
+.doc::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:${ubin(210, 297)} 50% 0/210mm 297mm repeat-y;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.doc.landscape::before{background:${ubin(297, 210)} 50% 0/297mm 210mm repeat-y}
+.doc.label-sheet::before{display:none}`
 }
