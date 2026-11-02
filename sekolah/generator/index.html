@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="id"><head><meta charset="UTF-8"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>SIMAS Generator Serial</title>
+<style>
+:root{--bg:#eaf0f6;--panel:#fff;--line:#d6dfe9;--text:#17283a;--muted:#6a7b8c;--acc:#0f7a8c;--acc2:#0b5f6e;--soft:#e2f3f5;--bad:#c62828;--ok:#16794a;--warn:#b26a00}
+*{box-sizing:border-box}html,body{height:100%}body{margin:0;font:13px/1.4 "Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;overflow:hidden}
+header{background:linear-gradient(90deg,#12324a,#0f5c7a);color:#fff;padding:9px 16px;display:flex;align-items:center;gap:10px;flex:none}
+header b{font-size:15px;letter-spacing:.02em}header .sp{flex:1}
+#kunci{display:flex;align-items:center;gap:6px;font-size:12px;background:rgba(255,255,255,.14);padding:3px 10px;border-radius:99px;cursor:default}
+.dot{width:9px;height:9px;border-radius:50%;background:#9aa7b4}.dot.ok{background:#3ddc84}.dot.bad{background:#ff6b6b}
+main{flex:1;display:grid;grid-template-columns:320px 1fr;gap:12px;padding:12px;min-height:0}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;min-height:0}
+h2{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+label{display:block;font-weight:600;font-size:12px;margin:9px 0 3px}label small{font-weight:400;color:var(--muted);float:right}
+input,textarea{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:7px;font:inherit;background:#fff;color:var(--text)}
+input:focus,textarea:focus{outline:2px solid rgba(15,122,140,.35);border-color:var(--acc)}
+.kode{font:600 14px Consolas,monospace;letter-spacing:.08em;text-transform:uppercase}.valid{border-color:var(--ok)!important;background:#f3fbf6}
+.chips{display:flex;gap:5px;flex-wrap:wrap}.chip{border:1px solid var(--line);background:#fff;border-radius:99px;padding:4px 11px;cursor:pointer;font:inherit;font-size:12px;color:var(--text)}
+.chip.on{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}.chip:hover:not(.on){background:var(--soft)}
+#pre{margin-top:10px;padding:8px 10px;background:var(--soft);border-radius:8px;font-size:12px;color:var(--acc2);min-height:54px}
+#pre b{color:var(--text)}
+button.p{width:100%;margin-top:10px;border:0;border-radius:8px;padding:10px;background:var(--acc);color:#fff;font:inherit;font-weight:700;cursor:pointer;transition:.12s}
+button.p:hover:not(:disabled){background:var(--acc2);transform:translateY(-1px)}button.p:disabled{opacity:.45;cursor:not-allowed}
+.hint{font-size:11px;color:var(--muted);margin-top:6px;text-align:center}kbd{background:#eef2f6;border:1px solid var(--line);border-radius:4px;padding:0 4px;font-size:10px}
+.err{color:var(--bad);font-weight:600;font-size:12px;margin-top:6px}
+.seg{display:flex;gap:3px;background:#eef2f6;border-radius:8px;padding:3px;margin-bottom:10px;flex:none}.seg button{flex:1;border:0;background:none;padding:6px;border-radius:6px;font:inherit;cursor:pointer;color:var(--muted);font-weight:600}.seg button.on{background:#fff;color:var(--acc2);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.view{flex:1;min-height:0;overflow:auto;display:none}.view.on{display:block}
+.kosong{display:grid;place-items:center;height:100%;color:var(--muted);text-align:center;padding:20px}
+.kartu{border:2px solid var(--acc);background:linear-gradient(135deg,#f0fafb,#fff);border-radius:12px;padding:14px;animation:muncul .25s}
+@keyframes muncul{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
+.kartu .judul{display:flex;align-items:center;gap:8px;margin-bottom:6px}.kartu .judul b{font-size:16px}
+.badge{display:inline-block;padding:1px 9px;border-radius:99px;font-size:11px;font-weight:700;background:#e1f5ea;color:var(--ok)}.badge.w{background:#fff1d6;color:var(--warn)}.badge.b{background:#fde8e8;color:var(--bad)}
+.meta{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-bottom:8px}.meta b{color:var(--text)}
+.serial{font:12px/1.5 Consolas,monospace;background:#12324a;color:#bff3ff;border-radius:8px;padding:10px;word-break:break-all;max-height:84px;overflow:auto;user-select:all}
+.aksi{display:flex;gap:6px;margin-top:10px}.aksi button{flex:1;border:1px solid var(--line);background:#fff;border-radius:7px;padding:8px;font:inherit;font-weight:600;cursor:pointer}.aksi button:hover{background:var(--soft)}.aksi .utama{background:var(--acc);color:#fff;border-color:var(--acc)}.aksi .utama:hover{background:var(--acc2)}
+table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:6px 7px;border-bottom:1px solid var(--line);text-align:left}th{color:var(--muted);font-weight:600;position:sticky;top:0;background:#fff}tr.r:hover{background:var(--soft)}
+td button{border:1px solid var(--line);background:#fff;border-radius:5px;padding:2px 7px;cursor:pointer;font:inherit;font-size:11px}td button:hover{background:var(--acc);color:#fff}
+#cari{margin-bottom:8px}#toast{position:fixed;left:50%;bottom:16px;transform:translate(-50%,20px);background:#12324a;color:#fff;padding:8px 16px;border-radius:99px;opacity:0;transition:.2s;pointer-events:none;font-weight:600}#toast.on{opacity:1;transform:translate(-50%,0)}
+@media (max-width:760px){main{grid-template-columns:1fr;overflow:auto}}
+</style></head><body>
+<header><b>🔑 SIMAS Generator Serial</b><span class="sp"></span><div id="kunci" title=""><span class="dot" id="dot"></span><span id="kteks">Memeriksa kunci…</span></div></header>
+<main>
+ <section class="panel">
+  <h2>Serial baru</h2>
+  <label for="nama">Pemegang lisensi <small id="cn">0/30</small></label>
+  <input id="nama" maxlength="30" placeholder="mis. SDN 1 Harapan" autocomplete="off">
+  <label for="kode">Kode Instalasi <small>opsional, mengikat ke 1 komputer</small></label>
+  <input id="kode" class="kode" placeholder="XXXX-XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false" maxlength="19">
+  <label>Masa berlaku</label>
+  <div class="chips" id="chips"><button class="chip on" data-m="perm">Permanen</button><button class="chip" data-m="1">1 tahun</button><button class="chip" data-m="2">2 tahun</button><button class="chip" data-m="3">3 tahun</button><button class="chip" data-m="tgl">Tanggal…</button></div>
+  <input id="tgl" type="date" style="display:none;margin-top:6px">
+  <label for="cat">Catatan internal <small>tidak masuk serial</small></label>
+  <input id="cat" maxlength="120" placeholder="mis. faktur 2026-014" autocomplete="off">
+  <div id="pre"></div>
+  <button class="p" id="buat" disabled>Buat serial</button>
+  <div class="hint"><kbd>Ctrl</kbd>+<kbd>Enter</kbd> untuk membuat · <label style="display:inline;font-weight:400;margin:0"><input type="checkbox" id="oto" checked style="width:auto"> salin otomatis</label></div>
+  <div id="galat" class="err"></div>
+ </section>
+ <section class="panel">
+  <div class="seg" id="seg"><button class="on" data-v="hasil">Hasil</button><button data-v="periksa">Periksa serial</button><button data-v="riwayat">Riwayat <span id="nr"></span></button></div>
+  <div class="view on" id="v-hasil"><div class="kosong" id="hk"><div>Isi data di kiri lalu klik <b>Buat serial</b>.<br>Serial yang dibuat tampil di sini dan otomatis tersalin.</div></div><div id="hh"></div></div>
+  <div class="view" id="v-periksa"><textarea id="cek" rows="4" placeholder="Tempel serial di sini, otomatis diperiksa…" spellcheck="false"></textarea><div id="hcek" style="margin-top:10px"></div></div>
+  <div class="view" id="v-riwayat"><input id="cari" placeholder="Cari nama, no. seri, atau catatan…"><table><thead><tr><th>Tanggal</th><th>Pemegang</th><th>No. seri</th><th>Berlaku</th><th></th></tr></thead><tbody id="rw"></tbody></table></div>
+ </section>
+</main>
+<div id="toast"></div>
+<script>
+const $=(i)=>document.getElementById(i)
+const esc=(s)=>String(s).replace(/[&<>"]/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))
+const tgl=(iso)=>iso?new Date(iso+'T00:00:00Z').toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}):'Permanen'
+let tt;function toast(t){const e=$('toast');e.textContent=t;e.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>e.classList.remove('on'),1600)}
+let siap=false,masa='perm',akhir=null
+function lihat(v){document.querySelectorAll('#seg button').forEach((b)=>b.classList.toggle('on',b.dataset.v===v));['hasil','periksa','riwayat'].forEach((x)=>$('v-'+x).classList.toggle('on',x===v));if(v==='riwayat')riwayat();if(v==='periksa')$('cek').focus()}
+$('seg').onclick=(e)=>{const b=e.target.closest('button');if(b)lihat(b.dataset.v)}
+async function status(){const s=await gen.status();const d=$('dot'),t=$('kteks')
+ if(!s.ada){d.className='dot bad';t.textContent='Kunci privat belum ada — klik untuk memilih';$('kunci').style.cursor='pointer';$('kunci').onclick=async()=>{await gen.pilihKunci();status()};siap=false}
+ else if(!s.cocok){d.className='dot bad';t.textContent='Kunci tidak cocok dengan aplikasi SIMAS';siap=false}
+ else{d.className='dot ok';t.textContent='Kunci siap';$('kunci').title=s.path;siap=true}
+ valid()}
+function kodeFmt(v){const c=v.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,16);return c.match(/.{1,4}/g)?.join('-')||''}
+function tglAkhir(){if(masa==='perm')return '';if(masa==='tgl')return $('tgl').value;const d=new Date();d.setUTCFullYear(d.getUTCFullYear()+Number(masa));d.setUTCDate(d.getUTCDate()-1);return d.toISOString().slice(0,10)}
+function valid(){const n=$('nama').value.trim(),k=$('kode').value.replace(/-/g,''),t=tglAkhir()
+ $('cn').textContent=$('nama').value.length+'/30';$('kode').classList.toggle('valid',k.length===16)
+ const salah=(k.length>0&&k.length!==16)?'Kode Instalasi harus 16 karakter.':(masa==='tgl'&&!t)?'Pilih tanggal berlaku.':''
+ $('pre').innerHTML=n?'<b>'+esc(n)+'</b><br>'+(t?'Berlaku sampai <b>'+tgl(t)+'</b>':'<b>Permanen</b> (tanpa batas waktu)')+'<br>'+(k.length===16?'Terikat ke instalasi <b>'+esc($('kode').value)+'</b>':'Dapat dipakai di komputer mana pun'):'Pratinjau lisensi muncul di sini.'
+ $('galat').textContent=n?salah:'';$('buat').disabled=!(siap&&n&&!salah)}
+$('nama').oninput=valid
+$('kode').oninput=(e)=>{e.target.value=kodeFmt(e.target.value);valid()}
+$('tgl').oninput=valid
+$('chips').onclick=(e)=>{const b=e.target.closest('.chip');if(!b)return;masa=b.dataset.m;document.querySelectorAll('.chip').forEach((x)=>x.classList.toggle('on',x===b));$('tgl').style.display=masa==='tgl'?'block':'none';if(masa==='tgl'&&!$('tgl').value){const d=new Date();d.setUTCFullYear(d.getUTCFullYear()+1);$('tgl').value=d.toISOString().slice(0,10);$('tgl').min=new Date().toISOString().slice(0,10)}valid()}
+async function buat(){if($('buat').disabled)return;const r=await gen.buat({nama:$('nama').value,kodeInstalasi:$('kode').value,kedaluwarsa:tglAkhir(),catatan:$('cat').value})
+ if(!r.ok){$('galat').textContent=r.pesan;return}
+ akhir={serial:r.serial,nama:$('nama').value.trim()};const t=tglAkhir(),k=$('kode').value
+ $('hk').style.display='none'
+ $('hh').innerHTML='<div class="kartu"><div class="judul"><b>'+esc(akhir.nama)+'</b><span class="badge">Serial dibuat</span></div><div class="meta"><span>No. seri <b>'+r.noSeri+'</b></span><span>Berlaku <b>'+tgl(t)+'</b></span><span>'+(k?'Terikat <b>'+esc(k)+'</b>':'<b>Tidak terikat</b>')+'</span></div><div class="serial" id="sr">'+esc(r.serial)+'</div><div class="aksi"><button class="utama" id="salin">Salin serial</button><button id="berkas">Simpan .lisensi</button><button id="baru">Serial baru</button></div></div>'
+ $('salin').onclick=async()=>{await gen.salin(r.serial);toast('Serial tersalin ✓')}
+ $('berkas').onclick=async()=>{const x=await gen.simpanBerkas(akhir);if(x.ok)toast('Berkas disimpan ✓')}
+ $('baru').onclick=()=>{$('nama').value='';$('kode').value='';$('cat').value='';$('hh').innerHTML='';$('hk').style.display='';valid();$('nama').focus()}
+ lihat('hasil');refreshN();if($('oto').checked){await gen.salin(r.serial);toast('Serial dibuat dan tersalin ✓')}else toast('Serial dibuat ✓')}
+$('buat').onclick=buat
+document.addEventListener('keydown',(e)=>{if(e.ctrlKey&&e.key==='Enter')buat()})
+let tc;$('cek').oninput=()=>{clearTimeout(tc);tc=setTimeout(async()=>{const v=$('cek').value.trim();if(!v){$('hcek').innerHTML='';return}const r=await gen.periksa(v)
+ $('hcek').innerHTML=!r.ok?'<span class="badge b">Tidak valid</span> '+esc(r.pesan):'<div class="kartu"><div class="judul"><b>'+esc(r.nama)+'</b><span class="badge '+(r.valid?'':'b')+'">'+(r.valid?'Asli':'Tanda tangan TIDAK cocok')+'</span></div><div class="meta"><span>Terbit <b>'+tgl(r.terbit)+'</b></span><span>Berlaku <b>'+tgl(r.kedaluwarsa)+'</b></span><span>'+(r.terikat?'<b>Terikat instalasi</b>':'<b>Tidak terikat</b>')+'</span><span>No. seri <b>'+r.noSeri+'</b></span></div></div>'},250)}
+let semua=[]
+async function refreshN(){semua=await gen.riwayat();$('nr').textContent=semua.length?'('+semua.length+')':''}
+function riwayat(){const q=$('cari').value.toLowerCase();const rw=semua.filter((x)=>!q||(x.nama+x.noSeri+(x.catatan||'')).toLowerCase().includes(q))
+ $('rw').innerHTML=rw.map((x)=>'<tr class="r"><td>'+esc(x.waktu.slice(0,10))+'</td><td><b>'+esc(x.nama)+'</b>'+(x.catatan?'<br><span style="color:var(--muted)">'+esc(x.catatan)+'</span>':'')+'</td><td>'+esc(x.noSeri)+'</td><td>'+(x.kedaluwarsa?esc(x.kedaluwarsa):'Permanen')+'</td><td><button data-s="'+esc(x.serial)+'">Salin</button></td></tr>').join('')||'<tr><td colspan="5" style="color:var(--muted);text-align:center;padding:20px">'+(semua.length?'Tidak ada yang cocok.':'Belum ada serial yang dibuat.')+'</td></tr>'
+ $('rw').querySelectorAll('button').forEach((b)=>b.onclick=async()=>{await gen.salin(b.dataset.s);toast('Serial tersalin ✓')})}
+$('cari').oninput=riwayat
+refreshN();status();valid();$('nama').focus()
+</script></body></html>

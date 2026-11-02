@@ -1,0 +1,17 @@
+{
+  "name": "simas-generator-serial",
+  "productName": "SIMAS Generator Serial",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Pembuat serial/lisensi SIMAS Sekolah (khusus penerbit)",
+  "author": "SIMAS",
+  "main": "main.cjs",
+  "build": {
+    "electronVersion": "33.2.1",
+    "appId": "id.simas.generator",
+    "productName": "SIMAS Generator Serial",
+    "directories": { "output": "../release-generator" },
+    "files": ["main.cjs", "preload.cjs", "lib.cjs", "index.html", "package.json"],
+    "win": { "target": ["zip"], "icon": "../public/icon.png" }
+  }
+}

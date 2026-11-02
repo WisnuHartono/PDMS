@@ -1,0 +1,40 @@
+name: SIMAS Sekolah
+
+on:
+  push:
+    paths: ['sekolah/**', '.github/workflows/sekolah.yml']
+  pull_request:
+    paths: ['sekolah/**', '.github/workflows/sekolah.yml']
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: sekolah
+
+jobs:
+  test-web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: sekolah/package-lock.json }
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - uses: actions/upload-artifact@v4
+        with: { name: simas-web, path: sekolah/dist }
+
+  windows-exe:
+    runs-on: windows-latest
+    needs: test-web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm, cache-dependency-path: sekolah/package-lock.json }
+      - run: npm ci
+      - run: npm run dist:win -- --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: simas-windows
+          path: |
+            sekolah/release/*.exe
