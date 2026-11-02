@@ -76,7 +76,7 @@ export function ChipTrial() {
   if (!s || s.mode !== 'trial') return null
   return (
     <>
-      <button className="chip-trial no-print" onClick={() => setBuka(true)} title="Masa percobaan. Klik untuk memasukkan serial lisensi.">Percobaan · sisa {s.sisaHari} hari</button>
+      <button className="chip-trial no-print" onClick={() => setBuka(true)} title="Masa percobaan. Klik untuk memasukkan serial lisensi.">Trial · sisa {s.sisaHari} hari</button>
       {buka && <Modal title="Aktifkan lisensi" onClose={() => setBuka(false)}><p className="muted small">Masa percobaan {s.sisaHari} hari lagi. Masukkan serial untuk memakai aplikasi tanpa batas waktu percobaan.</p><FormSerial kode={s.kodeInstalasi} onSukses={() => setBuka(false)} /></Modal>}
     </>
   )
