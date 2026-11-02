@@ -61,10 +61,10 @@ export function RaporDoc({ siswa, rombel, semester }: { siswa: Siswa; rombel: Ro
       <h1 className="doc-title">{kur.judulRapor}</h1>
       <table className="ident">
         <tbody>
-          <tr><td>{L.nama}</td><td>: <b>{siswa.nama.toUpperCase()}</b></td><td>{L.kelas}</td><td>: {rombel.nama}{f && !intl ? ` (Fase ${f})` : ''}</td></tr>
-          <tr><td>{L.nis}</td><td>: {siswa.noInduk}{siswa.nisn ? ` / ${siswa.nisn}` : ''}</td><td>{L.sem}</td><td>: {semester} ({semester === 1 ? (intl ? 'First' : 'Ganjil') : (intl ? 'Second' : 'Genap')})</td></tr>
-          <tr><td>{intl ? 'School' : 'Sekolah'}</td><td>: {s.nama}</td><td>{L.ta}</td><td>: {rombel.tahunAjaran}</td></tr>
-          {kur.naratif && <tr><td>Usia</td><td>: {usiaTahunBulan(siswa.tanggalLahir, parseIso(s.tanggalRapor ?? new Date().toISOString().slice(0, 10))) || '-'}</td><td>Nama panggilan</td><td>: {siswa.namaPanggilan || '-'}</td></tr>}
+          <tr><td>{L.nama}</td><td><span className="kl">:</span><b>{siswa.nama.toUpperCase()}</b></td><td>{L.kelas}</td><td><span className="kl">:</span>{rombel.nama}{f && !intl ? ` (Fase ${f})` : ''}</td></tr>
+          <tr><td>{L.nis}</td><td><span className="kl">:</span>{siswa.noInduk}{siswa.nisn ? ` / ${siswa.nisn}` : ''}</td><td>{L.sem}</td><td><span className="kl">:</span>{semester} ({semester === 1 ? (intl ? 'First' : 'Ganjil') : (intl ? 'Second' : 'Genap')})</td></tr>
+          <tr><td>{intl ? 'School' : 'Sekolah'}</td><td><span className="kl">:</span>{s.nama}</td><td>{L.ta}</td><td><span className="kl">:</span>{rombel.tahunAjaran}</td></tr>
+          {kur.naratif && <tr><td>Usia</td><td><span className="kl">:</span>{usiaTahunBulan(siswa.tanggalLahir, parseIso(s.tanggalRapor ?? new Date().toISOString().slice(0, 10))) || '-'}</td><td>Nama panggilan</td><td><span className="kl">:</span>{siswa.namaPanggilan || '-'}</td></tr>}
         </tbody>
       </table>
 
