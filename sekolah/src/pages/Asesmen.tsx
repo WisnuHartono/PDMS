@@ -20,6 +20,8 @@ export default function Asesmen() {
   const [drafts, setDrafts] = useState<Record<string, Rekam>>({})
   const [detail, setDetail] = useState<Siswa | null>(null)
   const [kelola, setKelola] = useState(false)
+  const [pilih, setPilih] = useState(false)
+  const [antrian, setAntrian] = useState<string[]>([])
   const [rubrik, setRubrik] = useState(false)
   const insts = useMemo(() => semuaInstrumen(arsip), [arsip])
   const inst = insts.find((i) => i.id === iid) ?? insts[0]
@@ -68,9 +70,10 @@ export default function Asesmen() {
     toast(n ? `${n} asesmen dikunci` : 'Tidak ada yang siap dikunci (lengkapi aspek dan bukti dulu).')
   }
 
-  const mulai = () => { const s = anggota.find((x) => !rekam(x.id).final) ?? anggota[0]; if (s) setDetail(s) }
-  const idxDetail = detail ? anggota.findIndex((x) => x.id === detail.id) : -1
-  const pindah = (d: number) => { const t = anggota[idxDetail + d]; if (t) setDetail(t) }
+  const mulai = (ids: string[]) => { const urut = anggota.filter((x) => ids.includes(x.id)); if (!urut.length) return toast('Pilih minimal satu siswa.'); setAntrian(urut.map((x) => x.id)); setDetail(urut[0]); setPilih(false) }
+  const daftar = antrian.length ? antrian : anggota.map((x) => x.id)
+  const idxDetail = detail ? daftar.indexOf(detail.id) : -1
+  const pindah = (d: number) => { const t = anggota.find((x) => x.id === daftar[idxDetail + d]); if (t) setDetail(t) }
 
   const final = anggota.filter((s) => rekam(s.id).final).length
   const terisi = anggota.filter((s) => kelengkapan(inst, rekam(s.id)).terisi > 0).length
@@ -79,7 +82,7 @@ export default function Asesmen() {
   return (
     <div>
       <PageHead title="Asesmen Siswa" sub={`${inst.nama} · ${r.nama} · TA ${r.tahunAjaran} Semester ${sem} · hasil terkunci masuk rapor`}>
-        <Btn kind="primary" icon="edit" onClick={mulai} disabled={!anggota.length}>Lakukan asesmen</Btn>
+        <Btn kind="primary" icon="edit" onClick={() => setPilih(true)} disabled={!anggota.length}>Lakukan asesmen</Btn>
         <Btn icon="edit" onClick={() => setKelola(true)}>Kelola instrumen</Btn>
         <Btn icon="kunci" onClick={kunciSemua}>Kunci yang lengkap</Btn>
         <Btn onClick={simpanSemua} disabled={!nDraft}>{nDraft ? `Simpan (${nDraft})` : 'Tersimpan'}</Btn>
@@ -140,13 +143,44 @@ export default function Asesmen() {
 
       {detail && (
         <PanduanSiswa key={detail.id + inst.id} siswa={detail} inst={inst} kelas={r.nama} rekam={rekam(detail.id)} onChange={(fn) => ubah(detail.id, fn)}
-          onSimpan={async () => { await simpanSiswa(detail.id); toast('Asesmen disimpan') }} onKunci={() => kunci(detail.id)} onClose={() => setDetail(null)}
-          posisi={idxDetail >= 0 ? `Siswa ${idxDetail + 1} dari ${anggota.length}` : undefined}
+          onSimpan={async () => { await simpanSiswa(detail.id); toast('Asesmen disimpan') }} onKunci={() => kunci(detail.id)} onClose={() => { setDetail(null); setAntrian([]) }}
+          posisi={idxDetail >= 0 ? `Siswa ${idxDetail + 1} dari ${daftar.length}` : undefined}
           onSebelum={idxDetail > 0 ? () => pindah(-1) : undefined}
-          onBerikut={idxDetail >= 0 && idxDetail < anggota.length - 1 ? async () => { if (!rekam(detail.id).final) await simpanSiswa(detail.id); pindah(1) } : undefined} />
+          onBerikut={idxDetail >= 0 && idxDetail < daftar.length - 1 ? async () => { if (!rekam(detail.id).final) await simpanSiswa(detail.id); pindah(1) } : undefined} />
       )}
+      {pilih && <PilihSiswa anggota={anggota} final={(id) => rekam(id).final} terisi={(id) => kelengkapan(inst, rekam(id)).terisi} total={inst.aspek.length} onMulai={mulai} onClose={() => setPilih(false)} />}
       {kelola && <KelolaInstrumen onClose={() => setKelola(false)} onPilih={(id) => { setIid(id); setKelola(false) }} />}
     </div>
+  )
+}
+
+function PilihSiswa({ anggota, final, terisi, total, onMulai, onClose }: { anggota: Siswa[]; final: (id: string) => boolean; terisi: (id: string) => number; total: number; onMulai: (ids: string[]) => void; onClose: () => void }) {
+  const [sel, setSel] = useState<string[]>(() => anggota.filter((s) => !final(s.id)).map((s) => s.id))
+  const [cari, setCari] = useState('')
+  const tampil = anggota.filter((s) => s.nama.toLowerCase().includes(cari.toLowerCase()))
+  const tog = (id: string) => setSel((x) => x.includes(id) ? x.filter((i) => i !== id) : [...x, id])
+  return (
+    <Modal title="Pilih siswa yang akan dinilai" onClose={onClose}
+      footer={<><Btn onClick={onClose}>Batal</Btn><Btn kind="primary" onClick={() => onMulai(sel)} disabled={!sel.length}>Mulai asesmen ({sel.length})</Btn></>}>
+      <p className="muted small">Siswa dinilai satu per satu sesuai urutan daftar, dengan panduan rubrik tiap aspek. Yang sudah terkunci tidak dipilih otomatis.</p>
+      <div className="row-actions">
+        <input placeholder="Cari nama siswa…" value={cari} onChange={(e) => setCari(e.target.value)} />
+        <Btn kind="ghost" onClick={() => setSel(anggota.filter((s) => !final(s.id)).map((s) => s.id))}>Yang belum selesai</Btn>
+        <Btn kind="ghost" onClick={() => setSel(anggota.map((s) => s.id))}>Semua</Btn>
+        <Btn kind="ghost" onClick={() => setSel([])}>Kosongkan</Btn>
+      </div>
+      <div className="table-wrap" style={{ maxHeight: 360, overflow: 'auto' }}>
+        <table className="tbl"><tbody>
+          {tampil.map((s) => (
+            <tr key={s.id}>
+              <td style={{ width: 32 }}><input type="checkbox" checked={sel.includes(s.id)} onChange={() => tog(s.id)} aria-label={s.nama} /></td>
+              <td><b>{s.nama}</b></td>
+              <td className="c">{final(s.id) ? <span className="pill ok">Terkunci</span> : <span className="pill">{terisi(s.id)}/{total}</span>}</td>
+            </tr>
+          ))}
+        </tbody></table>
+      </div>
+    </Modal>
   )
 }
 
