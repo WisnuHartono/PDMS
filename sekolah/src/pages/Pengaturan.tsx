@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import DataCadangan from './DataCadangan'
+import { KartuLisensi } from './Lisensi'
 import PanelTema from './PanelTema'
 import { kodeSekolah } from '../administrasi'
 import { KERTAS, type IdKertas } from '../kertas'
@@ -15,7 +16,7 @@ import { AI_DEFAULT, PANDUAN, PENYEDIA, aiSiap, panggilAi } from '../ai'
 import { Btn, Card, Field, Inp, Modal, PageHead, Sel, toast } from '../ui'
 import { fotoKecil, namaPegawai, today } from '../util'
 
-type Bagian = 'tema' | 'identitas' | 'lokasi' | 'pelengkap' | 'pejabat' | 'kop' | 'cetak' | 'kurikulum' | 'tampilan' | 'ai' | 'data'
+type Bagian = 'tema' | 'identitas' | 'lokasi' | 'pelengkap' | 'pejabat' | 'kop' | 'cetak' | 'kurikulum' | 'tampilan' | 'ai' | 'data' | 'lisensi'
 const BAGIAN: [Bagian, string, string][] = [
   ['identitas', 'Identitas & Legalitas', 'Nama, NPSN, status, SK pendirian/izin, akreditasi, jenjang'],
   ['lokasi', 'Lokasi & Kontak', 'Alamat lengkap, koordinat, telepon, email, laman'],
@@ -28,6 +29,7 @@ const BAGIAN: [Bagian, string, string][] = [
   ['tampilan', 'Tampilan & Logo', 'Ukuran, bentuk, bingkai, zoom logo dan nama di header'],
   ['ai', 'Integrasi AI', 'Penyusun narasi rapor: penyedia, kunci API, gaya'],
   ['data', 'Data & Cadangan', 'Ekspor Excel/CSV, cloud, cadangan terenkripsi, pulihkan'],
+  ['lisensi', 'Lisensi', 'Status lisensi, masa percobaan, kode instalasi, serial'],
 ]
 
 const ROMAWI = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII']
@@ -302,6 +304,8 @@ export default function Pengaturan() {
           {bagian === 'ai' && <PanelAi s={s} set={set} />}
 
           {bagian === 'data' && <DataCadangan />}
+
+          {bagian === 'lisensi' && <KartuLisensi />}
         </div>
       </div>
     </div>

@@ -12,6 +12,7 @@ import { boleh, keluar, useSesi } from './security/sesi'
 import { namaPegawai } from './util'
 import { terapkanTema } from './tema'
 import { kertasDari, MARGIN } from './kertas'
+import { ChipTrial } from './pages/Lisensi'
 import { BrandApp, LogoSekolah, tampilanDari, terapkanHuruf, terapkanTandaAir, tinggiBrand } from './logo'
 
 interface MenuItem { id: PageId; label: string; icon: string; group: string }
@@ -133,6 +134,7 @@ export default function App() {
           <button className="icon-btn light" onClick={() => setExpanded((e) => !e)} aria-label="Menu"><Icon name="menu" /></button>
           <BrandApp t={tm} bawah={tm.appTampilLampu ? <LampuKoneksi /> : undefined} />
           <div className="topbar-fill" />
+          <ChipTrial />
           <QuickSearch />
           <div className="top-sekolah" title={[`TA ${sekolah.tahunAjaranAktif} Semester ${sekolah.semesterAktif === 1 ? 'Ganjil' : 'Genap'}`, sekolah.jenjang.join(' · '), sekolah.alamat].filter(Boolean).join(' · ')}>
             <LogoSekolah logo={sekolah.logo} t={tm} />

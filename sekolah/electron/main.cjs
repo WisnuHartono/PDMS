@@ -39,6 +39,19 @@ if (!app.requestSingleInstanceLock()) {
     if (w) { if (w.isMinimized()) w.restore(); w.focus() }
   })
 
+  // Penyimpanan masa percobaan: dua salinan di luar data aplikasi web (menghapus data browser/penyimpanan tidak mengulang trial).
+  const berkasLisensi = () => [path.join(app.getPath('userData'), 'lisensi.dat'), path.join(app.getPath('appData'), 'SIMAS-lisensi.dat')]
+  ipcMain.handle('simas:lisensi-baca', async () => {
+    const out = []
+    for (const f of berkasLisensi()) { try { out.push(await fs.readFile(f, 'utf8')) } catch { /* belum ada */ } }
+    return out
+  })
+  ipcMain.handle('simas:lisensi-tulis', async (_e, s) => {
+    let ok = false
+    for (const f of berkasLisensi()) { try { await fs.mkdir(path.dirname(f), { recursive: true }); await fs.writeFile(f, String(s).slice(0, 4000)); ok = true } catch { /* lanjut */ } }
+    return ok
+  })
+
   // Simpan dokumen yang sedang dipratinjau menjadi PDF A4 (memakai CSS cetak yang sama dengan printer).
   ipcMain.handle('simas:simpan-pdf', async (e, nama, kiri) => {
     const win = BrowserWindow.fromWebContents(e.sender)

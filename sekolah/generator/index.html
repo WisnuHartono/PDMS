@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="id"><head><meta charset="UTF-8"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>SIMAS Generator Serial</title>
+<style>
+:root{--bg:#eef2f6;--panel:#fff;--line:#d9e1ea;--text:#1c2b39;--muted:#6b7a8a;--accent:#0f7a8c;--accent2:#0b5f6e;--bad:#c62828;--ok:#1a7f4b}
+*{box-sizing:border-box}body{margin:0;font:14px/1.45 "Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--text)}
+header{background:#12324a;color:#fff;padding:14px 22px;display:flex;align-items:center;gap:12px}header b{font-size:18px}header span{opacity:.7;font-size:12px}
+main{max-width:940px;margin:18px auto;padding:0 16px}
+.tabs{display:flex;gap:6px;margin-bottom:12px}.tabs button{border:1px solid var(--line);background:#fff;padding:8px 16px;border-radius:8px 8px 0 0;cursor:pointer;font:inherit}.tabs button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:14px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.grid .full{grid-column:1/-1}
+label{display:block;font-weight:600;font-size:12px;margin-bottom:4px}input,select,textarea{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:7px;font:inherit;background:#fff}
+textarea{font-family:Consolas,monospace;font-size:13px;min-height:96px;resize:vertical}
+button.p,button.s{border:0;border-radius:7px;padding:9px 16px;font:inherit;cursor:pointer}button.p{background:var(--accent);color:#fff;font-weight:600}button.p:hover{background:var(--accent2)}button.s{background:#e6edf3;color:var(--text)}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.muted{color:var(--muted);font-size:12px}
+.pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600}.ok{background:#e1f5ea;color:var(--ok)}.bad{background:#fde8e8;color:var(--bad)}
+.err{color:var(--bad);font-weight:600;margin-top:8px}table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{background:#f4f7fa}
+.hasil{border:2px solid var(--accent);background:#f0fafb}.hide{display:none}
+</style></head><body>
+<header><b>SIMAS Generator Serial</b><span>Khusus penerbit lisensi. Jangan dibagikan kepada pengguna.</span></header>
+<main>
+<div id="kunci" class="card"></div>
+<div class="tabs"><button class="on" data-t="buat">Buat serial</button><button data-t="periksa">Periksa serial</button><button data-t="riwayat">Riwayat</button></div>
+
+<section id="t-buat">
+ <div class="card"><div class="grid">
+  <div><label for="nama">Nama pemegang lisensi (sekolah) *</label><input id="nama" maxlength="30" placeholder="mis. SDN 1 Harapan"></div>
+  <div><label for="kode">Kode Instalasi (opsional)</label><input id="kode" placeholder="ABCD-EFGH-JKLM-NPQR" autocomplete="off"></div>
+  <div><label for="masa">Masa berlaku</label><select id="masa"><option value="perm">Permanen (selamanya)</option><option value="1">1 tahun</option><option value="2">2 tahun</option><option value="3">3 tahun</option><option value="tgl">Sampai tanggal tertentu</option></select></div>
+  <div id="tglw" class="hide"><label for="tgl">Berlaku sampai (termasuk hari itu)</label><input id="tgl" type="date"></div>
+  <div class="full"><label for="cat">Catatan internal (tidak masuk serial)</label><input id="cat" maxlength="120" placeholder="mis. pembeli: Bu Ani, faktur 2026-014"></div>
+ </div>
+ <p class="muted">Kode Instalasi dilihat pemilik di layar lisensi aplikasi. Bila diisi, serial hanya berlaku di instalasi itu. Bila kosong, serial dapat dipakai di komputer mana pun.</p>
+ <div class="row"><button class="p" id="buat">Buat serial</button></div><div id="galat" class="err"></div></div>
+ <div id="hasil" class="card hasil hide"><label>Serial lisensi</label><textarea id="serial" readonly></textarea>
+  <div class="muted" id="info"></div>
+  <div class="row"><button class="s" id="salin">Salin serial</button><button class="s" id="berkas">Simpan sebagai berkas .lisensi</button></div></div>
+</section>
+
+<section id="t-periksa" class="hide"><div class="card"><label for="cek">Tempel serial untuk diperiksa</label><textarea id="cek"></textarea><div class="row"><button class="p" id="periksa">Periksa</button></div><div id="hcek" style="margin-top:10px"></div></div></section>
+
+<section id="t-riwayat" class="hide"><div class="card"><table><thead><tr><th>Waktu</th><th>Pemegang</th><th>No. seri</th><th>Berlaku</th><th>Terikat</th><th>Catatan</th><th></th></tr></thead><tbody id="rw"></tbody></table><p class="muted" id="rwk"></p></div></section>
+</main>
+<script>
+const $=(i)=>document.getElementById(i)
+const esc=(s)=>String(s).replace(/[&<>"]/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))
+document.querySelectorAll('.tabs button').forEach((b)=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach((x)=>x.classList.toggle('on',x===b));['buat','periksa','riwayat'].forEach((t)=>$('t-'+t).classList.toggle('hide',t!==b.dataset.t));if(b.dataset.t==='riwayat')muatRiwayat()})
+async function status(){const s=await gen.status();const k=$('kunci')
+ if(!s.ada){k.innerHTML='<b>Kunci privat belum ditemukan</b> <span class="pill bad">Tidak siap</span><p class="muted">Letakkan berkas <code>kunci-privat.pem</code> di folder yang sama dengan aplikasi ini, atau pilih berkasnya.</p><button class="s" id="pk">Pilih kunci-privat.pem…</button>';$('pk').onclick=async()=>{await gen.pilihKunci();status()};$('buat').disabled=true}
+ else if(!s.cocok){k.innerHTML='<b>Kunci privat tidak cocok dengan aplikasi SIMAS</b> <span class="pill bad">Salah kunci</span><p class="muted">Serial dari kunci ini tidak akan diterima aplikasi.</p>';$('buat').disabled=true}
+ else{k.innerHTML='Kunci privat siap digunakan <span class="pill ok">Cocok dengan aplikasi</span> <span class="muted">'+esc(s.path)+'</span>';$('buat').disabled=false}}
+$('masa').onchange=()=>$('tglw').classList.toggle('hide',$('masa').value!=='tgl')
+function tglHasil(){const m=$('masa').value;if(m==='perm')return '';if(m==='tgl')return $('tgl').value;const d=new Date();d.setUTCFullYear(d.getUTCFullYear()+Number(m));d.setUTCDate(d.getUTCDate()-1);return d.toISOString().slice(0,10)}
+let akhir=null
+$('buat').onclick=async()=>{$('galat').textContent='';const r=await gen.buat({nama:$('nama').value,kodeInstalasi:$('kode').value,kedaluwarsa:tglHasil(),catatan:$('cat').value})
+ if(!r.ok){$('galat').textContent=r.pesan;$('hasil').classList.add('hide');return}
+ akhir={serial:r.serial,nama:$('nama').value};$('serial').value=r.serial;$('hasil').classList.remove('hide')
+ $('info').textContent='No. seri '+r.noSeri+' · '+(tglHasil()?'berlaku sampai '+tglHasil():'permanen')+' · '+(r.terikat?'terikat ke satu instalasi':'tidak terikat instalasi')}
+$('salin').onclick=async()=>{await gen.salin($('serial').value);$('salin').textContent='Tersalin ✓';setTimeout(()=>$('salin').textContent='Salin serial',1500)}
+$('berkas').onclick=async()=>{if(!akhir)return;const r=await gen.simpanBerkas(akhir);if(r.ok)$('berkas').textContent='Tersimpan ✓'}
+$('periksa').onclick=async()=>{const r=await gen.periksa($('cek').value);$('hcek').innerHTML=!r.ok?'<span class="pill bad">Tidak valid</span> '+esc(r.pesan):(r.valid?'<span class="pill ok">Tanda tangan valid</span>':'<span class="pill bad">Tanda tangan TIDAK cocok</span>')+'<table style="margin-top:8px"><tr><th>Pemegang</th><td>'+esc(r.nama)+'</td></tr><tr><th>Diterbitkan</th><td>'+r.terbit+'</td></tr><tr><th>Berlaku sampai</th><td>'+(r.kedaluwarsa||'Permanen')+'</td></tr><tr><th>Terikat instalasi</th><td>'+(r.terikat?'Ya':'Tidak')+'</td></tr><tr><th>No. seri</th><td>'+r.noSeri+'</td></tr></table>'}
+async function muatRiwayat(){const rw=await gen.riwayat();$('rw').innerHTML=rw.map((x,i)=>'<tr><td>'+esc(x.waktu.slice(0,16).replace('T',' '))+'</td><td>'+esc(x.nama)+'</td><td>'+esc(x.noSeri)+'</td><td>'+(x.kedaluwarsa?esc(x.kedaluwarsa):'Permanen')+'</td><td>'+(x.kodeInstalasi?esc(x.kodeInstalasi):'-')+'</td><td>'+esc(x.catatan||'')+'</td><td><button class="s" data-i="'+i+'">Salin</button></td></tr>').join('')||'<tr><td colspan="7" class="muted">Belum ada serial yang dibuat.</td></tr>'
+ $('rw').querySelectorAll('button').forEach((b)=>b.onclick=()=>{gen.salin(rw[b.dataset.i].serial);b.textContent='✓'})
+ $('rwk').textContent=rw.length+' serial tercatat di komputer ini.'}
+status()
+</script></body></html>

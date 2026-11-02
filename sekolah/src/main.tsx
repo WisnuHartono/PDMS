@@ -2,6 +2,7 @@ import { StrictMode, useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
 import { EncryptedBackend, IndexedDbBackend } from './db'
+import { GerbangLisensi, useLisensi } from './pages/Lisensi'
 import { Masuk, Pasang } from './pages/Login'
 import { seedDemo } from './seed'
 import { adaAkun, kebijakan, type Sesi } from './security/akun'
@@ -24,9 +25,11 @@ function Root() {
   useEffect(() => {
     adaAkun().then((ada) => setTahap(ada ? 'masuk' : 'pasang')).catch((e) => setGalat(String(e)))
   }, [])
+  const lisensi = useLisensi()
   const lanjut = (s: Sesi, demo?: boolean) => bukaData(s, demo).then(() => setTahap('app')).catch((e) => setGalat(`Gagal membuka data: ${e}`))
   if (galat) return <div className="welcome"><div className="welcome-card"><h1>Terjadi kesalahan</h1><p>{galat}</p></div></div>
-  if (tahap === 'muat') return <div className="welcome" />
+  if (lisensi?.mode === 'habis') return <GerbangLisensi status={lisensi} />
+  if (tahap === 'muat' || !lisensi) return <div className="welcome" />
   if (tahap === 'pasang') return <Pasang onSelesai={(s, demo) => lanjut(s, demo)} />
   if (tahap === 'masuk') return <Masuk onMasuk={(s) => lanjut(s)} />
   return <App />

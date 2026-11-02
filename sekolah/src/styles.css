@@ -1107,3 +1107,13 @@ button.link { background: none; border: 0; color: var(--accent); cursor: pointer
 .doc.rapor table.ident td:nth-child(3) { padding-left: 18px; }
 .doc.rapor table.ident td:nth-child(4) { padding-right: 0; }
 .doc.rapor table.ident td:nth-child(1), .doc.rapor table.ident td:nth-child(3) { padding-right: 10px; }
+
+/* Lisensi */
+.welcome-card.gerbang { width: min(520px, 100%); }
+.gerbang-ikon { font-size: 34px; }
+.lisensi-form textarea { width: 100%; font-family: Consolas, monospace; font-size: 13px; margin: 4px 0 8px; }
+.lisensi-kode { background: var(--accent-soft); border-radius: 8px; padding: 10px 12px; margin: 10px 0; }
+.kode-inst { font: 700 16px Consolas, monospace; letter-spacing: .06em; }
+.chip-trial { border: 1px solid var(--tab-on); background: rgba(245, 158, 11, .16); color: inherit; border-radius: 99px; padding: 4px 12px; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.chip-trial:hover { background: rgba(245, 158, 11, .3); }
+.lisensi-ringkas table th { text-align: left; width: 180px; }
